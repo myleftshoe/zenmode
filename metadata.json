@@ -1,0 +1,8 @@
+{
+    "name": "2up",
+    "description": "Windows grouped in twos",
+    "uuid": "2up@myleftshoe",
+    "shell-version": [
+        "3.36.2"
+    ]
+}
