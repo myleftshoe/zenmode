@@ -2,6 +2,7 @@ const { Meta } = imports.gi;
 const Main = imports.ui.main;
 const Signals = imports.signals;
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const { createChrome } = Extension.imports.chrome
 
 function init() {
     log(`***************************************************************`);
@@ -16,6 +17,8 @@ const signals = []
 function enable() {
     log(`${Extension.metadata.uuid} enable()`);
     
+    const chrome = createChrome({top: 50, right: 50, bottom: 50, left: 50})
+
     signals.push(global.display.connect('window-created', (display, metaWindow) => {
         if (metaWindow.is_client_decorated()) return;
         if (metaWindow.get_window_type() > 1) return;
