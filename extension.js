@@ -17,6 +17,8 @@ function enable() {
     log(`${Extension.metadata.uuid} enable()`);
     
     signals.push(global.display.connect('window-created', (display, metaWindow) => {
+        if (metaWindow.is_client_decorated()) return;
+        if (metaWindow.get_window_type() > 1) return;
         metaWindow.maximize(Meta.MaximizeFlags.BOTH)
     }));        
     signals.push(global.display.connect('notify::focus-window', (display, paramSpec) => {
