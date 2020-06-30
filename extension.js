@@ -1,10 +1,7 @@
-const { GLib } = imports.gi;
+const { Meta } = imports.gi;
 const Main = imports.ui.main;
 const Signals = imports.signals;
-
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
-const { TwoUp } = Extension.imports.main;
-const { Log } = Extension.imports.utils.logger;
 
 function init() {
     log(`***************************************************************`);
@@ -12,15 +9,44 @@ function init() {
     Signals.addSignalMethods(Extension);
 }
 
+
+let lastFocusedMetaWindow
+const signals = []
+
 function enable() {
     log(`${Extension.metadata.uuid} enable()`);
-    global.twoUp = new TwoUp();
+    
+    signals.push(global.display.connect('window-created', (display, metaWindow) => {
+        metaWindow.maximize(Meta.MaximizeFlags.BOTH)
+    }));        
+    signals.push(global.display.connect('notify::focus-window', (display, paramSpec) => {
+        const tabList = display.get_tab_list(Meta.TabList.NORMAL, null)
+        const focusedMetaWindow = tabList[0]
+
+        if (!focusedMetaWindow) return;
+        if (focusedMetaWindow === lastFocusedMetaWindow) return;
+        lastFocusedMetaWindow = focusedMetaWindow
+        if (focusedMetaWindow.maximized_horizontally) return;
+
+        const { x: fmwX, width: fmwW } = focusedMetaWindow.get_frame_rect()
+
+        for (let i = 1; i < tabList.length; i++) {
+            const metaWindow = tabList[i]
+            const { x, y, width, height } = metaWindow.get_frame_rect()
+            if (x === fmwW || x === 0 && fmwX === width) {
+                Main.activateWindow(metaWindow)
+                lastFocusedMetaWindow = focusedMetaWindow
+                break;
+            }
+        };
+        Main.activateWindow(focusedMetaWindow)
+    }));
+
     Extension.loaded = true;
 }
 
 function disable() {
     log(`${Extension.metadata.uuid} disable()`);
-    global.twoUp.destroy();
-    delete global.twoUp;
+    signals.forEach(signal => signal.disconnect())
     Extension.loaded = false;
 }
