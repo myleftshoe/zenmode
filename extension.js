@@ -23,11 +23,11 @@ function enable() {
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
     const chrome = createChrome({ top: 1, right: 1, bottom: 1, left: 1 })
-    chrome.left.connect('button_press_event', slideLeft)
-    chrome.right.connect('button_press_event', slideRight)
+    chrome.left.connect('button-press-event', slideLeft)
+    chrome.right.connect('button-press-event', slideRight)
 
-    signals.push(activeWorkspace.connect('window_added', addWindow))
-    signals.push(activeWorkspace.connect('window_removed', removeWindow))
+    signals.push(activeWorkspace.connect('window-added', addWindow))
+    signals.push(activeWorkspace.connect('window-removed', removeWindow))
     signals.push(global.display.connect('notify::focus-window', focusWindow))
 
     Extension.loaded = true
@@ -41,7 +41,7 @@ function disable() {
 
 function addWindow(workspace, addedMetaWindow) {
     // if (metaWindow.is_client_decorated()) return;
-    if (addedMetaWindow.get_window_type() > 1) return
+    if (addedMetaWindow.get_window_type() > 1) return;
     addedMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
     metaWindows.push(addedMetaWindow)
 }
@@ -61,7 +61,7 @@ function slideLeft() {
     const nextMetaWindow =
         metaWindows[metaWindows.indexOf(focusedMetaWindow) - 1] ||
         metaWindows[metaWindows.length - 1]
-    if (!nextMetaWindow) return
+    if (!nextMetaWindow) return;
     slideOutRight(focusedMetaWindow)
     slideInFromLeft(nextMetaWindow)
 }
@@ -70,7 +70,7 @@ function slideRight() {
     const nextMetaWindow =
         metaWindows[metaWindows.indexOf(focusedMetaWindow) + 1] ||
         metaWindows[0]
-    if (!nextMetaWindow) return
+    if (!nextMetaWindow) return;
     slideOutLeft(focusedMetaWindow)
     slideInFromRight(nextMetaWindow)
 }
@@ -85,7 +85,7 @@ function slideOutLeft(metaWindow) {
     clone.save_easing_state()
     clone.set_easing_duration(350)
     clone.set_position(0 - width, y)
-    const signal = clone.connect('transition_stopped', () => {
+    const signal = clone.connect('transition-stopped', () => {
         clone.restore_easing_state()
         clone.disconnect(signal)
         clone.destroy()
@@ -102,7 +102,7 @@ function slideOutRight(metaWindow) {
     clone.save_easing_state()
     clone.set_easing_duration(350)
     clone.set_position(1920, y)
-    const signal = clone.connect('transition_stopped', () => {
+    const signal = clone.connect('transition-stopped', () => {
         clone.restore_easing_state()
         clone.disconnect(signal)
         clone.destroy()
@@ -118,7 +118,7 @@ function slideInFromRight(metaWindow) {
     clone.save_easing_state()
     clone.set_easing_duration(350)
     clone.set_position(x, y)
-    const signal = clone.connect('transition_stopped', () => {
+    const signal = clone.connect('transition-stopped', () => {
         clone.restore_easing_state()
         clone.disconnect(signal)
         clone.destroy()
@@ -136,7 +136,7 @@ function slideInFromLeft(metaWindow) {
     clone.save_easing_state()
     clone.set_easing_duration(350)
     clone.set_position(x, y)
-    const signal = clone.connect('transition_stopped', () => {
+    const signal = clone.connect('transition-stopped', () => {
         clone.restore_easing_state()
         clone.disconnect(signal)
         clone.destroy()
