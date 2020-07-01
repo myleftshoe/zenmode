@@ -23,34 +23,22 @@ function enable() {
 
     chrome.left.connect('button_press_event', () => {
         const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
-
-        new Clone(tabList[0]).slideOutRight()
-
-        log(tabList.map(w => w.title))
+        slideOutRight(tabList[0])
         for (let i = tabList.length - 1; i > 1; i--) {
             Main.activateWindow(tabList[i])
             tabList[i].get_compositor_private().hide()
-            log(tabList[i].title)
         }
-
-        new Clone(tabList[tabList.length - 1]).slideInFromLeft()
+        slideInFromLeft(tabList[tabList.length - 1])
     })
 
     chrome.right.connect('button_press_event', () => {
         const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
-
-        new Clone(tabList[0]).slideOutLeft()
-
-        log('Before for loop')
-        tabList.map((w, i) => log(i, w.title))
+        slideOutLeft(tabList[0])
         for (let i = tabList.length - 1; i > 0; i--) {
             Main.activateWindow(tabList[i])
             tabList[i].get_compositor_private().hide()
-            log('--->', i, tabList[i].title)
         }
-        log('After for loop')
-        tabList.map((w, i) => log(i, w.title))
-        new Clone(tabList[1]).slideInFromRight()
+        slideInFromRight(tabList[1])
     })
 
     signals.push(global.display.connect('window-created', (display, metaWindow) => {
@@ -80,67 +68,72 @@ function disable() {
     Extension.loaded = false;
 }
 
-function Clone(metaWindow) {
+function slideOutLeft(metaWindow) {
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor });
-    return {
-        slideOutLeft() {
-            const { x, y, width } = metaWindow.get_buffer_rect()
-            clone.set_position(x, y)
-            Main.uiGroup.add_child(clone)
-            metaWindowActor.hide()
-            clone.save_easing_state()
-            clone.set_easing_duration(350)
-            clone.set_position(0 - width, y)
-            const signal = clone.connect('transition_stopped', () => {
-                clone.restore_easing_state()
-                clone.disconnect(signal)
-                clone.destroy()
-            })
-        },
-        slideOutRight() {
-            const { x, y, width } = metaWindow.get_buffer_rect()
-            clone.set_position(x, y)
-            Main.uiGroup.add_child(clone)
-            metaWindowActor.hide()
-            clone.save_easing_state()
-            clone.set_easing_duration(350)
-            clone.set_position(1920, y)
-            const signal = clone.connect('transition_stopped', () => {
-                clone.restore_easing_state()
-                clone.disconnect(signal)
-                clone.destroy()
-            })
-        },
-        slideInFromRight() {
-            const { x, y } = metaWindow.get_buffer_rect()
-            clone.set_position(1920, y) //TODO
-            Main.uiGroup.add_child(clone)
-            clone.save_easing_state()
-            clone.set_easing_duration(350)
-            clone.set_position(x, y)
-            const signal = clone.connect('transition_stopped', () => {
-                clone.restore_easing_state()
-                clone.disconnect(signal)
-                clone.destroy()
-                metaWindowActor.show()
-                Main.activateWindow(metaWindow)
-            })
-        },
-        slideInFromLeft() {
-            const { x, y, width } = metaWindow.get_buffer_rect()
-            clone.set_position(0 - width, y) //TODO
-            Main.uiGroup.add_child(clone)
-            clone.save_easing_state()
-            clone.set_easing_duration(350)
-            clone.set_position(x, y)
-            const signal = clone.connect('transition_stopped', () => {
-                clone.restore_easing_state()
-                clone.disconnect(signal)
-                clone.destroy()
-                metaWindowActor.show()
-                Main.activateWindow(metaWindow)
-            })
-        }
-    }
+    const { x, y, width } = metaWindow.get_buffer_rect()
+    clone.set_position(x, y)
+    Main.uiGroup.add_child(clone)
+    metaWindowActor.hide()
+    clone.save_easing_state()
+    clone.set_easing_duration(350)
+    clone.set_position(0 - width, y)
+    const signal = clone.connect('transition_stopped', () => {
+        clone.restore_easing_state()
+        clone.disconnect(signal)
+        clone.destroy()
+    })
+}
+
+function slideOutRight(metaWindow) {
+    const metaWindowActor = metaWindow.get_compositor_private()
+    const clone = new Clutter.Clone({ source: metaWindowActor });
+    const { x, y, width } = metaWindow.get_buffer_rect()
+    clone.set_position(x, y)
+    Main.uiGroup.add_child(clone)
+    metaWindowActor.hide()
+    clone.save_easing_state()
+    clone.set_easing_duration(350)
+    clone.set_position(1920, y)
+    const signal = clone.connect('transition_stopped', () => {
+        clone.restore_easing_state()
+        clone.disconnect(signal)
+        clone.destroy()
+    })
+}
+
+function slideInFromRight(metaWindow) {
+    const metaWindowActor = metaWindow.get_compositor_private()
+    const clone = new Clutter.Clone({ source: metaWindowActor });
+    const { x, y } = metaWindow.get_buffer_rect()
+    clone.set_position(1920, y) //TODO
+    Main.uiGroup.add_child(clone)
+    clone.save_easing_state()
+    clone.set_easing_duration(350)
+    clone.set_position(x, y)
+    const signal = clone.connect('transition_stopped', () => {
+        clone.restore_easing_state()
+        clone.disconnect(signal)
+        clone.destroy()
+        metaWindowActor.show()
+        Main.activateWindow(metaWindow)
+    })
+}
+
+function slideInFromLeft(metaWindow) {
+    const metaWindowActor = metaWindow.get_compositor_private()
+    const clone = new Clutter.Clone({ source: metaWindowActor });
+    const { x, y, width } = metaWindow.get_buffer_rect()
+    clone.set_position(0 - width, y) //TODO
+    Main.uiGroup.add_child(clone)
+    clone.save_easing_state()
+    clone.set_easing_duration(350)
+    clone.set_position(x, y)
+    const signal = clone.connect('transition_stopped', () => {
+        clone.restore_easing_state()
+        clone.disconnect(signal)
+        clone.destroy()
+        metaWindowActor.show()
+        Main.activateWindow(metaWindow)
+    })
 }
