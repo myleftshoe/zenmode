@@ -26,6 +26,7 @@ function enable() {
         const activeMetaWindow = tabList[0]
         const amwi = metaWindows.indexOf(activeMetaWindow)
         const activeMWA = activeMetaWindow.get_compositor_private();
+        activeMWA.hide()
         const clone = new Clutter.Clone({source: activeMWA});
         const { y:y1, x:x1, width } = activeMetaWindow.get_buffer_rect()
         clone.set_position(x1, y1)
@@ -38,15 +39,18 @@ function enable() {
             clone.destroy()
         })
         const nextMetaWindow = metaWindows[amwi - 1] || metaWindows[metaWindows.length - 1]
+        nextMWA = nextMetaWindow.get_compositor_private()
         const clone2 = new Clutter.Clone({source: nextMetaWindow.get_compositor_private()});
         const { y, x } = nextMetaWindow.get_buffer_rect()
         clone2.set_position(-1920, y)
         Main.uiGroup.add_child(clone2)
+        nextMWA.hide()
         clone2.save_easing_state()
         clone2.set_easing_duration(350)
         clone2.set_position(x, y)
         clone2.connect('transition_stopped', () => {
             clone2.restore_easing_state()
+            nextMWA.show()
             Main.activateWindow(nextMetaWindow)
             clone2.destroy()
         })
@@ -60,6 +64,7 @@ function enable() {
         const activeMetaWindow = tabList[0]
         const amwi = metaWindows.indexOf(activeMetaWindow)
         const activeMWA = activeMetaWindow.get_compositor_private();
+        activeMWA.hide()
         const clone = new Clutter.Clone({source: activeMWA});
         const { y:y1, x:x1, width } = activeMetaWindow.get_buffer_rect()
         clone.set_position(x1, y1)
@@ -71,16 +76,22 @@ function enable() {
             clone.restore_easing_state()
             clone.destroy()
         })
-        const nextMetaWindow = metaWindows[amwi + 1] || metaWindows[0]
+        let nextMetaWindow
+        do  {
+            nextMetaWindow = metaWindows[amwi + 1] || metaWindows[0]
+        } while (nextMetaWindow.is_fullscreen())
+        nextMWA = nextMetaWindow.get_compositor_private()
         const clone2 = new Clutter.Clone({source: nextMetaWindow.get_compositor_private()});
         const { y, x } = nextMetaWindow.get_buffer_rect()
         clone2.set_position(1920, y)
         Main.uiGroup.add_child(clone2)
+        nextMWA.hide()
         clone2.save_easing_state()
         clone2.set_easing_duration(350)
         clone2.set_position(x, y)
         clone2.connect('transition_stopped', () => {
             clone2.restore_easing_state()
+            nextMWA.show()
             Main.activateWindow(nextMetaWindow)
             clone2.destroy()
         })
@@ -95,24 +106,12 @@ function enable() {
     signals.push(global.display.connect('notify::focus-window', (display, paramSpec) => {
         const tabList = display.get_tab_list(Meta.TabList.NORMAL, null)
         const focusedMetaWindow = tabList[0]
+        const focusedMWA = focusedMetaWindow.get_compositor_private()
+        focusedMWA.show()
 
-        if (!focusedMetaWindow) return;
-        if (focusedMetaWindow === lastFocusedMetaWindow) return;
-        lastFocusedMetaWindow = focusedMetaWindow
-        if (focusedMetaWindow.maximized_horizontally) return;
-
-        const { x: fmwX, width: fmwW } = focusedMetaWindow.get_frame_rect()
-
-        for (let i = 1; i < tabList.length; i++) {
-            const metaWindow = tabList[i]
-            const { x, y, width, height } = metaWindow.get_frame_rect()
-            if (x === fmwW || x === 0 && fmwX === width) {
-                Main.activateWindow(metaWindow)
-                lastFocusedMetaWindow = focusedMetaWindow
-                break;
-            }
-        };
-        Main.activateWindow(focusedMetaWindow)
+        for ( let i = 1; i < tabList.length; i++) {
+            tabList[i].get_compositor_private().hide()
+        }
     }));
 
     Extension.loaded = true;
