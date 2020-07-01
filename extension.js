@@ -58,19 +58,19 @@ function focusWindow(display, paramSpec) {
 }
 
 function slideLeft() {
+    if (metaWindows.length < 2) return;
     const nextMetaWindow =
         metaWindows[metaWindows.indexOf(focusedMetaWindow) - 1] ||
         metaWindows[metaWindows.length - 1]
-    if (!nextMetaWindow) return;
     slideOutRight(focusedMetaWindow)
     slideInFromLeft(nextMetaWindow)
 }
 
 function slideRight() {
+    if (metaWindows.length < 2) return;
     const nextMetaWindow =
         metaWindows[metaWindows.indexOf(focusedMetaWindow) + 1] ||
         metaWindows[0]
-    if (!nextMetaWindow) return;
     slideOutLeft(focusedMetaWindow)
     slideInFromRight(nextMetaWindow)
 }
