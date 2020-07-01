@@ -23,22 +23,6 @@ function init() {
     Signals.addSignalMethods(Extension)
 }
 
-function connectSignal(object, signal, callback) {
-    const id =  object.connect(signal,callback)
-    signals.set(id, { object, signal })
-    return id
-}
-
-function disconnectOneSignal(id) {
-    const { object } = signals.get(id)
-    object.disconnect(id)
-}
-
-function disconnectObjectSignals(object) {
-    
-}
-
-
 function enable() {
     log(`${uuid} enable()`)
 
