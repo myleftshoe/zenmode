@@ -1,8 +1,10 @@
-const { Clutter, Meta } = imports.gi;
-const Main = imports.ui.main;
-const Signals = imports.signals;
-const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const { Clutter, Meta } = imports.gi
+const Main = imports.ui.main
+const Signals = imports.signals
+const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { createChrome } = Extension.imports.chrome
+
+const uuid = Extension.metadata.uuid
 
 let activeWorkspace
 let metaWindows = []
@@ -10,17 +12,17 @@ let focusedMetaWindow
 const signals = []
 
 function init() {
-    log(`***************************************************************`);
-    log(`${Extension.metadata.uuid} init()`);
-    Signals.addSignalMethods(Extension);
+    log(`***************************************************************`)
+    log(`${uuid} init()`)
+    Signals.addSignalMethods(Extension)
 }
 
 function enable() {
-    log(`${Extension.metadata.uuid} enable()`);
+    log(`${uuid} enable()`)
 
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
-    const chrome = createChrome({ top:1, right: 1, bottom: 1, left: 1 })
+    const chrome = createChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.connect('button_press_event', slideLeft)
     chrome.right.connect('button_press_event', slideRight)
 
@@ -28,21 +30,21 @@ function enable() {
     signals.push(activeWorkspace.connect('window_removed', removeWindow))
     signals.push(global.display.connect('notify::focus-window', focusWindow))
 
-    Extension.loaded = true;
+    Extension.loaded = true
 }
 
 function disable() {
-    log(`${Extension.metadata.uuid} disable()`);
+    log(`${uuid} disable()`)
     signals.forEach(signal => signal.disconnect())
-    Extension.loaded = false;
+    Extension.loaded = false
 }
 
 function addWindow(workspace, addedMetaWindow) {
     // if (metaWindow.is_client_decorated()) return;
-    if (addedMetaWindow.get_window_type() > 1) return;
+    if (addedMetaWindow.get_window_type() > 1) return
     addedMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
     metaWindows.push(addedMetaWindow)
-};
+}
 
 function removeWindow(workspace, removedMetaWindow) {
     metaWindows = metaWindows.filter(metaWindow => metaWindow !== removedMetaWindow)
@@ -52,18 +54,22 @@ function focusWindow(display, paramSpec) {
     const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
     focusedMetaWindow = tabList[0]
     focusedMetaWindow.get_compositor_private().show()
-    tabList.slice(1).forEach(metaWindow => metaWindow.get_compositor_private().hide())
+    tabList.slice(1).forEach((metaWindow) => metaWindow.get_compositor_private().hide())
 }
 
 function slideLeft() {
-    const nextMetaWindow = metaWindows[metaWindows.indexOf(focusedMetaWindow) - 1] || metaWindows[metaWindows.length - 1]
+    const nextMetaWindow =
+        metaWindows[metaWindows.indexOf(focusedMetaWindow) - 1] ||
+        metaWindows[metaWindows.length - 1]
     if (!nextMetaWindow) return
     slideOutRight(focusedMetaWindow)
     slideInFromLeft(nextMetaWindow)
 }
 
 function slideRight() {
-    const nextMetaWindow = metaWindows[metaWindows.indexOf(focusedMetaWindow) + 1] || metaWindows[0]
+    const nextMetaWindow =
+        metaWindows[metaWindows.indexOf(focusedMetaWindow) + 1] ||
+        metaWindows[0]
     if (!nextMetaWindow) return
     slideOutLeft(focusedMetaWindow)
     slideInFromRight(nextMetaWindow)
@@ -71,7 +77,7 @@ function slideRight() {
 
 function slideOutLeft(metaWindow) {
     const metaWindowActor = metaWindow.get_compositor_private()
-    const clone = new Clutter.Clone({ source: metaWindowActor });
+    const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y, width } = metaWindow.get_buffer_rect()
     clone.set_position(x, y)
     Main.uiGroup.add_child(clone)
@@ -88,7 +94,7 @@ function slideOutLeft(metaWindow) {
 
 function slideOutRight(metaWindow) {
     const metaWindowActor = metaWindow.get_compositor_private()
-    const clone = new Clutter.Clone({ source: metaWindowActor });
+    const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y, width } = metaWindow.get_buffer_rect()
     clone.set_position(x, y)
     Main.uiGroup.add_child(clone)
@@ -105,7 +111,7 @@ function slideOutRight(metaWindow) {
 
 function slideInFromRight(metaWindow) {
     const metaWindowActor = metaWindow.get_compositor_private()
-    const clone = new Clutter.Clone({ source: metaWindowActor });
+    const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y } = metaWindow.get_buffer_rect()
     clone.set_position(1920, y) //TODO
     Main.uiGroup.add_child(clone)
@@ -123,7 +129,7 @@ function slideInFromRight(metaWindow) {
 
 function slideInFromLeft(metaWindow) {
     const metaWindowActor = metaWindow.get_compositor_private()
-    const clone = new Clutter.Clone({ source: metaWindowActor });
+    const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y, width } = metaWindow.get_buffer_rect()
     clone.set_position(0 - width, y) //TODO
     Main.uiGroup.add_child(clone)
