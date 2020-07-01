@@ -10,6 +10,7 @@ let activeWorkspace
 let metaWindows = []
 let focusedMetaWindow
 
+let activeWorkspaceChangedSid
 let chromeLeftButtonPressEventSid
 let chromeRightButtonPressEventSid
 let activeWorkspaceWindowAddedSid
@@ -28,11 +29,12 @@ function enable() {
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
     const chrome = createChrome({ top: 1, right: 1, bottom: 1, left: 1 })
-    chrome.left.connect('button-press-event', slideLeft)
-    chrome.right.connect('button-press-event', slideRight)
+    chromeLeftButtonPressEventSid = chrome.left.connect('button-press-event', slideLeft)
+    chromeRightButtonPressEventSid = chrome.right.connect('button-press-event', slideRight)
 
-    windowAddedSid = activeWorkspace.connect('window-added', addWindow)
-    windowRemovedsid = activeWorkspace.connect('window-removed', removeWindow)
+    handleWorkspaceChange()
+
+    activeWorkspaceChangedSid = global.workspace_manager.connect('active-workspace-changed', handleWorkspaceChange)
     focusWindowSid = global.display.connect('notify::focus-window', focusWindow)
 
     Extension.loaded = true
@@ -42,6 +44,7 @@ function disable() {
     log(`${uuid} disable()`)
     signals.forEach(signal => signal.disconnect())
 
+    global.workspace_manager.disconnect(activeWorkspaceChangedSid)
     chrome.left.disconnect(chromeLeftButtonPressEventSid)
     chrome.left.disconnect(chromeRightButtonPressEventSid)
     activeWorkspace.disconnect(activeWorkspaceWindowAddedSid)
@@ -50,6 +53,21 @@ function disable() {
 
     Extension.loaded = false
 }
+
+
+function handleWorkspaceChange() {
+
+    activeWorkspaceWindowAddedSid && activeWorkspace.disconnect(activeWorkspaceWindowAddedSid)
+    activeWorkspaceWindowRemovedSid && activeWorkspace.disconnect(activeWorkspaceWindowRemovedSid)
+
+    activeWorkspace = global.workspace_manager.get_active_workspace()
+    metaWindows = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
+    // focusedMetaWindow = metaWindows[0]    
+
+    activeWorkspaceChangedSid = activeWorkspace.connect('window-added', addWindow)
+    activeWorkspaceWindowRemovedSid = activeWorkspace.connect('window-removed', removeWindow)
+}
+
 
 function addWindow(workspace, addedMetaWindow) {
     // if (metaWindow.is_client_decorated()) return;
@@ -63,8 +81,9 @@ function removeWindow(workspace, removedMetaWindow) {
 }
 
 function focusWindow(display, paramSpec) {
-    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
+    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
     focusedMetaWindow = tabList[0]
+    if (!focusedMetaWindow) return;
     focusedMetaWindow.get_compositor_private().show()
     tabList.slice(1).forEach((metaWindow) => metaWindow.get_compositor_private().hide())
 }
