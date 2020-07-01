@@ -9,7 +9,12 @@ const uuid = Extension.metadata.uuid
 let activeWorkspace
 let metaWindows = []
 let focusedMetaWindow
-const signals = []
+
+let chromeLeftButtonPressEventSid
+let chromeRightButtonPressEventSid
+let activeWorkspaceWindowAddedSid
+let activeWorkspaceWindowRemovedSid
+let displayFocusWindowSid
 
 function init() {
     log(`***************************************************************`)
@@ -26,9 +31,9 @@ function enable() {
     chrome.left.connect('button-press-event', slideLeft)
     chrome.right.connect('button-press-event', slideRight)
 
-    signals.push(activeWorkspace.connect('window-added', addWindow))
-    signals.push(activeWorkspace.connect('window-removed', removeWindow))
-    signals.push(global.display.connect('notify::focus-window', focusWindow))
+    windowAddedSid = activeWorkspace.connect('window-added', addWindow)
+    windowRemovedsid = activeWorkspace.connect('window-removed', removeWindow)
+    focusWindowSid = global.display.connect('notify::focus-window', focusWindow)
 
     Extension.loaded = true
 }
@@ -36,6 +41,13 @@ function enable() {
 function disable() {
     log(`${uuid} disable()`)
     signals.forEach(signal => signal.disconnect())
+
+    chrome.left.disconnect(chromeLeftButtonPressEventSid)
+    chrome.left.disconnect(chromeRightButtonPressEventSid)
+    activeWorkspace.disconnect(activeWorkspaceWindowAddedSid)
+    activeWorkspace.disconnect(activeWorkspaceWindowRemovedSid)
+    global.display.disconnect(displayFocusWindowSid)
+
     Extension.loaded = false
 }
 
