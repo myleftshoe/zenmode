@@ -107,11 +107,11 @@ function enable() {
         const tabList = display.get_tab_list(Meta.TabList.NORMAL, null)
         const focusedMetaWindow = tabList[0]
         const focusedMWA = focusedMetaWindow.get_compositor_private()
-        focusedMWA.show()
 
-        for ( let i = 1; i < tabList.length; i++) {
-            tabList[i].get_compositor_private().hide()
+        for ( let i = 0; i < metaWindows.length; i++) {
+            metaWindows[i].get_compositor_private().hide()
         }
+        focusedMWA.show()
     }));
 
     Extension.loaded = true;
