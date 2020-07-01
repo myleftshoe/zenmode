@@ -4,60 +4,29 @@ const Signals = imports.signals;
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
 const { createChrome } = Extension.imports.chrome
 
+let activeWorkspace
+let metaWindows = []
+let focusedMetaWindow
+const signals = []
+
 function init() {
     log(`***************************************************************`);
     log(`${Extension.metadata.uuid} init()`);
     Signals.addSignalMethods(Extension);
 }
 
-
-let lastFocusedMetaWindow
-const signals = []
-const metaWindows = []
-
 function enable() {
-
     log(`${Extension.metadata.uuid} enable()`);
 
-    const chrome = createChrome({ top: 50, right: 20, bottom: 20, left: 20 })
+    activeWorkspace = global.workspace_manager.get_active_workspace()
 
-    chrome.left.connect('button_press_event', () => {
-        const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
-        slideOutRight(tabList[0])
-        for (let i = tabList.length - 1; i > 1; i--) {
-            Main.activateWindow(tabList[i])
-            tabList[i].get_compositor_private().hide()
-        }
-        slideInFromLeft(tabList[tabList.length - 1])
-    })
+    const chrome = createChrome({ top:1, right: 1, bottom: 1, left: 1 })
+    chrome.left.connect('button_press_event', slideLeft)
+    chrome.right.connect('button_press_event', slideRight)
 
-    chrome.right.connect('button_press_event', () => {
-        const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
-        slideOutLeft(tabList[0])
-        for (let i = tabList.length - 1; i > 0; i--) {
-            Main.activateWindow(tabList[i])
-            tabList[i].get_compositor_private().hide()
-        }
-        slideInFromRight(tabList[1])
-    })
-
-    signals.push(global.display.connect('window-created', (display, metaWindow) => {
-        // if (metaWindow.is_client_decorated()) return;
-        if (metaWindow.get_window_type() > 1) return;
-        metaWindow.maximize(Meta.MaximizeFlags.BOTH)
-        metaWindows.push(metaWindow)
-    }));
-    // signals.push(global.display.connect('notify::focus-window', (display, paramSpec) => {
-    //     const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
-    //     const focusedMetaWindow = tabList[0]
-    //     const focusedMWA = focusedMetaWindow.get_compositor_private()
-    //     focusedMWA.show()
-
-    //     for ( let i = 1; i < tabList.length; i++) {
-    //         tabList[i].get_compositor_private().hide()
-    //     }
-    //     log("######", tabList.map(w => w.title))
-    // }));
+    signals.push(activeWorkspace.connect('window_added', addWindow))
+    signals.push(activeWorkspace.connect('window_removed', removeWindow))
+    signals.push(global.display.connect('notify::focus-window', focusWindow))
 
     Extension.loaded = true;
 }
@@ -66,6 +35,38 @@ function disable() {
     log(`${Extension.metadata.uuid} disable()`);
     signals.forEach(signal => signal.disconnect())
     Extension.loaded = false;
+}
+
+function addWindow(workspace, addedMetaWindow) {
+    // if (metaWindow.is_client_decorated()) return;
+    if (addedMetaWindow.get_window_type() > 1) return;
+    addedMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
+    metaWindows.push(addedMetaWindow)
+};
+
+function removeWindow(workspace, removedMetaWindow) {
+    metaWindows = metaWindows.filter(metaWindow => metaWindow !== removedMetaWindow)
+}
+
+function focusWindow(display, paramSpec) {
+    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
+    focusedMetaWindow = tabList[0]
+    focusedMetaWindow.get_compositor_private().show()
+    tabList.slice(1).forEach(metaWindow => metaWindow.get_compositor_private().hide())
+}
+
+function slideLeft() {
+    const nextMetaWindow = metaWindows[metaWindows.indexOf(focusedMetaWindow) - 1] || metaWindows[metaWindows.length - 1]
+    if (!nextMetaWindow) return
+    slideOutRight(focusedMetaWindow)
+    slideInFromLeft(nextMetaWindow)
+}
+
+function slideRight() {
+    const nextMetaWindow = metaWindows[metaWindows.indexOf(focusedMetaWindow) + 1] || metaWindows[0]
+    if (!nextMetaWindow) return
+    slideOutLeft(focusedMetaWindow)
+    slideInFromRight(nextMetaWindow)
 }
 
 function slideOutLeft(metaWindow) {
