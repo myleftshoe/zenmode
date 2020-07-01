@@ -9,13 +9,30 @@ const uuid = Extension.metadata.uuid
 let activeWorkspace
 let metaWindows = []
 let focusedMetaWindow
-const signals = []
+const signals = new Map()
+let workspaceSignals = new Map()
 
 function init() {
     log(`***************************************************************`)
     log(`${uuid} init()`)
     Signals.addSignalMethods(Extension)
 }
+
+function connectSignal(object, signal, callback) {
+    const id =  object.connect(signal,callback)
+    signals.set(id, { object, signal })
+    return id
+}
+
+function disconnectOneSignal(id) {
+    const { object } = signals.get(id)
+    object.disconnect(id)
+}
+
+function disconnectObjectSignals(object) {
+    
+}
+
 
 function enable() {
     log(`${uuid} enable()`)
@@ -26,8 +43,9 @@ function enable() {
     chrome.left.connect('button_press_event', slideLeft)
     chrome.right.connect('button_press_event', slideRight)
 
-    signals.push(activeWorkspace.connect('window_added', addWindow))
-    signals.push(activeWorkspace.connect('window_removed', removeWindow))
+    signals.set(global.workspace_manager.connect('active-workspace-changed', handleWorkspaceChange), global.workspaceManager)
+    workspaceSignals.push(activeWorkspace.connect('window_added', addWindow))
+    workspaceSignals.push(activeWorkspace.connect('window_removed', removeWindow))
     signals.push(global.display.connect('notify::focus-window', focusWindow))
 
     Extension.loaded = true
@@ -36,8 +54,24 @@ function enable() {
 function disable() {
     log(`${uuid} disable()`)
     signals.forEach(signal => signal.disconnect())
+    workspaceSignals.forEach(signal => signal.disconnect())
     Extension.loaded = false
 }
+
+function handleWorkspaceChange(workspaceManager) {
+    log('WORKSPOACE WINDOW')
+    log('WORKSPOACE WINDOW')
+    log('WORKSPOACE WINDOW')
+    log('WORKSPOACE WINDOW')
+    workspaceSignals.forEach(signal => signal.disconnect())
+    activeWorkspace = workspaceManager.get_active_workspace()
+    workspaceSignals = []
+    workspaceSignals.push(activeWorkspace.connect('window_added', addWindow))
+    workspaceSignals.push(activeWorkspace.connect('window_removed', removeWindow))
+    metaWindows = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
+    focusedMetaWindow = tabList[0]
+}
+
 
 function addWindow(workspace, addedMetaWindow) {
     // if (metaWindow.is_client_decorated()) return;
@@ -51,7 +85,12 @@ function removeWindow(workspace, removedMetaWindow) {
 }
 
 function focusWindow(display, paramSpec) {
-    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
+    log('FOCUS WINDOW')
+    log('FOCUS WINDOW')
+    log('FOCUS WINDOW')
+    log('FOCUS WINDOW')
+
+    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
     focusedMetaWindow = tabList[0]
     focusedMetaWindow.get_compositor_private().show()
     tabList.slice(1).forEach((metaWindow) => metaWindow.get_compositor_private().hide())
