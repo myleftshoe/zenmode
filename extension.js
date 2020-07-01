@@ -9,8 +9,13 @@ const uuid = Extension.metadata.uuid
 let activeWorkspace
 let metaWindows = []
 let focusedMetaWindow
-const signals = new Map()
-let workspaceSignals = new Map()
+
+let activeWorkspaceChangedSid
+let chromeLeftButtonPressEventSid
+let chromeRightButtonPressEventSid
+let activeWorkspaceWindowAddedSid
+let activeWorkspaceWindowRemovedSid
+let displayFocusWindowSid
 
 function init() {
     log(`***************************************************************`)
@@ -40,13 +45,13 @@ function enable() {
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
     const chrome = createChrome({ top: 1, right: 1, bottom: 1, left: 1 })
-    chrome.left.connect('button_press_event', slideLeft)
-    chrome.right.connect('button_press_event', slideRight)
+    chromeLeftButtonPressEventSid = chrome.left.connect('button-press-event', slideLeft)
+    chromeRightButtonPressEventSid = chrome.right.connect('button-press-event', slideRight)
 
-    signals.set(global.workspace_manager.connect('active-workspace-changed', handleWorkspaceChange), global.workspaceManager)
-    workspaceSignals.push(activeWorkspace.connect('window_added', addWindow))
-    workspaceSignals.push(activeWorkspace.connect('window_removed', removeWindow))
-    signals.push(global.display.connect('notify::focus-window', focusWindow))
+    handleWorkspaceChange()
+
+    activeWorkspaceChangedSid = global.workspace_manager.connect('active-workspace-changed', handleWorkspaceChange)
+    focusWindowSid = global.display.connect('notify::focus-window', focusWindow)
 
     Extension.loaded = true
 }
@@ -54,28 +59,35 @@ function enable() {
 function disable() {
     log(`${uuid} disable()`)
     signals.forEach(signal => signal.disconnect())
-    workspaceSignals.forEach(signal => signal.disconnect())
+
+    global.workspace_manager.disconnect(activeWorkspaceChangedSid)
+    chrome.left.disconnect(chromeLeftButtonPressEventSid)
+    chrome.left.disconnect(chromeRightButtonPressEventSid)
+    activeWorkspace.disconnect(activeWorkspaceWindowAddedSid)
+    activeWorkspace.disconnect(activeWorkspaceWindowRemovedSid)
+    global.display.disconnect(displayFocusWindowSid)
+
     Extension.loaded = false
 }
 
-function handleWorkspaceChange(workspaceManager) {
-    log('WORKSPOACE WINDOW')
-    log('WORKSPOACE WINDOW')
-    log('WORKSPOACE WINDOW')
-    log('WORKSPOACE WINDOW')
-    workspaceSignals.forEach(signal => signal.disconnect())
-    activeWorkspace = workspaceManager.get_active_workspace()
-    workspaceSignals = []
-    workspaceSignals.push(activeWorkspace.connect('window_added', addWindow))
-    workspaceSignals.push(activeWorkspace.connect('window_removed', removeWindow))
+
+function handleWorkspaceChange() {
+
+    activeWorkspaceWindowAddedSid && activeWorkspace.disconnect(activeWorkspaceWindowAddedSid)
+    activeWorkspaceWindowRemovedSid && activeWorkspace.disconnect(activeWorkspaceWindowRemovedSid)
+
+    activeWorkspace = global.workspace_manager.get_active_workspace()
     metaWindows = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
-    focusedMetaWindow = tabList[0]
+    // focusedMetaWindow = metaWindows[0]    
+
+    activeWorkspaceChangedSid = activeWorkspace.connect('window-added', addWindow)
+    activeWorkspaceWindowRemovedSid = activeWorkspace.connect('window-removed', removeWindow)
 }
 
 
 function addWindow(workspace, addedMetaWindow) {
     // if (metaWindow.is_client_decorated()) return;
-    if (addedMetaWindow.get_window_type() > 1) return
+    if (addedMetaWindow.get_window_type() > 1) return;
     addedMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
     metaWindows.push(addedMetaWindow)
 }
@@ -85,31 +97,27 @@ function removeWindow(workspace, removedMetaWindow) {
 }
 
 function focusWindow(display, paramSpec) {
-    log('FOCUS WINDOW')
-    log('FOCUS WINDOW')
-    log('FOCUS WINDOW')
-    log('FOCUS WINDOW')
-
     const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
     focusedMetaWindow = tabList[0]
+    if (!focusedMetaWindow) return;
     focusedMetaWindow.get_compositor_private().show()
     tabList.slice(1).forEach((metaWindow) => metaWindow.get_compositor_private().hide())
 }
 
 function slideLeft() {
+    if (metaWindows.length < 2) return;
     const nextMetaWindow =
         metaWindows[metaWindows.indexOf(focusedMetaWindow) - 1] ||
         metaWindows[metaWindows.length - 1]
-    if (!nextMetaWindow) return
     slideOutRight(focusedMetaWindow)
     slideInFromLeft(nextMetaWindow)
 }
 
 function slideRight() {
+    if (metaWindows.length < 2) return;
     const nextMetaWindow =
         metaWindows[metaWindows.indexOf(focusedMetaWindow) + 1] ||
         metaWindows[0]
-    if (!nextMetaWindow) return
     slideOutLeft(focusedMetaWindow)
     slideInFromRight(nextMetaWindow)
 }
@@ -124,7 +132,7 @@ function slideOutLeft(metaWindow) {
     clone.save_easing_state()
     clone.set_easing_duration(350)
     clone.set_position(0 - width, y)
-    const signal = clone.connect('transition_stopped', () => {
+    const signal = clone.connect('transition-stopped', () => {
         clone.restore_easing_state()
         clone.disconnect(signal)
         clone.destroy()
@@ -141,7 +149,7 @@ function slideOutRight(metaWindow) {
     clone.save_easing_state()
     clone.set_easing_duration(350)
     clone.set_position(1920, y)
-    const signal = clone.connect('transition_stopped', () => {
+    const signal = clone.connect('transition-stopped', () => {
         clone.restore_easing_state()
         clone.disconnect(signal)
         clone.destroy()
@@ -157,7 +165,7 @@ function slideInFromRight(metaWindow) {
     clone.save_easing_state()
     clone.set_easing_duration(350)
     clone.set_position(x, y)
-    const signal = clone.connect('transition_stopped', () => {
+    const signal = clone.connect('transition-stopped', () => {
         clone.restore_easing_state()
         clone.disconnect(signal)
         clone.destroy()
@@ -175,7 +183,7 @@ function slideInFromLeft(metaWindow) {
     clone.save_easing_state()
     clone.set_easing_duration(350)
     clone.set_position(x, y)
-    const signal = clone.connect('transition_stopped', () => {
+    const signal = clone.connect('transition-stopped', () => {
         clone.restore_easing_state()
         clone.disconnect(signal)
         clone.destroy()

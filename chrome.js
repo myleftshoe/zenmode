@@ -27,7 +27,7 @@ var Chrome = GObject.registerClass(
             // });
         }
         set onClick(callback) {
-            if (typeof callback !== 'function') return
+            if (typeof callback !== 'function') return;
             this.set_reactive(true)
             const clickAction = new Clutter.ClickAction()
             clickAction.connect('clicked', callback)
@@ -59,7 +59,7 @@ var addRight = size => new Chrome({
 })
 
 function createChrome(size) {
-    if (typeof size !== 'object') return
+    if (typeof size !== 'object') return;
     const top = size.top && addTop(size.top)
     const bottom = size.bottom && addBottom(size.bottom)
     const left = size.left && addLeft(size.left)
