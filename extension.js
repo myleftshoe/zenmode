@@ -13,6 +13,8 @@ let focusedMetaWindow
 let activeWorkspaceChangedSid
 let chromeLeftButtonPressEventSid
 let chromeRightButtonPressEventSid
+let chromeTopButtonPressEventSid
+let chromeBottomButtonPressEventSid
 let activeWorkspaceWindowAddedSid
 let activeWorkspaceWindowRemovedSid
 let displayFocusWindowSid
@@ -31,11 +33,13 @@ function enable() {
     const chrome = createChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chromeLeftButtonPressEventSid = chrome.left.connect('button-press-event', slideLeft)
     chromeRightButtonPressEventSid = chrome.right.connect('button-press-event', slideRight)
-
+    chromeTopButtonPressEventSid = chrome.top.connect('button-press-event', prevWorkspace)
+    chromeBottomButtonPressEventSid = chrome.bottom.connect('button-press-event', nextWorkspace)
+    
     handleWorkspaceChange()
 
     activeWorkspaceChangedSid = global.workspace_manager.connect('active-workspace-changed', handleWorkspaceChange)
-    focusWindowSid = global.display.connect('notify::focus-window', focusWindow)
+    displayFocusWindowSid = global.display.connect('notify::focus-window', focusWindow)
 
     Extension.loaded = true
 }
@@ -46,7 +50,9 @@ function disable() {
 
     global.workspace_manager.disconnect(activeWorkspaceChangedSid)
     chrome.left.disconnect(chromeLeftButtonPressEventSid)
-    chrome.left.disconnect(chromeRightButtonPressEventSid)
+    chrome.right.disconnect(chromeRightButtonPressEventSid)
+    chrome.top.disconnect(chromeTopButtonPressEventSid)
+    chrome.bottom.disconnect(chromeBottomButtonPressEventSid)
     activeWorkspace.disconnect(activeWorkspaceWindowAddedSid)
     activeWorkspace.disconnect(activeWorkspaceWindowRemovedSid)
     global.display.disconnect(displayFocusWindowSid)
@@ -54,6 +60,14 @@ function disable() {
     Extension.loaded = false
 }
 
+
+function prevWorkspace() {
+    activeWorkspace.get_neighbor(Meta.MotionDirection.UP).activate(global.get_current_time());
+}
+
+function nextWorkspace() {
+    activeWorkspace.get_neighbor(Meta.MotionDirection.DOWN).activate(global.get_current_time());
+}
 
 function handleWorkspaceChange() {
 
