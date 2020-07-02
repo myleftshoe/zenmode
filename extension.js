@@ -84,7 +84,7 @@ function handleWorkspaceChange() {
 
 
 function addWindow(workspace, addedMetaWindow) {
-    // if (metaWindow.is_client_decorated()) return;
+    if (addedMetaWindow.is_client_decorated()) return;
     if (addedMetaWindow.get_window_type() > 1) return;
     addedMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
     metaWindows.push(addedMetaWindow)
@@ -96,10 +96,11 @@ function removeWindow(workspace, removedMetaWindow) {
 
 function focusWindow(display, paramSpec) {
     const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
+    if (tabList[0].is_client_decorated()) return;
+    if (!tabList[0]) return;
+    metaWindows.forEach((metaWindow) => metaWindow.get_compositor_private().hide())
     focusedMetaWindow = tabList[0]
-    if (!focusedMetaWindow) return;
     focusedMetaWindow.get_compositor_private().show()
-    tabList.slice(1).forEach((metaWindow) => metaWindow.get_compositor_private().hide())
 }
 
 function slideLeft() {
