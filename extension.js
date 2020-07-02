@@ -70,7 +70,6 @@ function nextWorkspace() {
 }
 
 function handleWorkspaceChange() {
-
     activeWorkspaceWindowAddedSid && activeWorkspace.disconnect(activeWorkspaceWindowAddedSid)
     activeWorkspaceWindowRemovedSid && activeWorkspace.disconnect(activeWorkspaceWindowRemovedSid)
 
@@ -78,16 +77,36 @@ function handleWorkspaceChange() {
     metaWindows = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
     // focusedMetaWindow = metaWindows[0]    
 
-    activeWorkspaceChangedSid = activeWorkspace.connect('window-added', addWindow)
+    activeWorkspaceWindowAddedSid = activeWorkspace.connect('window-added', addWindow)
     activeWorkspaceWindowRemovedSid = activeWorkspace.connect('window-removed', removeWindow)
 }
 
 
 function addWindow(workspace, addedMetaWindow) {
     if (addedMetaWindow.is_client_decorated()) return;
+    // if (addedMetaWindow.get_maximized() < 2) return;
     if (addedMetaWindow.get_window_type() > 1) return;
     addedMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
     metaWindows.push(addedMetaWindow)
+    addedMetaWindow.connect('size-changed', handleMetaWindowSizeChange)
+}
+
+function handleMetaWindowSizeChange(metaWindow) {
+    if (metaWindow.get_maximized() < 3) {
+        metaWindow.get_compositor_private().show()
+        removeWindow(activeWorkspace, metaWindow)
+        metaWindow.make_above()
+        // metaWindow.stick()
+        const i = metaWindows.indexOf(metaWindow)
+        focusedMetaWindow = metaWindows[i - 1] || metaWindows[i + 1] || undefined
+        return;
+    }
+    if (metaWindows.indexOf(metaWindow) < 0) {
+        metaWindows.push(metaWindow)
+        metaWindow.unmake_above()
+        // metaWindow.unstick()
+        focusedMetaWindow = metaWindow
+    } 
 }
 
 function removeWindow(workspace, removedMetaWindow) {
@@ -96,8 +115,11 @@ function removeWindow(workspace, removedMetaWindow) {
 
 function focusWindow(display, paramSpec) {
     const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
-    if (tabList[0].is_client_decorated()) return;
+    tabList[0].get_compositor_private().show()
+    
+    if (tabList[0].get_maximized() < 3) return;
     if (!tabList[0]) return;
+
     metaWindows.forEach((metaWindow) => metaWindow.get_compositor_private().hide())
     focusedMetaWindow = tabList[0]
     focusedMetaWindow.get_compositor_private().show()
@@ -117,11 +139,15 @@ function slideRight() {
     const nextMetaWindow =
         metaWindows[metaWindows.indexOf(focusedMetaWindow) + 1] ||
         metaWindows[0]
+    if (!nextMetaWindow && focusedMetaWindow) {
+        Main.activateWindow(focused)
+    }
     slideOutLeft(focusedMetaWindow)
     slideInFromRight(nextMetaWindow)
 }
 
 function slideOutLeft(metaWindow) {
+    if (!metaWindow) return;
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y, width } = metaWindow.get_buffer_rect()
@@ -139,6 +165,7 @@ function slideOutLeft(metaWindow) {
 }
 
 function slideOutRight(metaWindow) {
+    if (!metaWindow) return;
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y, width } = metaWindow.get_buffer_rect()
@@ -156,6 +183,7 @@ function slideOutRight(metaWindow) {
 }
 
 function slideInFromRight(metaWindow) {
+    if (!metaWindow) return;
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y } = metaWindow.get_buffer_rect()
@@ -174,6 +202,7 @@ function slideInFromRight(metaWindow) {
 }
 
 function slideInFromLeft(metaWindow) {
+    if (!metaWindow) return;
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y, width } = metaWindow.get_buffer_rect()
