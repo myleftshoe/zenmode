@@ -11,10 +11,6 @@ let metaWindows = []
 let focusedMetaWindow
 
 let activeWorkspaceChangedSid
-let chromeLeftButtonPressEventSid
-let chromeRightButtonPressEventSid
-let chromeTopButtonPressEventSid
-let chromeBottomButtonPressEventSid
 let activeWorkspaceWindowAddedSid
 let activeWorkspaceWindowRemovedSid
 let displayFocusWindowSid
@@ -31,10 +27,10 @@ function enable() {
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
     const chrome = createChrome({ top: 1, right: 1, bottom: 1, left: 1 })
-    chromeLeftButtonPressEventSid = chrome.left.connect('button-press-event', slideLeft)
-    chromeRightButtonPressEventSid = chrome.right.connect('button-press-event', slideRight)
-    chromeTopButtonPressEventSid = chrome.top.connect('button-press-event', prevWorkspace)
-    chromeBottomButtonPressEventSid = chrome.bottom.connect('button-press-event', nextWorkspace)
+    chrome.left.onClick = slideLeft
+    chrome.right.onClick = slideRight
+    chrome.top.onClick = prevWorkspace
+    chrome.bottom.onClick = nextWorkspace
     
     handleWorkspaceChange()
 
@@ -49,10 +45,6 @@ function disable() {
     signals.forEach(signal => signal.disconnect())
 
     global.workspace_manager.disconnect(activeWorkspaceChangedSid)
-    chrome.left.disconnect(chromeLeftButtonPressEventSid)
-    chrome.right.disconnect(chromeRightButtonPressEventSid)
-    chrome.top.disconnect(chromeTopButtonPressEventSid)
-    chrome.bottom.disconnect(chromeBottomButtonPressEventSid)
     activeWorkspace.disconnect(activeWorkspaceWindowAddedSid)
     activeWorkspace.disconnect(activeWorkspaceWindowRemovedSid)
     global.display.disconnect(displayFocusWindowSid)
