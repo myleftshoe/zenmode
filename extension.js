@@ -79,7 +79,22 @@ function addWindow(workspace, addedMetaWindow) {
     if (addedMetaWindow.is_client_decorated()) return;
     if (addedMetaWindow.get_window_type() > 1) return;
     addedMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
+    addedMetaWindow.connect('size-changed', handleWindowSizeChange)
     metaWindows.push(addedMetaWindow)
+
+}
+
+function handleWindowSizeChange(metaWindow) {
+    const mwi = metaWindows.indexOf(metaWindow)
+    if (metaWindow.get_maximized() < 2) {
+        removeWindow(activeWorkspace, metaWindow)
+        Main.activateWindow(metaWindows[mwi] || metaWindows[0] || undefined)
+        return
+    }
+    focusedMetaWindow = metaWindows[mwi] || metaWindows[mwi - 1] || metaWindows[0] || undefined
+    if (mwi < 0) {
+        metaWindows.push(metaWindow)
+    }    
 }
 
 function removeWindow(workspace, removedMetaWindow) {
