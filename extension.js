@@ -133,21 +133,21 @@ function slideRight() {
 
 function slideOutLeft(metaWindow) {
     const { width } = metaWindow.get_buffer_rect()
-    translateMetaWindow(metaWindow, { to: [0 - width] })
+    translateMetaWindow(metaWindow, { to: {x: 0 - width} })
 }
 
 function slideOutRight(metaWindow) {
-    translateMetaWindow(metaWindow, { to: [1920]})
+    translateMetaWindow(metaWindow, { to: {x: 1920}})
 }
 
 async function slideInFromRight(metaWindow) {
-    await translateMetaWindow(metaWindow, {from: [1920]})
+    await translateMetaWindow(metaWindow, {from: {x: 1920}})
     Main.activateWindow(metaWindow)
 }
 
 async function slideInFromLeft(metaWindow) {
     const { width } = metaWindow.get_buffer_rect()
-    await translateMetaWindow(metaWindow, {from: [0 - width]})
+    await translateMetaWindow(metaWindow, {from: {x: 0 - width}})
     Main.activateWindow(metaWindow)
 }
 
@@ -157,24 +157,24 @@ async function translateMetaWindow(metaWindow, {from, to, duration}) {
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y } = metaWindow.get_buffer_rect()
-    const startPosition = from && [from[0] || x, from[1] || y] || [x,y]
-    const endPosition = to && [to[0] || x, to[1] || y] || [x,y]
-    clone.set_position(startPosition[0], startPosition[1])    
+    const [x0, y0] = coalesceXY(from, [x, y])
+    const [x1, y1] = coalesceXY(to, [x, y])
+    clone.set_position(x0, y0)    
     Main.uiGroup.add_child(clone)
     metaWindowActor.hide()
-    await translateActor(clone, {from: startPosition, to: endPosition, duration})
+    await translateActor(clone, {from: [x0, y0], to: [x1, y1], duration})
     metaWindowActor.show()
     clone.destroy()
 }
 
 async function translateActor(actor, {from, to, duration = 350}) {
     const { x, y } = actor.get_position()
-    const startPosition = from && [from[0] || x, from[1] || y] || [x,y]
-    const endPosition = to && [to[0] || x, to[1] || y] || [x,y]
-    actor.set_position(startPosition[0], startPosition[1])
+    const [x0, y0] = coalesceXY(from, [x, y])
+    const [x1, y1] = coalesceXY(to, [x, y])
+    actor.set_position(x0, y0)
     actor.save_easing_state()
     actor.set_easing_duration(duration)
-    actor.set_position(endPosition[0], endPosition[1])
+    actor.set_position(x1, y1)
     return new Promise(resolve => {
         const signal = actor.connect('transition-stopped', () => {
             actor.restore_easing_state()
@@ -184,4 +184,12 @@ async function translateActor(actor, {from, to, duration = 350}) {
     })
 }
 
+// accepts point in form {x}, {y}, {x, y}, [x], [,y] or [x,y]
+// replaces missing values with x and y from second parameter [x, y]
+// returns point in form [x,y] 
+function coalesceXY(xy, [x, y]) {
+    if (Array.isArray(xy)) return [xy[0] || x, xy[1] || y]
+    if (typeof xy === 'object') return [xy.x || x, xy.y || y ]
+    return [x,y]
+}
 
