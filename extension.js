@@ -98,7 +98,11 @@ function handleWindowSizeChange(metaWindow) {
 }
 
 function removeWindow(workspace, removedMetaWindow) {
-    metaWindows = metaWindows.filter(metaWindow => metaWindow !== removedMetaWindow)
+    const mwi = metaWindows.indexOf(removedMetaWindow)
+    metaWindows.splice(mwi, 1)
+    // metaWindows = metaWindows.filter(metaWindow => metaWindow !== removedMetaWindow)
+    const nextMetaWindow = metaWindows[mwi]
+    slideInFromRight(nextMetaWindow)
 }
 
 function focusWindow(display, paramSpec) {
@@ -129,6 +133,7 @@ function slideRight() {
 }
 
 function slideOutLeft(metaWindow) {
+    if (!metaWindow) return;
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y, width } = metaWindow.get_buffer_rect()
@@ -146,6 +151,7 @@ function slideOutLeft(metaWindow) {
 }
 
 function slideOutRight(metaWindow) {
+    if (!metaWindow) return;
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y, width } = metaWindow.get_buffer_rect()
@@ -163,6 +169,7 @@ function slideOutRight(metaWindow) {
 }
 
 function slideInFromRight(metaWindow) {
+    if (!metaWindow) return;
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y } = metaWindow.get_buffer_rect()
@@ -181,6 +188,7 @@ function slideInFromRight(metaWindow) {
 }
 
 function slideInFromLeft(metaWindow) {
+    if (!metaWindow) return;
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y, width } = metaWindow.get_buffer_rect()
