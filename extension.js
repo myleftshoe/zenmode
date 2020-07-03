@@ -132,28 +132,22 @@ function slideRight() {
 }
 
 function slideOutLeft(metaWindow) {
-    if (!metaWindow) return;
-    const { y, width } = metaWindow.get_buffer_rect()
-    translateMetaWindow(metaWindow, { to: [0 - width, y] })
+    const { width } = metaWindow.get_buffer_rect()
+    translateMetaWindow(metaWindow, { to: [0 - width] })
 }
 
 function slideOutRight(metaWindow) {
-    if (!metaWindow) return;
-    const { y } = metaWindow.get_buffer_rect()
-    translateMetaWindow(metaWindow, { to: [1920, y]})
+    translateMetaWindow(metaWindow, { to: [1920]})
 }
 
 async function slideInFromRight(metaWindow) {
-    if (!metaWindow) return;
-    const { y } = metaWindow.get_buffer_rect()
-    await translateMetaWindow(metaWindow, {from: [1920, y]})
+    await translateMetaWindow(metaWindow, {from: [1920]})
     Main.activateWindow(metaWindow)
 }
 
 async function slideInFromLeft(metaWindow) {
-    if (!metaWindow) return;
-    const { y, width } = metaWindow.get_buffer_rect()
-    await translateMetaWindow(metaWindow, {from: [0 - width, y]})
+    const { width } = metaWindow.get_buffer_rect()
+    await translateMetaWindow(metaWindow, {from: [0 - width]})
     Main.activateWindow(metaWindow)
 }
 
@@ -163,8 +157,8 @@ async function translateMetaWindow(metaWindow, {from, to, duration}) {
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y } = metaWindow.get_buffer_rect()
-    const startPosition = from || [x,y]
-    const endPosition = to || [x,y]
+    const startPosition = from && [from[0] || x, from[1] || y] || [x,y]
+    const endPosition = to && [to[0] || x, to[1] || y] || [x,y]
     clone.set_position(startPosition[0], startPosition[1])    
     Main.uiGroup.add_child(clone)
     metaWindowActor.hide()
@@ -174,9 +168,9 @@ async function translateMetaWindow(metaWindow, {from, to, duration}) {
 }
 
 async function translateActor(actor, {from, to, duration = 350}) {
-    const currentPosition = actor.get_position()
-    const startPosition = from || [currentPosition.x, currentPosition.y]
-    const endPosition = to || [currentPosition.x, currentPosition.y]
+    const { x, y } = actor.get_position()
+    const startPosition = from && [from[0] || x, from[1] || y] || [x,y]
+    const endPosition = to && [to[0] || x, to[1] || y] || [x,y]
     actor.set_position(startPosition[0], startPosition[1])
     actor.save_easing_state()
     actor.set_easing_duration(duration)
