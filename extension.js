@@ -27,10 +27,10 @@ function enable() {
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
     const chrome = createChrome({ top: 1, right: 1, bottom: 1, left: 1 })
-    chrome.left.onClick = slideLeft
-    chrome.right.onClick = slideRight
-    chrome.top.onClick = prevWorkspace
-    chrome.bottom.onClick = nextWorkspace
+    chrome.left.onButtonPress = slideLeft
+    chrome.right.onButtonPress = slideRight
+    chrome.top.onButtonPress = prevWorkspace
+    chrome.bottom.onButtonPress = nextWorkspace
     
     handleWorkspaceChange()
 
