@@ -42,7 +42,6 @@ function enable() {
 
 function disable() {
     log(`${uuid} disable()`)
-    signals.forEach(signal => signal.disconnect())
 
     global.workspace_manager.disconnect(activeWorkspaceChangedSid)
     activeWorkspace.disconnect(activeWorkspaceWindowAddedSid)
@@ -134,74 +133,61 @@ function slideRight() {
 
 function slideOutLeft(metaWindow) {
     if (!metaWindow) return;
-    const metaWindowActor = metaWindow.get_compositor_private()
-    const clone = new Clutter.Clone({ source: metaWindowActor })
-    const { x, y, width } = metaWindow.get_buffer_rect()
-    clone.set_position(x, y)
-    Main.uiGroup.add_child(clone)
-    metaWindowActor.hide()
-    clone.save_easing_state()
-    clone.set_easing_duration(350)
-    clone.set_position(0 - width, y)
-    const signal = clone.connect('transition-stopped', () => {
-        clone.restore_easing_state()
-        clone.disconnect(signal)
-        clone.destroy()
-    })
+    const { y, width } = metaWindow.get_buffer_rect()
+    translateMetaWindow(metaWindow, { to: [0 - width, y] })
 }
 
 function slideOutRight(metaWindow) {
     if (!metaWindow) return;
-    const metaWindowActor = metaWindow.get_compositor_private()
-    const clone = new Clutter.Clone({ source: metaWindowActor })
-    const { x, y, width } = metaWindow.get_buffer_rect()
-    clone.set_position(x, y)
-    Main.uiGroup.add_child(clone)
-    metaWindowActor.hide()
-    clone.save_easing_state()
-    clone.set_easing_duration(350)
-    clone.set_position(1920, y)
-    const signal = clone.connect('transition-stopped', () => {
-        clone.restore_easing_state()
-        clone.disconnect(signal)
-        clone.destroy()
-    })
+    const { y } = metaWindow.get_buffer_rect()
+    translateMetaWindow(metaWindow, { to: [1920, y]})
 }
 
-function slideInFromRight(metaWindow) {
+async function slideInFromRight(metaWindow) {
+    if (!metaWindow) return;
+    const { y } = metaWindow.get_buffer_rect()
+    await translateMetaWindow(metaWindow, {from: [1920, y]})
+    Main.activateWindow(metaWindow)
+}
+
+async function slideInFromLeft(metaWindow) {
+    if (!metaWindow) return;
+    const { y, width } = metaWindow.get_buffer_rect()
+    await translateMetaWindow(metaWindow, {from: [0 - width, y]})
+    Main.activateWindow(metaWindow)
+}
+
+
+async function translateMetaWindow(metaWindow, {from, to, duration}) {
     if (!metaWindow) return;
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y } = metaWindow.get_buffer_rect()
-    clone.set_position(1920, y) //TODO
+    const startPosition = from || [x,y]
+    const endPosition = to || [x,y]
+    clone.set_position(startPosition[0], startPosition[1])    
     Main.uiGroup.add_child(clone)
-    clone.save_easing_state()
-    clone.set_easing_duration(350)
-    clone.set_position(x, y)
-    const signal = clone.connect('transition-stopped', () => {
-        clone.restore_easing_state()
-        clone.disconnect(signal)
-        clone.destroy()
-        metaWindowActor.show()
-        Main.activateWindow(metaWindow)
+    metaWindowActor.hide()
+    await translateActor(clone, {from: startPosition, to: endPosition, duration})
+    metaWindowActor.show()
+    clone.destroy()
+}
+
+async function translateActor(actor, {from, to, duration = 350}) {
+    const currentPosition = actor.get_position()
+    const startPosition = from || [currentPosition.x, currentPosition.y]
+    const endPosition = to || [currentPosition.x, currentPosition.y]
+    actor.set_position(startPosition[0], startPosition[1])
+    actor.save_easing_state()
+    actor.set_easing_duration(duration)
+    actor.set_position(endPosition[0], endPosition[1])
+    return new Promise(resolve => {
+        const signal = actor.connect('transition-stopped', () => {
+            actor.restore_easing_state()
+            actor.disconnect(signal)
+            resolve('complete')
+        })
     })
 }
 
-function slideInFromLeft(metaWindow) {
-    if (!metaWindow) return;
-    const metaWindowActor = metaWindow.get_compositor_private()
-    const clone = new Clutter.Clone({ source: metaWindowActor })
-    const { x, y, width } = metaWindow.get_buffer_rect()
-    clone.set_position(0 - width, y) //TODO
-    Main.uiGroup.add_child(clone)
-    clone.save_easing_state()
-    clone.set_easing_duration(350)
-    clone.set_position(x, y)
-    const signal = clone.connect('transition-stopped', () => {
-        clone.restore_easing_state()
-        clone.disconnect(signal)
-        clone.destroy()
-        metaWindowActor.show()
-        Main.activateWindow(metaWindow)
-    })
-}
+
