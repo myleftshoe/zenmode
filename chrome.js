@@ -17,7 +17,7 @@ var Chrome = GObject.registerClass({},
                 reactive: true,
                 ...props,
             })
-            this._signals = []
+            this._signals = new Map()
             Main.layoutManager.addChrome(this, { affectsStruts })
             this._connect('enter-event', () => {
                 global.display.set_cursor(Meta.Cursor.POINTING_HAND)
@@ -26,29 +26,42 @@ var Chrome = GObject.registerClass({},
             //     global.display.set_cursor(Meta.Cursor.DEFAULT);
             // });
         }
-        _connect(signal, callback) {
-            this._signals.push(super.connect(signal, callback))
+        _connect(signal, callback, object) {
+            let sid
+            if (object) 
+                sid = object.connect(signal, callback) 
+            else 
+                sid = super.connect(signal, callback)
+            this._signals.set(sid, object)
+            return sid
         }
-        connect(signal, callback) {
-            this._connect(signal, callback)
+        _disconnect(sid) {
+            const object = this._signals.get(sid)
+            if (object)
+                object.disconnect(sid)
+            else 
+                super.disconnect(sid)
+            this._signals.delete(sid)
+        }
+        connect(signal, callback, object) {
+            return this._connect(signal, callback, object)
         }
         disconnect(sid) {
-            super.disconnect(sid)
-            this._signals = this._signals.filter(id => id !== sid)
+            this._disconnect(sid)
         }
         destroy() {
-            this._signals.forEach(sid => super.disconnect(sid))
-            this._signals = []
+            this._signals.forEach(this._disconnect)
+            this._signals.clear()
         }
         set onClick(callback) {
             if (typeof callback !== 'function') return;
             this.set_reactive(true)
             const clickAction = new Clutter.ClickAction()
-            clickAction.connect('clicked', callback)
+            this._connect('clicked', callback, clickAction)
             this.add_action(clickAction)
         }
         set onButtonPress(callback) {
-            this.connect('button-press-event', callback)
+            this._connect('button-press-event', callback)
         }
     }
 )
