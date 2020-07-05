@@ -17,7 +17,7 @@ var Signals = class Signals {
     destroy() {
         this.signals.forEach(this._disconnect)
         this.signals.clear()
-    }    
+    }
 }
 
 function withSignals(SuperClass) {

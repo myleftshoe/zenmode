@@ -21,12 +21,6 @@ const _Chrome = GObject.registerClass({},
             })
             this.signals = new Signals()
             Main.layoutManager.addChrome(this, { affectsStruts })
-            // this.signals.connect(this, 'enter-event', () => {
-            //     global.display.set_cursor(Meta.Cursor.POINTING_HAND)
-            // })
-            // this.connect('leave-event', () => {
-            //     global.display.set_cursor(Meta.Cursor.DEFAULT);
-            // });
         }
         set onClick(callback) {
             if (typeof callback !== 'function') return;
@@ -35,31 +29,70 @@ const _Chrome = GObject.registerClass({},
             this.signals.connect(clickAction, 'clicked', callback)
             this.add_action(clickAction)
         }
-        set onButtonPress(callback) {
-            this.signals.connect(this, 'button-press-event', callback)
-        }
     }
 )
 
-var Chrome = withSignals(_Chrome)
 
-var addTop = size => new Chrome({
+function eventize(object, signalName, eventName) {
+    return Object.defineProperty(object.prototype, eventName, {
+        set(callback) {
+            this.connect(signalName, callback)
+        }
+    })
+}
+
+
+function composeChrome() {
+    const ComposedChrome = withSignals(_Chrome)
+    eventize(ComposedChrome, 'button-press-event', 'onButtonPress')
+    return ComposedChrome
+}
+
+const Chrome = composeChrome()
+
+
+function createEdge(...props) {
+    const edge = new Chrome(...props)
+    edge.connect('enter-event', () => {
+        global.display.set_cursor(Meta.Cursor.POINTING_HAND)
+    })
+    return edge
+}
+
+// ChromeWithSignals.prototype.addAction = function() {log('ddddddddddd')}
+// function withButtonPress(SuperClass) {
+//     return GObject.registerClass({}, class WithButtonPress extends SuperClass {
+//         _init(...props) {
+//             super._init(...props)
+//             this.connect('enter-event', () => {
+//                 global.display.set_cursor(Meta.Cursor.POINTING_HAND)
+//             })
+//         }
+//         set onButtonPress(callback) {
+//             this.connect('button-press-event', callback)
+//         }
+//     })
+// }
+
+// var Chrome = withButtonPress(ChromeWithSignals)
+
+var addTop = size => createEdge({
     height: size,
     width: monitor.width,
 })
 
-var addBottom = size => new Chrome({
+var addBottom = size => createEdge({
     height: size,
     width: monitor.width,
     y: monitor.height - size,
 })
 
-var addLeft = size => new Chrome({
+var addLeft = size => createEdge({
     height: monitor.height,
     width: size,
 })
 
-var addRight = size => new Chrome({
+var addRight = size => createEdge({
     height: monitor.height,
     width: size,
     x: monitor.width - size,
@@ -68,6 +101,7 @@ var addRight = size => new Chrome({
 function createChrome(size) {
     if (typeof size !== 'object') return;
     const top = size.top && addTop(size.top)
+    // top.addAction()
     const bottom = size.bottom && addBottom(size.bottom)
     const left = size.left && addLeft(size.left)
     const right = size.right && addRight(size.right)
