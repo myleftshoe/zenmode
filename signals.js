@@ -1,6 +1,6 @@
 const { GObject } = imports.gi
 
-class Signals {
+var Signals = class Signals {
     constructor() {
         this.signals = new Map()
     }
@@ -20,7 +20,7 @@ class Signals {
     }    
 }
 
-function WithSignals(SuperClass) {
+function withSignals(SuperClass) {
     return GObject.registerClass({}, class WithSignals extends SuperClass {
         _init(...props) {
             super._init(...props)

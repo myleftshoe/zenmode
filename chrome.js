@@ -2,6 +2,7 @@ const Main = imports.ui.main
 const { GObject, Clutter, Meta, St } = imports.gi
 
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
+const { Signals, withSignals } = Extension.imports.signals
 
 const style_class = 'chrome'
 const affectsStruts = true
@@ -10,29 +11,8 @@ let primaryMonitor = global.display.get_current_monitor()
 let monitor = global.display.get_monitor_geometry(primaryMonitor)
 
 
-class Signals {
-    constructor() {
-        this.signals = new Map()
-    }
-    connect(object, signal, callback) {
-        const sid = GObject.signal_connect(object, signal, callback) 
-        this.signals.set(sid, object)
-        return sid
-    }
-    disconnect(sid) {
-        const object = this._signals.get(sid)
-        object.disconnect(sid)
-        this.signals.delete(sid)
-    }
-    destroy() {
-        this.signals.forEach(this._disconnect)
-        this.signals.clear()
-    }    
-}
-
-
-var Chrome = GObject.registerClass({},
-    class Chrome extends St.Widget {
+const _Chrome = GObject.registerClass({},
+    class _Chrome extends St.Widget {
         _init(props) {
             super._init({
                 style_class,
@@ -61,6 +41,8 @@ var Chrome = GObject.registerClass({},
     }
 )
 
+var Chrome = withSignals(_Chrome)
+
 var addTop = size => new Chrome({
     height: size,
     width: monitor.width,
@@ -77,13 +59,7 @@ var addLeft = size => new Chrome({
     width: size,
 })
 
-// var addRight = size => new (WithSignals(Chrome))({
-//     height: monitor.height,
-//     width: size,
-//     x: monitor.width - size,
-// })
-
-var addRight = size => new ChromeWithSignals({
+var addRight = size => new Chrome({
     height: monitor.height,
     width: size,
     x: monitor.width - size,
@@ -98,24 +74,3 @@ function createChrome(size) {
     return { top, bottom, left, right }
 }
 
-
-var ChromeWithSignals = WithSignals(Chrome)
-
-function WithSignals(SuperClass) {
-    return GObject.registerClass({}, class WithSignals extends SuperClass {
-        _init(...props) {
-            super._init(...props)
-            this.signals = new Signals()
-        }
-        connect(signal, callback) {
-            this.signals.connect(this, signal, callback)
-        }
-        disconnect(sid) {
-            this.signals.disconnect(sid)
-        }
-        destroy() {
-            this.signals.destroy()
-            return super.destroy()
-        }
-    })
-}
