@@ -10,12 +10,12 @@ var Signals = class Signals {
         return sid
     }
     disconnect(sid) {
-        const object = this._signals.get(sid)
+        const object = this.signals.get(sid)
         object.disconnect(sid)
         this.signals.delete(sid)
     }
     destroy() {
-        this.signals.forEach(this._disconnect)
+        this.signals.forEach(this.disconnect)
         this.signals.clear()
     }    
 }
@@ -50,7 +50,7 @@ function defineListener(object, eventName, signalName) {
 }
 
 function defineActionListener(object, actionName, eventName, signalName) {
-    const property = Object.defineProperty(object.prototype, eventName, {
+    return Object.defineProperty(object.prototype, eventName, {
         set(callback) {
             if (typeof callback !== 'function') return;
             this.set_reactive(true)
