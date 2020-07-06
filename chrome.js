@@ -19,7 +19,6 @@ const _Chrome = GObject.registerClass({},
                 reactive: true,
                 ...props,
             })
-            this.signals = new Signals()
             Main.layoutManager.addChrome(this, { affectsStruts })
         }
     }

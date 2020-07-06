@@ -22,11 +22,13 @@ var Signals = class Signals {
 
 function withSignals(SuperClass) {
     return GObject.registerClass({}, class WithSignals extends SuperClass {
-        _init(...props) {
-            super._init(...props)
-            this.signals = new Signals()
-        }
+        // _init(...props) {
+        //     super._init(...props)
+        //     this.signals = new Signals()
+        // }
         connect(signal, callback) {
+            if (!this.signals)
+                this.signals = new Signals()
             this.signals.connect(this, signal, callback)
         }
         disconnect(sid) {
