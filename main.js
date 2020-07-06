@@ -54,7 +54,6 @@ function handleWorkspaceChange() {
 
     activeWorkspace = global.workspace_manager.get_active_workspace()
     metaWindows = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
-    // focusedMetaWindow = metaWindows[0]    
 
     activeWorkspaceWindowAddedSid = signals.connect(activeWorkspace, 'window-added', addWindow)
     activeWorkspaceWindowRemovedSid = signals.connect(activeWorkspace, 'window-removed', removeWindow)
