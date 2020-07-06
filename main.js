@@ -12,9 +12,6 @@ let metaWindows = []
 let focusedMetaWindow
 let chrome
 
-let activeWorkspaceWindowAddedSid
-let activeWorkspaceWindowRemovedSid
-
 function start() {
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
@@ -48,17 +45,14 @@ function nextWorkspace() {
 }
 
 function handleWorkspaceChange() {
-
-    signals.disconnect(activeWorkspaceWindowAddedSid)
-    signals.disconnect(activeWorkspaceWindowRemovedSid)
+    signals.disconnectObject(activeWorkspace)
 
     activeWorkspace = global.workspace_manager.get_active_workspace()
     metaWindows = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
 
-    activeWorkspaceWindowAddedSid = signals.connect(activeWorkspace, 'window-added', addWindow)
-    activeWorkspaceWindowRemovedSid = signals.connect(activeWorkspace, 'window-removed', removeWindow)
+    signals.connect(activeWorkspace, 'window-added', addWindow)
+    signals.connect(activeWorkspace, 'window-removed', removeWindow)
 }
-
 
 function addWindow(workspace, addedMetaWindow) {
     if (addedMetaWindow.is_client_decorated()) return;
@@ -66,7 +60,6 @@ function addWindow(workspace, addedMetaWindow) {
     addedMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
     signals.connect(addedMetaWindow, 'size-changed', handleWindowSizeChange)
     metaWindows.push(addedMetaWindow)
-
 }
 
 function handleWindowSizeChange(metaWindow) {
@@ -85,7 +78,6 @@ function handleWindowSizeChange(metaWindow) {
 function removeWindow(workspace, removedMetaWindow) {
     const mwi = metaWindows.indexOf(removedMetaWindow)
     metaWindows.splice(mwi, 1)
-    // metaWindows = metaWindows.filter(metaWindow => metaWindow !== removedMetaWindow)
     const nextMetaWindow = metaWindows[mwi]
     slideInFromRight(nextMetaWindow)
 }

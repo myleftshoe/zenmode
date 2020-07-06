@@ -15,6 +15,11 @@ var Signals = class Signals {
         GObject.signal_handler_disconnect(object, sid)
         this.signals.delete(sid)
     }
+    disconnectObject(object) {
+        [...this.signals.entries()]
+            .filter((sid, value) => value.object === object)
+            .map(sid => disconnect(sid))
+    }
     destroy() {
         this.signals.forEach(({ object }, sid) => {
             GObject.signal_handler_disconnect(object, sid)
