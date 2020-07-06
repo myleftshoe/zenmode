@@ -1,48 +1,41 @@
-const { GObject, Clutter } = imports.gi
+const { GObject } = imports.gi
 
-var Signals = class Signals {
-    constructor() {
-        this.signals = new Map()
-    }
-    connect(object, signal, callback) {
-        const sid = GObject.signal_connect(object, signal, callback) 
-        this.signals.set(sid, object)
-        return sid
-    }
-    disconnect(sid) {
-        const object = this.signals.get(sid)
-        object.disconnect(sid)
-        this.signals.delete(sid)
-    }
-    destroy() {
-        this.signals.forEach((object, sid) => object.disconnect(sid))
-        this.signals.clear()
-    }    
+const signals = new Map()
+
+function connect(object, signal, callback) {
+    const sid = GObject.signal_connect(object, signal, callback) 
+    const objectSignals = signals.get(object) || new Map()
+    signals.set(object, objectSignals.set(sid, signal))
+    return sid
 }
 
-function withSignals(SuperClass) {
-    return GObject.registerClass({}, class WithSignals extends SuperClass {
-        _init(...props) {
-            this.signals = new Signals()
-            super._init(...props)
-        }
-        connect(signal, callback) {
-            this.signals.connect(this, signal, callback)
-        }
-        disconnect(sid) {
-            this.signals.disconnect(sid)
-        }
-        destroy() {
-            this.signals.destroy()
-            return super.destroy()
-        }
-    })
+function disconnect(object, sid) {
+    object.disconnect(sid)
+    signals.get(object).delete(sid)
 }
 
-function defineListener(object, eventName, signalName) {
-    return Object.defineProperty(object.prototype, eventName, {
+function disconnectObject(object) {
+    signals.get(object).forEach((signal, sid) => object.disconnect(signal))
+    signals.delete(object)
+}
+
+function clear() {
+    signals.forEach((signals, object) => disconnectObject(object))
+    signals.clear()
+}    
+
+function toString(object, sid) {
+    return signals.get(object).get(sid)
+}
+
+function list(object) {
+    signals.get(object).forEach((signal, sid) => log(object, sid, signal))
+}
+
+function defineListener(object, name, signal) {
+    return Object.defineProperty(object.prototype, name, {
         set(callback) {
-            this.connect(signalName, callback)
+            connect(object, signal, callback)
         }
     })
 }
@@ -54,7 +47,7 @@ function defineListener(object, eventName, signalName) {
 //             this.set_reactive(true)
 //             const action = new Clutter[actionName]()
 //             this.add_action(action)
-//             this.signals.connect(action, signalName, callback)
+//             signals.connect(action, signalName, callback)
 //         }
 //     })
 // }
