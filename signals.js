@@ -1,4 +1,4 @@
-const { GObject } = imports.gi
+const { GObject, Clutter } = imports.gi
 
 var Signals = class Signals {
     constructor() {
@@ -17,7 +17,7 @@ var Signals = class Signals {
     destroy() {
         this.signals.forEach(this._disconnect)
         this.signals.clear()
-    }
+    }    
 }
 
 function withSignals(SuperClass) {
@@ -36,5 +36,28 @@ function withSignals(SuperClass) {
             this.signals.destroy()
             return super.destroy()
         }
+        get _signals() { return this.signals.signals }
+
     })
 }
+
+function defineListener(object, eventName, signalName) {
+    return Object.defineProperty(object.prototype, eventName, {
+        set(callback) {
+            this.connect(signalName, callback)
+        }
+    })
+}
+
+function defineActionListener(object, actionName, eventName, signalName) {
+    const property = Object.defineProperty(object.prototype, eventName, {
+        set(callback) {
+            if (typeof callback !== 'function') return;
+            this.set_reactive(true)
+            const action = new Clutter[actionName]()
+            this.add_action(action)
+            this.signals.connect(action, signalName, callback)
+        }
+    })
+}
+

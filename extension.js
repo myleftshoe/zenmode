@@ -2,7 +2,7 @@ const { Clutter, Meta, GObject } = imports.gi
 const Main = imports.ui.main
 const Signals = imports.signals
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
-const { createChrome } = Extension.imports.chrome
+const { addChrome } = Extension.imports.chrome
 
 log('ffffffffffffffffffff')
 log('ffffffffffffffffffff')
@@ -45,7 +45,7 @@ function enable() {
 
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
-    const chrome = createChrome({ top: 1, right: 1, bottom: 1, left: 1 })
+    const chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = slideLeft
     chrome.right.onButtonPress = slideRight
     chrome.top.onButtonPress = prevWorkspace
