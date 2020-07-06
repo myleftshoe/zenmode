@@ -15,7 +15,7 @@ var Signals = class Signals {
         this.signals.delete(sid)
     }
     destroy() {
-        this.signals.forEach(this.disconnect)
+        this.signals.forEach((object, sid) => object.disconnect(sid))
         this.signals.clear()
     }    
 }

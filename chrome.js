@@ -2,7 +2,7 @@ const Main = imports.ui.main
 const { GObject, Clutter, Meta, St } = imports.gi
 
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
-const { Signals, withSignals, defineListener, defineActionListener } = Extension.imports.signals
+const { Signals, withSignals, defineListener, /*defineActionListener*/ } = Extension.imports.signals
 
 const style_class = 'chrome'
 const affectsStruts = true

@@ -4,16 +4,18 @@ const Signals = imports.signals
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 
+const { Signals: SignalsManager } = Extension.imports.signals
+
+const signals = new SignalsManager()
+
 const uuid = Extension.metadata.uuid
 
 let activeWorkspace
 let metaWindows = []
 let focusedMetaWindow
 
-let activeWorkspaceChangedSid
 let activeWorkspaceWindowAddedSid
 let activeWorkspaceWindowRemovedSid
-let displayFocusWindowSid
 
 function init() {
     log(`***************************************************************`)
@@ -34,20 +36,15 @@ function enable() {
     
     handleWorkspaceChange()
 
-    activeWorkspaceChangedSid = global.workspace_manager.connect('active-workspace-changed', handleWorkspaceChange)
-    displayFocusWindowSid = global.display.connect('notify::focus-window', focusWindow)
+    signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
+    signals.connect(global.display, 'notify::focus-window', focusWindow)
 
     Extension.loaded = true
 }
 
 function disable() {
     log(`${uuid} disable()`)
-
-    global.workspace_manager.disconnect(activeWorkspaceChangedSid)
-    activeWorkspace.disconnect(activeWorkspaceWindowAddedSid)
-    activeWorkspace.disconnect(activeWorkspaceWindowRemovedSid)
-    global.display.disconnect(displayFocusWindowSid)
-
+    signals.destroy()
     Extension.loaded = false
 }
 
@@ -62,15 +59,15 @@ function nextWorkspace() {
 
 function handleWorkspaceChange() {
 
-    activeWorkspaceWindowAddedSid && activeWorkspace.disconnect(activeWorkspaceWindowAddedSid)
-    activeWorkspaceWindowRemovedSid && activeWorkspace.disconnect(activeWorkspaceWindowRemovedSid)
+    activeWorkspaceWindowAddedSid && signals.disconnect(activeWorkspaceWindowAddedSid)
+    activeWorkspaceWindowRemovedSid && signals.disconnect(activeWorkspaceWindowRemovedSid)
 
     activeWorkspace = global.workspace_manager.get_active_workspace()
     metaWindows = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
     // focusedMetaWindow = metaWindows[0]    
 
-    activeWorkspaceChangedSid = activeWorkspace.connect('window-added', addWindow)
-    activeWorkspaceWindowRemovedSid = activeWorkspace.connect('window-removed', removeWindow)
+    activeWorkspaceWindowAddedSid = signals.connect(activeWorkspace, 'window-added', addWindow)
+    activeWorkspaceWindowRemovedSid = signals.connect(activeWorkspace, 'window-removed', removeWindow)
 }
 
 
@@ -78,7 +75,7 @@ function addWindow(workspace, addedMetaWindow) {
     if (addedMetaWindow.is_client_decorated()) return;
     if (addedMetaWindow.get_window_type() > 1) return;
     addedMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
-    addedMetaWindow.connect('size-changed', handleWindowSizeChange)
+    signals.connect(addedMetaWindow, 'size-changed', handleWindowSizeChange)
     metaWindows.push(addedMetaWindow)
 
 }
