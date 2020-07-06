@@ -5,19 +5,24 @@ var Signals = class Signals {
         this.signals = new Map()
     }
     connect(object, signal, callback) {
-        const sid = GObject.signal_connect(object, signal, callback) 
-        this.signals.set(sid, object)
+        const sid = GObject.signal_connect(object, signal, callback)
+        this.signals.set(sid, { object, signal })
         return sid
     }
     disconnect(sid) {
-        const object = this.signals.get(sid)
-        object.disconnect(sid)
+        const { object } = this.signals.get(sid)
+        GObject.signal_handler_disconnect(object, sid)
         this.signals.delete(sid)
     }
     destroy() {
-        this.signals.forEach((object, sid) => object.disconnect(sid))
+        this.signals.forEach(({ object }, sid) => {
+            GObject.signal_handler_disconnect(object, sid)
+        })
         this.signals.clear()
-    }    
+    }
+    list() {
+        this.signals.forEach(({ object, signal }, sid) => log(object, sid, signal))
+    }
 }
 
 function withSignals(SuperClass) {
@@ -34,6 +39,7 @@ function withSignals(SuperClass) {
         }
         destroy() {
             this.signals.destroy()
+            this.signals.list()
             return super.destroy()
         }
     })

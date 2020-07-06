@@ -13,6 +13,7 @@ const uuid = Extension.metadata.uuid
 let activeWorkspace
 let metaWindows = []
 let focusedMetaWindow
+let chrome
 
 let activeWorkspaceWindowAddedSid
 let activeWorkspaceWindowRemovedSid
@@ -28,7 +29,7 @@ function enable() {
 
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
-    const chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
+    chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = slideLeft
     chrome.right.onButtonPress = slideRight
     chrome.top.onButtonPress = prevWorkspace
@@ -44,7 +45,12 @@ function enable() {
 
 function disable() {
     log(`${uuid} disable()`)
+    signals.list()
     signals.destroy()
+    chrome.left.destroy()
+    chrome.right.destroy()
+    chrome.top.destroy()
+    chrome.bottom.destroy()
     Extension.loaded = false
 }
 
