@@ -49,8 +49,8 @@ function nextWorkspace() {
 
 function handleWorkspaceChange() {
 
-    activeWorkspaceWindowAddedSid && signals.disconnect(activeWorkspaceWindowAddedSid)
-    activeWorkspaceWindowRemovedSid && signals.disconnect(activeWorkspaceWindowRemovedSid)
+    signals.disconnect(activeWorkspaceWindowAddedSid)
+    signals.disconnect(activeWorkspaceWindowRemovedSid)
 
     activeWorkspace = global.workspace_manager.get_active_workspace()
     metaWindows = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)

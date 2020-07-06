@@ -10,7 +10,8 @@ var Signals = class Signals {
         return sid
     }
     disconnect(sid) {
-        const { object } = this.signals.get(sid)
+        const { object } = this.signals.get(sid) || {}
+        if (!object) return
         GObject.signal_handler_disconnect(object, sid)
         this.signals.delete(sid)
     }
