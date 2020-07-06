@@ -4,25 +4,6 @@ const Signals = imports.signals
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 
-log('ffffffffffffffffffff')
-log('ffffffffffffffffffff')
-log('ffffffffffffffffffff')
-log('ffffffffffffffffffff')
-log('ffffffffffffffffffff')
-log('ffffffffffffffffffff')
-log('ffffffffffffffffffff')
-log(Object.getOwnPropertyNames(GObject))
-log(GObject.signal_connect)
-// log(Signals._connect)
-// log(Signals._disconnect)
-// log(Signals._disconnectAll)
-// log(Signals.WithSignals)
-// log(Signals.addSignalMethods)
-// log(Signals._emit)
-// log(Signals)
-// log(Signals._addSignalMethod)
-
-log('ffffffffffffffffffff')
 const uuid = Extension.metadata.uuid
 
 let activeWorkspace
