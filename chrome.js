@@ -21,6 +21,14 @@ const _Chrome = GObject.registerClass({},
             })
             Main.layoutManager.addChrome(this, { affectsStruts })
         }
+        hide() {
+            this.set_reactive(false)
+            this.add_style_pseudo_class('disabled')
+        }
+        show() {
+            this.set_reactive(true)
+            this.remove_style_pseudo_class('disabled')
+        }
     }
 )
 

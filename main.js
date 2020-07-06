@@ -12,6 +12,9 @@ let metaWindows = []
 let focusedMetaWindow
 let chrome
 
+let hideChromeSid
+let showChromeSid
+
 function start() {
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
@@ -20,6 +23,9 @@ function start() {
     chrome.right.onButtonPress = slideRight
     chrome.top.onButtonPress = prevWorkspace
     chrome.bottom.onButtonPress = nextWorkspace
+
+    hideChromeSid = Main.overview.connect('shown', hideChrome);
+    showChromeSid = Main.overview.connect('hidden', showChrome);
     
     handleWorkspaceChange()
 
@@ -27,8 +33,19 @@ function start() {
     signals.connect(global.display, 'notify::focus-window', focusWindow)
 }
 
+function hideChrome() {
+    Object.getOwnPropertyNames(chrome).map(edge => chrome[edge].hide())
+}
+
+function showChrome() {
+    Object.getOwnPropertyNames(chrome).map(edge => chrome[edge].show())
+}
+
+
 function stop() {
     signals.destroy()
+    Main.overview.disconnect(hideChromeSid);
+    Main.overview.disconnect(showChromeSid);
     chrome.left.destroy()
     chrome.right.destroy()
     chrome.top.destroy()
