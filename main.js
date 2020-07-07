@@ -15,6 +15,8 @@ let chrome
 let hideChromeSid
 let showChromeSid
 
+const now = () => global.get_current_time()
+
 function start() {
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
@@ -82,8 +84,10 @@ function addWindow(workspace, addedMetaWindow) {
 function handleWindowSizeChange(metaWindow) {
     const mwi = metaWindows.indexOf(metaWindow)
     if (metaWindow.get_maximized() < 2) {
-        removeWindow(activeWorkspace, metaWindow)
-        Main.activateWindow(metaWindows[mwi] || metaWindows[0] || undefined)
+        // Not Maximized or maximized horizontally
+        metaWindow.
+        // removeWindow(metaWindow)
+        // Main.activateWindow(metaWindows[mwi] || metaWindows[0] || undefined)
         return
     }
     focusedMetaWindow = metaWindows[mwi] || metaWindows[mwi - 1] || metaWindows[0] || undefined
@@ -92,7 +96,7 @@ function handleWindowSizeChange(metaWindow) {
     }    
 }
 
-function removeWindow(workspace, removedMetaWindow) {
+function removeWindow(removedMetaWindow) {
     const mwi = metaWindows.indexOf(removedMetaWindow)
     metaWindows.splice(mwi, 1)
     const nextMetaWindow = metaWindows[mwi]
@@ -137,13 +141,15 @@ function slideOutRight(metaWindow) {
 
 async function slideInFromRight(metaWindow) {
     await translateMetaWindow(metaWindow, {from: {x: 1920}})
-    Main.activateWindow(metaWindow)
+    // Main.activateWindow(metaWindow)
+    metaWindow.activate(now())
 }
 
 async function slideInFromLeft(metaWindow) {
     const { width } = metaWindow.get_buffer_rect()
     await translateMetaWindow(metaWindow, {from: {x: 0 - width}})
-    Main.activateWindow(metaWindow)
+    // Main.activateWindow(metaWindow)
+    metaWindow.activate(now())
 }
 
 
