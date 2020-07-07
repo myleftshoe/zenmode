@@ -36,11 +36,13 @@ function start() {
 }
 
 function hideChrome() {
-    Object.getOwnPropertyNames(chrome).map(edge => chrome[edge].hide())
+    chrome.left.hide()
+    chrome.right.hide()
 }
 
 function showChrome() {
-    Object.getOwnPropertyNames(chrome).map(edge => chrome[edge].show())
+    chrome.left.show()
+    chrome.right.show()
 }
 
 
