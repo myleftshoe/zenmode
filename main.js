@@ -74,7 +74,8 @@ function handleWorkspaceChange() {
 }
 
 function addWindow(workspace, addedMetaWindow) {
-    if (addedMetaWindow.is_client_decorated()) return;
+    log('add window`')
+    // if (addedMetaWindow.is_client_decorated()) return;
     if (addedMetaWindow.get_window_type() > 1) return;
     addedMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
     signals.connect(addedMetaWindow, 'size-changed', handleWindowSizeChange)
@@ -104,9 +105,10 @@ function removeWindow(removedMetaWindow) {
 }
 
 function focusWindow(display, paramSpec) {
+    log('focuswindow')
     const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
-    if (tabList[0].is_client_decorated()) return;
     if (!tabList[0]) return;
+    // if (tabList[0].is_client_decorated()) return;
     metaWindows.forEach((metaWindow) => metaWindow.get_compositor_private().hide())
     focusedMetaWindow = tabList[0]
     focusedMetaWindow.get_compositor_private().show()
@@ -131,21 +133,25 @@ function slideRight() {
 }
 
 function slideOutLeft(metaWindow) {
+    if (!metaWindow) return
     const { width } = metaWindow.get_buffer_rect()
     translateMetaWindow(metaWindow, { to: {x: 0 - width} })
 }
 
 function slideOutRight(metaWindow) {
+    if (!metaWindow) return
     translateMetaWindow(metaWindow, { to: {x: 1920}})
 }
 
 async function slideInFromRight(metaWindow) {
+    if (!metaWindow) return
     await translateMetaWindow(metaWindow, {from: {x: 1920}})
     // Main.activateWindow(metaWindow)
     metaWindow.activate(now())
 }
 
 async function slideInFromLeft(metaWindow) {
+    if (!metaWindow) return
     const { width } = metaWindow.get_buffer_rect()
     await translateMetaWindow(metaWindow, {from: {x: 0 - width}})
     // Main.activateWindow(metaWindow)
