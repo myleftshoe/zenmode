@@ -1,4 +1,4 @@
-const Signals = imports.signals
+const { GLib } = imports.gi
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { start, stop } = Extension.imports.main
 
@@ -7,18 +7,15 @@ const uuid = Extension.metadata.uuid
 function init() {
     log(`***************************************************************`)
     log(`${uuid} init()`)
-    Signals.addSignalMethods(Extension)
 }
 
 function enable() {
     log(`${uuid} enable()`)
-    start()
-    Extension.loaded = true
+    GLib.idle_add(GLib.PRIORITY_LOW, start)
 }
 
 function disable() {
     log(`${uuid} disable()`)
     stop()
-    Extension.loaded = false
 }
 
