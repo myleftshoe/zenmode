@@ -1,4 +1,4 @@
-const { Clutter, Meta, GObject } = imports.gi
+const { Clutter, Meta, GObject, GLib } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
@@ -8,14 +8,15 @@ const { Signals: SignalsManager } = Extension.imports.signals
 const signals = new SignalsManager()
 
 let activeWorkspace
-let metaWindows = []
 let focusedMetaWindow
 let chrome
 
 let hideChromeSid
 let showChromeSid
 
-const now = () => global.get_current_time()
+Object.defineProperty(this, 'now', { 
+    get() { return global.get_current_time() }
+})
 
 function start() {
     activeWorkspace = global.workspace_manager.get_active_workspace()
@@ -32,7 +33,7 @@ function start() {
     handleWorkspaceChange()
 
     signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
-    signals.connect(global.display, 'notify::focus-window', focusWindow)
+    // signals.connect(global.display, 'notify::focus-window', focusWindow)
 }
 
 function hideChrome() {
@@ -58,106 +59,100 @@ function stop() {
 }
 
 function prevWorkspace() {
-    activeWorkspace.get_neighbor(Meta.MotionDirection.UP).activate(global.get_current_time());
+    activeWorkspace.get_neighbor(Meta.MotionDirection.UP).activate(now);
 }
 
 function nextWorkspace() {
-    activeWorkspace.get_neighbor(Meta.MotionDirection.DOWN).activate(global.get_current_time());
+    activeWorkspace.get_neighbor(Meta.MotionDirection.DOWN).activate(now);
 }
 
 function handleWorkspaceChange() {
     signals.disconnectObject(activeWorkspace)
 
     activeWorkspace = global.workspace_manager.get_active_workspace()
-    metaWindows = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
 
     signals.connect(activeWorkspace, 'window-added', addWindow)
-    signals.connect(activeWorkspace, 'window-removed', removeWindow)
+    // signals.connect(activeWorkspace, 'window-removed', removeWindow)
 }
 
-function addWindow(workspace, addedMetaWindow) {
-    log('add window`')
-    // if (addedMetaWindow.is_client_decorated()) return;
-    if (addedMetaWindow.get_window_type() > 1) return;
-    addedMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
-    signals.connect(addedMetaWindow, 'size-changed', handleWindowSizeChange)
-    metaWindows.push(addedMetaWindow)
+async function addWindow(workspace, metaWindow) {
+    log('add window')
+    // if (metaWindow.is_client_decorated()) return;
+    if (metaWindow.get_window_type() > 1) return;
+    metaWindow.maximize(Meta.MaximizeFlags.BOTH)
+    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
+    await slideOutRight(tabList[1])
 }
 
-function handleWindowSizeChange(metaWindow) {
-    const mwi = metaWindows.indexOf(metaWindow)
-    if (metaWindow.get_maximized() < 2) {
-        // Not Maximized or maximized horizontally
-        metaWindow.
-        // removeWindow(metaWindow)
-        // Main.activateWindow(metaWindows[mwi] || metaWindows[0] || undefined)
-        return
-    }
-    focusedMetaWindow = metaWindows[mwi] || metaWindows[mwi - 1] || metaWindows[0] || undefined
-    if (mwi < 0) {
-        metaWindows.push(metaWindow)
-    }    
-}
-
-function removeWindow(removedMetaWindow) {
-    const mwi = metaWindows.indexOf(removedMetaWindow)
-    metaWindows.splice(mwi, 1)
-    const nextMetaWindow = metaWindows[mwi]
+function removeWindow(metaWindow) {
     slideInFromRight(nextMetaWindow)
 }
 
-function focusWindow(display, paramSpec) {
-    log('focuswindow')
-    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
-    if (!tabList[0]) return;
-    // if (tabList[0].is_client_decorated()) return;
-    metaWindows.forEach((metaWindow) => metaWindow.get_compositor_private().hide())
-    focusedMetaWindow = tabList[0]
-    focusedMetaWindow.get_compositor_private().show()
+async function setTabListOrder(metaWindows = []) {
+    return Promise.all(
+        metaWindows.map(metaWindow => new Promise(resolve => 
+            GLib.idle_add(GLib.PRIORITY_HIGH_IDLE, () => {
+                metaWindow.activate(now)
+                resolve('activated')
+                return false
+            })
+        ))
+    )
 }
 
-function slideLeft() {
-    if (metaWindows.length < 2) return;
-    const nextMetaWindow =
-        metaWindows[metaWindows.indexOf(focusedMetaWindow) - 1] ||
-        metaWindows[metaWindows.length - 1]
-    slideOutRight(focusedMetaWindow)
-    slideInFromLeft(nextMetaWindow)
+
+async function slideLeft() {
+    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
+    const [last, ...rest] = [...tabList].reverse()
+    const focusOrder = [...rest, last]
+    await Promise.all([
+        slideOutRight(tabList[0]),
+        slideInFromLeft(last)
+    ])
+    tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
+    await setTabListOrder(focusOrder)
+    global.display.get_tab_list(Meta.TabList.NORMAL, null)[0].get_compositor_private().show()
 }
 
-function slideRight() {
-    if (metaWindows.length < 2) return;
-    const nextMetaWindow =
-        metaWindows[metaWindows.indexOf(focusedMetaWindow) + 1] ||
-        metaWindows[0]
-    slideOutLeft(focusedMetaWindow)
-    slideInFromRight(nextMetaWindow)
+async function slideRight() {
+    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, null)
+    await Promise.all([
+        slideOutLeft(tabList[0]),
+        slideInFromRight(tabList[1])
+    ])
+    // tabList.slice(1).reverse().map(metaWindow => {
+    //     GLib.idle_add(GLib.PRIORITY_HIGH_IDLE, () => metaWindow.activate(now))
+    // })
+    const focusOrder = tabList.slice(1).reverse()
+    tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
+    await setTabListOrder(focusOrder)
+    global.display.get_tab_list(Meta.TabList.NORMAL, null)[0].get_compositor_private().show()
 }
 
-function slideOutLeft(metaWindow) {
+async function slideOutLeft(metaWindow) {
     if (!metaWindow) return
     const { width } = metaWindow.get_buffer_rect()
-    translateMetaWindow(metaWindow, { to: {x: 0 - width} })
+    return translateMetaWindow(metaWindow, { to: {x: 0 - width} })
 }
 
-function slideOutRight(metaWindow) {
+async function slideOutRight(metaWindow) {
     if (!metaWindow) return
-    translateMetaWindow(metaWindow, { to: {x: 1920}})
+    return translateMetaWindow(metaWindow, { to: {x: 1920}})
 }
 
 async function slideInFromRight(metaWindow) {
     if (!metaWindow) return
-    await translateMetaWindow(metaWindow, {from: {x: 1920}})
+    return translateMetaWindow(metaWindow, {from: {x: 1920}})
     // Main.activateWindow(metaWindow)
-    metaWindow.activate(now())
+    // metaWindow.activate(now())
 }
 
 async function slideInFromLeft(metaWindow) {
     if (!metaWindow) return
     const { width } = metaWindow.get_buffer_rect()
-    await translateMetaWindow(metaWindow, {from: {x: 0 - width}})
+    return translateMetaWindow(metaWindow, {from: {x: 0 - width}})
     // Main.activateWindow(metaWindow)
-    metaWindow.activate(now())
+    // metaWindow.activate(now())
 }
 
 
