@@ -109,9 +109,7 @@ async function slideLeft() {
         slideOutRight(tabList[0]),
         slideInFromLeft(last)
     ])
-    tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
     await setTabListOrder(focusOrder)
-    global.display.get_tab_list(Meta.TabList.NORMAL, null)[0].get_compositor_private().show()
 }
 
 async function slideRight() {
@@ -124,9 +122,7 @@ async function slideRight() {
     //     GLib.idle_add(GLib.PRIORITY_HIGH_IDLE, () => metaWindow.activate(now))
     // })
     const focusOrder = tabList.slice(1).reverse()
-    tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
     await setTabListOrder(focusOrder)
-    global.display.get_tab_list(Meta.TabList.NORMAL, null)[0].get_compositor_private().show()
 }
 
 async function slideOutLeft(metaWindow) {
@@ -156,18 +152,23 @@ async function slideInFromLeft(metaWindow) {
 }
 
 
+function rectIsInViewport(x, y, width, height) {
+    return (x < 1920 && y < 1200 && x + width > 0 && y + height > 0)
+}
+
 async function translateMetaWindow(metaWindow, {from, to, duration}) {
     if (!metaWindow) return;
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
-    const { x, y } = metaWindow.get_buffer_rect()
+    const { x, y, width, height } = metaWindow.get_buffer_rect()
     const [x0, y0] = coalesceXY(from, [x, y])
     const [x1, y1] = coalesceXY(to, [x, y])
     clone.set_position(x0, y0)    
     Main.uiGroup.add_child(clone)
     metaWindowActor.hide()
     await translateActor(clone, {from: [x0, y0], to: [x1, y1], duration})
-    metaWindowActor.show()
+    if (rectIsInViewport(x1, y1, width, height))
+        metaWindowActor.show()
     clone.destroy()
 }
 
