@@ -8,7 +8,6 @@ const { Signals: SignalsManager } = Extension.imports.signals
 const signals = new SignalsManager()
 
 let activeWorkspace
-let focusedMetaWindow
 let chrome
 
 let hideChromeSid
@@ -33,7 +32,7 @@ function start() {
     handleWorkspaceChange()
 
     signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
-    // signals.connect(global.display, 'notify::focus-window', focusWindow)
+    signals.connect(global.display, 'notify::focus-window', focusWindow)
 }
 
 function hideChrome() {
@@ -75,6 +74,15 @@ function handleWorkspaceChange() {
     // signals.connect(activeWorkspace, 'window-removed', removeWindow)
 }
 
+
+let reordering = false
+function focusWindow(display, paramSpec) {
+    if (reordering) return
+    const metaWindow = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null)[0]
+    metaWindow.get_compositor_private().show()
+}
+
+
 async function addWindow(workspace, metaWindow) {
     log('add window')
     // if (metaWindow.is_client_decorated()) return;
@@ -89,10 +97,12 @@ function removeWindow(metaWindow) {
 }
 
 async function setTabListOrder(metaWindows = []) {
+    reordering = true
     return Promise.all(
         metaWindows.map(metaWindow => new Promise(resolve => 
             GLib.idle_add(GLib.PRIORITY_HIGH_IDLE, () => {
                 metaWindow.activate(now)
+                reordering = false
                 resolve('activated')
                 return false
             })
