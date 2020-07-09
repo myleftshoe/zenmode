@@ -79,8 +79,9 @@ function handleWorkspaceChange() {
 let reordering = false
 function focusWindow(display, paramSpec) {
     if (reordering) return
-    const metaWindow = getActiveWorkspaceTabList()[0]
-    if (metaWindow) metaWindow.get_compositor_private().show()
+    const tabList = getActiveWorkspaceTabList()
+    tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
+    if (tabList[0]) tabList[0].get_compositor_private().show()
 }
 
 
@@ -99,34 +100,36 @@ function removeWindow(metaWindow) {
 
 async function setTabListOrder(metaWindows = []) {
     reordering = true
-    return Promise.all(
+    await Promise.all(
         metaWindows.map(metaWindow => new Promise(resolve => 
             GLib.idle_add(GLib.PRIORITY_HIGH_IDLE, () => {
                 metaWindow.activate(now)
-                reordering = false
                 resolve('activated')
                 return false
             })
         ))
     )
+    reordering = false 
 }
 
 
 async function slideLeft() {
     const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
+    tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
     const [last, ...rest] = [...tabList].reverse()
     const focusOrder = [...rest, last]
     await Promise.all([
         slideOutRight(tabList[0]),
         slideInFromLeft(last)
     ])
-    await setTabListOrder(focusOrder)
+    setTabListOrder(focusOrder)
 }
 
 async function slideRight() {
     const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
+    tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
     await Promise.all([
         slideOutLeft(tabList[0]),
         slideInFromRight(tabList[1])
@@ -135,7 +138,7 @@ async function slideRight() {
     //     GLib.idle_add(GLib.PRIORITY_HIGH_IDLE, () => metaWindow.activate(now))
     // })
     const focusOrder = tabList.slice(1).reverse()
-    await setTabListOrder(focusOrder)
+    setTabListOrder(focusOrder)
 }
 
 async function slideOutLeft(metaWindow) {
