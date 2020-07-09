@@ -7,9 +7,7 @@ const { Signals: SignalsManager } = Extension.imports.signals
 
 const signals = new SignalsManager()
 
-let activeWorkspace
 let chrome
-
 let hideChromeSid
 let showChromeSid
 
@@ -17,13 +15,15 @@ Object.defineProperty(this, 'now', {
     get() { return global.get_current_time() }
 })
 
+Object.defineProperty(this, 'activeWorkspace', {
+    get() { return  global.workspace_manager.get_active_workspace() }
+})
+
 function getActiveWorkspaceTabList() {
     return global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
 }
 
 function start() {
-    activeWorkspace = global.workspace_manager.get_active_workspace()
-
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = slideLeft
     chrome.right.onButtonPress = slideRight
@@ -71,9 +71,6 @@ function nextWorkspace() {
 
 function handleWorkspaceChange() {
     signals.disconnectObject(activeWorkspace)
-
-    activeWorkspace = global.workspace_manager.get_active_workspace()
-
     signals.connect(activeWorkspace, 'window-added', addWindow)
     // signals.connect(activeWorkspace, 'window-removed', removeWindow)
 }
