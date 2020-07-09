@@ -17,6 +17,10 @@ Object.defineProperty(this, 'now', {
     get() { return global.get_current_time() }
 })
 
+function getActiveWorkspaceTabList() {
+    return global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
+}
+
 function start() {
     activeWorkspace = global.workspace_manager.get_active_workspace()
 
@@ -78,8 +82,8 @@ function handleWorkspaceChange() {
 let reordering = false
 function focusWindow(display, paramSpec) {
     if (reordering) return
-    const metaWindow = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, activeWorkspace)[0]
-    metaWindow.get_compositor_private().show()
+    const metaWindow = getActiveWorkspaceTabList()[0]
+    if (metaWindow) metaWindow.get_compositor_private().show()
 }
 
 
@@ -88,7 +92,7 @@ async function addWindow(workspace, metaWindow) {
     // if (metaWindow.is_client_decorated()) return;
     if (metaWindow.get_window_type() > 1) return;
     metaWindow.maximize(Meta.MaximizeFlags.BOTH)
-    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
+    const tabList = getActiveWorkspaceTabList()
     await slideOutRight(tabList[1])
 }
 
@@ -112,7 +116,7 @@ async function setTabListOrder(metaWindows = []) {
 
 
 async function slideLeft() {
-    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
+    const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
     const [last, ...rest] = [...tabList].reverse()
     const focusOrder = [...rest, last]
@@ -124,7 +128,7 @@ async function slideLeft() {
 }
 
 async function slideRight() {
-    const tabList = global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
+    const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
     await Promise.all([
         slideOutLeft(tabList[0]),
