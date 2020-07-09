@@ -89,7 +89,7 @@ async function addWindow(workspace, metaWindow) {
     log('add window')
     // if (metaWindow.is_client_decorated()) return;
     if (metaWindow.get_window_type() > 1) return;
-    metaWindow.maximize(Meta.MaximizeFlags.BOTH)
+    metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
     const tabList = getActiveWorkspaceTabList()
     await slideOutRight(tabList[1])
 }
@@ -130,13 +130,21 @@ async function slideRight() {
     const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
     tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
-    await Promise.all([
-        slideOutLeft(tabList[0]),
-        slideInFromRight(tabList[1])
-    ])
-    // tabList.slice(1).reverse().map(metaWindow => {
-    //     GLib.idle_add(GLib.PRIORITY_HIGH_IDLE, () => metaWindow.activate(now))
-    // })
+    const mwa = tabList[0].get_compositor_private()
+    const {width} = tabList[0].get_frame_rect()
+    let slideout = true
+    if (width <= 960) {
+        translateMetaWindow(tabList[0], { to: {x:1}})
+        await translateMetaWindow(tabList[1], { from: {x: 1920}, to: { x: width }})
+        slideout = false
+        // mwa.show()
+    }
+    else {
+        await Promise.all([
+            slideout && slideOutLeft(tabList[0]),
+            slideInFromRight(tabList[1])
+        ])
+    }
     const focusOrder = tabList.slice(1).reverse()
     setTabListOrder(focusOrder)
 }
@@ -174,17 +182,23 @@ function rectIsInViewport(x, y, width, height) {
 
 async function translateMetaWindow(metaWindow, {from, to, duration}) {
     if (!metaWindow) return;
-    const metaWindowActor = metaWindow.get_compositor_private()
-    const clone = new Clutter.Clone({ source: metaWindowActor })
     const { x, y, width, height } = metaWindow.get_buffer_rect()
     const [x0, y0] = coalesceXY(from, [x, y])
     const [x1, y1] = coalesceXY(to, [x, y])
+    // if (x0 === x1 && y0 === y1) return
+    log(x0, y0, x1, y1)
+    const metaWindowActor = metaWindow.get_compositor_private()
+    const clone = new Clutter.Clone({ source: metaWindowActor })
     clone.set_position(x0, y0)    
     Main.uiGroup.add_child(clone)
     metaWindowActor.hide()
+    log('iiiiii')
     await translateActor(clone, {from: [x0, y0], to: [x1, y1], duration})
-    if (rectIsInViewport(x1, y1, width, height))
+    log('jjjjjj')
+    if (rectIsInViewport(x1, y1, width, height)) {
+        metaWindowActor.set_position(x1, y1)
         metaWindowActor.show()
+    }
     clone.destroy()
 }
 
@@ -192,6 +206,7 @@ async function translateActor(actor, {from, to, duration = 350}) {
     const { x, y } = actor.get_position()
     const [x0, y0] = coalesceXY(from, [x, y])
     const [x1, y1] = coalesceXY(to, [x, y])
+    if (x0 === x1 && y0 === y1) return Promise.resolve()
     actor.set_position(x0, y0)
     actor.save_easing_state()
     actor.set_easing_duration(duration)
@@ -209,8 +224,27 @@ async function translateActor(actor, {from, to, duration = 350}) {
 // replaces missing values with x and y from second parameter [x, y]
 // returns point in form [x,y] 
 function coalesceXY(xy, [x, y]) {
-    if (Array.isArray(xy)) return [xy[0] || x, xy[1] || y]
-    if (typeof xy === 'object') return [xy.x || x, xy.y || y ]
-    return [x,y]
+    log(xy, x, y)
+
+    let nx = x
+    let ny = y
+    if (Array.isArray(xy)) {
+        nx = xy[0]
+        ny = xy[1]
+    }
+    else if (typeof xy === 'object') {
+        nx = xy.x
+        ny = xy.y
+    }
+    const ix = parseInt(nx)
+    const iy = parseInt(ny)
+
+    log('>>>i', ix, iy)
+
+    const rx = isNaN(ix) ? x : ix
+    const ry = isNaN(iy) ? y : iy
+
+    log('>>>r', rx, ry)
+    return [rx,ry]
 }
 
