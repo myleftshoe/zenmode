@@ -59,15 +59,15 @@ function defineListener(object, eventName, signalName) {
     })
 }
 
-// function defineActionListener(object, actionName, eventName, signalName) {
-//     return Object.defineProperty(object.prototype, eventName, {
-//         set(callback) {
-//             if (typeof callback !== 'function') return;
-//             this.set_reactive(true)
-//             const action = new Clutter[actionName]()
-//             this.add_action(action)
-//             this.signals.connect(action, signalName, callback)
-//         }
-//     })
-// }
+function defineActionListener(object, actionName, eventName, signalName) {
+    return Object.defineProperty(object.prototype, eventName, {
+        set(callback) {
+            if (typeof callback !== 'function') return;
+            this.set_reactive(true)
+            const action = new Clutter[actionName]()
+            this.add_action(action)
+            this.signals.connect(action, signalName, callback)
+        }
+    })
+}
 

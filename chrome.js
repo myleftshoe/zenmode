@@ -2,7 +2,7 @@ const Main = imports.ui.main
 const { GObject, Clutter, Meta, St } = imports.gi
 
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
-const { Signals, withSignals, defineListener, /*defineActionListener*/ } = Extension.imports.signals
+const { Signals, withSignals, defineListener, defineActionListener } = Extension.imports.signals
 
 const style_class = 'chrome'
 const affectsStruts = true
@@ -34,8 +34,8 @@ const _Chrome = GObject.registerClass({},
 
 function composeChrome() {
     const ComposedChrome = withSignals(_Chrome)
-    defineListener(ComposedChrome, 'onButtonPress', 'button-press-event')
-    // defineActionListener(ComposedChrome, 'ClickAction', 'onButtonPress', 'clicked')
+    // defineListener(ComposedChrome, 'onButtonPress', 'button-press-event')
+    defineActionListener(ComposedChrome, 'ClickAction', 'onButtonPress', 'clicked')
     return ComposedChrome
 }
 
