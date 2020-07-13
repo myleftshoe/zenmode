@@ -3,9 +3,9 @@ const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 
-const { Signals: SignalsManager } = Extension.imports.signals
+const { Signals } = Extension.imports.signals
 
-const signals = new SignalsManager()
+const signals = new Signals()
 
 let chrome
 let hideChromeSid
@@ -58,7 +58,6 @@ function stop() {
     chrome.right.destroy()
     chrome.top.destroy()
     chrome.bottom.destroy()
-    Extension.loaded = false
 }
 
 function prevWorkspace() {
@@ -112,41 +111,58 @@ async function setTabListOrder(metaWindows = []) {
     reordering = false 
 }
 
+let tabList = []
+let clicks = 0
+let pendingTransitions = 0
+
 
 async function slideLeft() {
-    const tabList = getActiveWorkspaceTabList()
-    if (tabList.length < 2) return
-    tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
-    const [last, ...rest] = [...tabList].reverse()
-    const focusOrder = [...rest, last]
-    await Promise.all([
-        slideOutRight(tabList[0]),
-        slideInFromLeft(last)
-    ])
-    setTabListOrder(focusOrder)
+    log('clicks', clicks)
+    if (!clicks) {
+        tabList = getActiveWorkspaceTabList()
+        if (tabList.length < 2) return
+        tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
+        tabList.map(metaWindow => log(metaWindow.title))
+        slideOutRight(tabList[0])
+    }
+    clicks++
+    pendingTransitions++
+    const pos = tabList.length - clicks
+    await slideInFromLeft(tabList[pos])
+    pendingTransitions--
+    log('pendingTransitions', pendingTransitions)
+    if (pendingTransitions === 0) {
+        const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
+        clicks = 0
+        focusOrder.map(mw => log(mw.title))
+        await setTabListOrder(focusOrder)
+        log('set focused order')
+        focusOrder.slice(-1).get_compositor_private().show()
+    }
 }
 
 async function slideRight() {
-    const tabList = getActiveWorkspaceTabList()
-    if (tabList.length < 2) return
-    tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
-    const mwa = tabList[0].get_compositor_private()
-    const {width} = tabList[0].get_frame_rect()
-    let slideout = true
-    if (width <= 960) {
-        translateMetaWindow(tabList[0], { to: {x:1}})
-        await translateMetaWindow(tabList[1], { from: {x: 1920}, to: { x: width }})
-        slideout = false
-        // mwa.show()
+    log('clicks', clicks)
+    if (!clicks) {
+        tabList = getActiveWorkspaceTabList()
+        if (tabList.length < 2) return
+        tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
+        tabList.map(metaWindow => log(metaWindow.title))
+        slideOutLeft(tabList[0])
     }
-    else {
-        await Promise.all([
-            slideout && slideOutLeft(tabList[0]),
-            slideInFromRight(tabList[1])
-        ])
+    clicks++
+    pendingTransitions++
+    await slideInFromRight(tabList[clicks])
+    pendingTransitions--
+    log('pendingTransitions', pendingTransitions)
+    if (pendingTransitions === 0) {
+        const focusOrder = [...tabList.slice(0, clicks).reverse(), ...tabList.slice(clicks).reverse()]
+        clicks = 0
+        focusOrder.map(mw => log(mw.title))
+        await setTabListOrder(focusOrder)
+        log('set focused order')
+        focusOrder.slice(-1).get_compositor_private().show()
     }
-    const focusOrder = tabList.slice(1).reverse()
-    setTabListOrder(focusOrder)
 }
 
 async function slideOutLeft(metaWindow) {
@@ -186,15 +202,12 @@ async function translateMetaWindow(metaWindow, {from, to, duration}) {
     const [x0, y0] = coalesceXY(from, [x, y])
     const [x1, y1] = coalesceXY(to, [x, y])
     // if (x0 === x1 && y0 === y1) return
-    log(x0, y0, x1, y1)
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
     clone.set_position(x0, y0)    
     Main.uiGroup.add_child(clone)
     metaWindowActor.hide()
-    log('iiiiii')
     await translateActor(clone, {from: [x0, y0], to: [x1, y1], duration})
-    log('jjjjjj')
     if (rectIsInViewport(x1, y1, width, height)) {
         metaWindowActor.set_position(x1, y1)
         metaWindowActor.show()
@@ -224,8 +237,6 @@ async function translateActor(actor, {from, to, duration = 350}) {
 // replaces missing values with x and y from second parameter [x, y]
 // returns point in form [x,y] 
 function coalesceXY(xy, [x, y]) {
-    log(xy, x, y)
-
     let nx = x
     let ny = y
     if (Array.isArray(xy)) {
@@ -238,13 +249,9 @@ function coalesceXY(xy, [x, y]) {
     }
     const ix = parseInt(nx)
     const iy = parseInt(ny)
-
-    log('>>>i', ix, iy)
-
     const rx = isNaN(ix) ? x : ix
     const ry = isNaN(iy) ? y : iy
 
-    log('>>>r', rx, ry)
     return [rx,ry]
 }
 

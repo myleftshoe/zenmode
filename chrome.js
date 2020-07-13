@@ -34,8 +34,8 @@ const _Chrome = GObject.registerClass({},
 
 function composeChrome() {
     const ComposedChrome = withSignals(_Chrome)
-    // defineListener(ComposedChrome, 'onButtonPress', 'button-press-event')
-    defineActionListener(ComposedChrome, 'ClickAction', 'onButtonPress', 'clicked')
+    defineListener(ComposedChrome, 'onButtonPress', 'button-press-event')
+    // defineActionListener(ComposedChrome, 'ClickAction', 'onButtonPress', 'clicked')
     return ComposedChrome
 }
 
