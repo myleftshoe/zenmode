@@ -25,13 +25,10 @@ function getActiveWorkspaceTabList() {
 
 function start() {
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
-    chrome.left.onButtonPress = slideLeft
-    chrome.right.onButtonPress = slideRight
+    chrome.left.onButtonPress = handleChromeLeftClick
+    chrome.right.onButtonPress = handleChromeRightClick
     chrome.top.onButtonPress = prevWorkspace
     chrome.bottom.onButtonPress = nextWorkspace
-
-    chrome.right.connect('enter-event', showRightButton)
-    chrome.right.connect('leave-event', handleRightButtonLeave)
 
     hideChromeSid = Main.overview.connect('shown', hideChrome);
     showChromeSid = Main.overview.connect('hidden', showChrome);
@@ -44,91 +41,51 @@ function start() {
 
 }
 
-function handleRightButtonLeave() {
-    if (!to) 
-        to = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 800, hideRightButton)
-
+function handleChromeLeftClick(actor, event) {
+    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK ))
+        toggle2UpLeft()
+    else
+        slideLeft()
 }
 
-let eventHandlerActor
 
-function getEventHandlerActor() {
-    if (!eventHandlerActor) {
-        eventHandlerActor = new Clutter.Actor({ 
-            width: global.stage.get_width(), 
-            height: global.stage.get_height(), 
-            // reactive:true 
-        });
-        Main.uiGroup.add_actor(eventHandlerActor);
-    }
-    eventHandlerActor.connect('key-press-event', hideRightButton)
-    const sid = global.stage.connect('button-press-event', () =>  {
-        log('bbbbbbbb')
-        if (eventHandlerActor) {
-            hideRightButton()
-            global.stage.disconnect(sid)
-            return true
-        }
-        return false
-    })
-    return eventHandlerActor;
+function handleChromeRightClick(actor, event) {
+    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK ))
+        toggle2UpRight()
+    else
+        slideRight()
 }
 
-let rightButton
-let rightButtonPressEvent
-let to
 
-function showRightButton() {
-    if (to) {
-        GLib.source_remove(to)
-        to = null
-    }    
-    log('showrifhgtb')
-    if (rightButton) return
-    rightButton = animatable(
-        new St.Button({style_class: 'right-button'}),
-    )
-    rightButton.set_position(1800, 588)
-    rightButton.inTransition = slide
-    global.stage.add_child(rightButton)
-    Main.pushModal(getEventHandlerActor())
-
-    rightButton.easeIn()
-    // rightButton.enter_transition = [[fade, slide], 350ms, ease]
-    // global.stage.add_child(rightButton)
-    // translateActor(rightButton, { from: [1920, 588], to: [1800,588] })
-    // slideIn({actor: rightButton, position: {x: 1800, y: 588}})
-    rightButtonPressEvent = rightButton.connect('clicked', handleRightButtonPress)
-
-    rightButton.connect('enter-event', () => { 
-        if (to) {
-            GLib.source_remove(to)
-            to = null
-        }
-    })
-    rightButton.connect('leave-event', () => { 
-        if (!to)
-            to = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 800, hideRightButton)
-    })
-}
-
-async function hideRightButton() {
-    Main.popModal(eventHandlerActor)
-    GLib.source_remove(to)
-    to = null
-    eventHandlerActor = null
-    await slideOut(rightButton)
-    rightButton.disconnect(rightButtonPressEvent)
-    rightButton.destroy()
-    rightButton = null    
-    return false
-}
-
-async function handleRightButtonPress() {
-    hideRightButton()
+async function toggle2UpLeft() {
     const [metaWindow] = getVisibleWindows()
     if (metaWindow.get_maximized() !== Meta.MaximizeFlags.BOTH) {
-        expand(metaWindow)
+        expandLeft(metaWindow)
+        return
+    }
+    // if (right) {
+    //     log('RIGHT')
+    //     expand(right)
+    //     return
+    // }
+    // const metaWindow = left
+    log(metaWindow.title)
+    metaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
+    metaWindow.move_resize_frame(true, 0, 0, 960, 500)
+    const nextMetaWindow = getNextMetaWindow()
+    nextMetaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
+    nextMetaWindow.move_resize_frame(true, 960, 0, 960, 500)
+    await slideInFromRight(nextMetaWindow)
+    nextMetaWindow.get_compositor_private().show()
+    // metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
+}
+
+
+
+async function toggle2UpRight() {
+    const [metaWindow] = getVisibleWindows()
+    if (metaWindow.get_maximized() !== Meta.MaximizeFlags.BOTH) {
+        expandRight(metaWindow)
         return
     }
     // if (right) {
@@ -148,7 +105,16 @@ async function handleRightButtonPress() {
     // metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
 }
 
-async function expand(metaWindow) {
+async function expandLeft(metaWindow) {
+    log(metaWindow.title)
+    metaWindow.maximize(Meta.MaximizeFlags.BOTH)
+    const nextMetaWindow = getNextMetaWindow()
+    await slideOutRight(nextMetaWindow)
+    nextMetaWindow.get_compositor_private().hide()
+    nextMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
+}
+
+async function expandRight(metaWindow) {
     log(metaWindow.title)
     metaWindow.maximize(Meta.MaximizeFlags.BOTH)
     const prevMetaWindow = getPrevMetaWindow()
@@ -157,6 +123,10 @@ async function expand(metaWindow) {
     prevMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
 }
 
+function getNextMetaWindow() {
+    const tabList = getActiveWorkspaceTabList()
+    return tabList[1]
+}
 
 function getPrevMetaWindow() {
     const tabList = getActiveWorkspaceTabList()
@@ -223,7 +193,8 @@ async function addWindow(workspace, metaWindow) {
     log('add window')
     // if (metaWindow.is_client_decorated()) return;
     if (metaWindow.get_window_type() > 1) return;
-    metaWindow.maximize(Meta.MaximizeFlags.BOTH)
+    metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
+    metaWindow.move_resize_frame(0,0,global.stage.get_width(), global.stage.get_height())
     const tabList = getActiveWorkspaceTabList()
     await slideOutRight(tabList[1])
 }
