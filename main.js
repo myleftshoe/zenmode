@@ -44,16 +44,20 @@ function start() {
 function handleChromeLeftClick(actor, event) {
     if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK ))
         toggle2UpLeft()
-    else
+    else {
+        getActiveWorkspaceTabList().map(mw => mw.maximize(Meta.MaximizeFlags.BOTH))
         slideLeft()
+    }
 }
 
 
 function handleChromeRightClick(actor, event) {
     if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK ))
         toggle2UpRight()
-    else
+    else {
+        getActiveWorkspaceTabList().map(mw => mw.maximize(Meta.MaximizeFlags.BOTH))
         slideRight()
+    }
 }
 
 
