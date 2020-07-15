@@ -187,7 +187,17 @@ function focusWindow(display, paramSpec) {
     if (reordering) return
     const tabList = getActiveWorkspaceTabList()
     tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
-    if (tabList[0]) tabList[0].get_compositor_private().show()
+    const metaWindow = tabList[0]
+    if (metaWindow) {
+        metaWindow.get_compositor_private().show()
+        if (metaWindow.get_maximized() !== Meta.MaximizeFlags.BOTH) {
+            const [otherMetaWindow] = tabList.filter(mw => {
+                return mw.get_maximized() !== Meta.MaximizeFlags.BOTH && mw !== metaWindow
+            })
+            log('otehrfdffsdf', otherMetaWindow.title)
+            otherMetaWindow.get_compositor_private().show()
+        }
+    }
 }
 
 
@@ -195,8 +205,8 @@ async function addWindow(workspace, metaWindow) {
     log('add window')
     // if (metaWindow.is_client_decorated()) return;
     if (metaWindow.get_window_type() > 1) return;
-    metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
-    metaWindow.move_resize_frame(0,0,global.stage.get_width(), global.stage.get_height())
+    metaWindow.maximize(Meta.MaximizeFlags.BOTH)
+    // metaWindow.move_resize_frame(true,0,0,global.stage.get_width(), global.stage.get_height())
     const tabList = getActiveWorkspaceTabList()
     await slideOutRight(tabList[1])
 }
