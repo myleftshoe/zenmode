@@ -1,8 +1,49 @@
 
 const { Clutter } = imports.gi
 
+function animatable(actor) {
+    actor.hide()
+    Object.defineProperty(actor, 'inTransition', {
+        set(transition) {
+            actor.easeIn = () => transition.in(actor)
+        }
+    })
+    actor.connect('parent-set', (actor, oldParent) => {
+        if (!oldParent) {
+            actor.easeIn(actor)
+            return
+        }
+        // if (!actor.get_parent()) {
+        //     actor.easeOut()
+        //     return
+        // }
+        
+    })
+    return actor
+}
 
-function slideIn({container = global.stage, actor}) {
+var slide = {
+    in(actor) {
+        const container = actor.get_parent()
+        const width = container.get_width()
+        const height = container.get_height()
+        const [x,y] = actor.get_position()
+        log('qqqqq', x, y)
+        const from = { x: width, y }
+        log(from.x, from.y, x, y)
+        actor.set_position(from.x, from.y)
+        actor.show()
+
+        // container.add_child(actor)
+        // log(actor, from.x, from.y ,to.x, to.y)
+        translateActor(actor, { from, to: { x, y } } )
+    }
+}
+
+
+
+function slideIn(actor) {
+    const container = actor.get_parent()
     const width = container.get_width()
     const height = container.get_height()
     const [x,y] = actor.get_position()
@@ -10,7 +51,9 @@ function slideIn({container = global.stage, actor}) {
     const from = { x: width, y }
     log(from.x, from.y, x, y)
     actor.set_position(from.x, from.y)
-    container.add_child(actor)
+    actor.show()
+
+    // container.add_child(actor)
     // log(actor, from.x, from.y ,to.x, to.y)
     translateActor(actor, { from, to: { x, y } } )
 }

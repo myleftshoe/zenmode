@@ -2,7 +2,7 @@ const { Clutter, GLib, GObject, Meta, St } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
-const {slideIn, slideOut} = Extension.imports.transition
+const {slide, slideOut, animatable} = Extension.imports.transition
 const { Signals } = Extension.imports.signals
 
 const signals = new Signals()
@@ -85,16 +85,19 @@ function showRightButton() {
     }    
     log('showrifhgtb')
     if (rightButton) return
-    rightButton = new St.Button({
-        style_class: 'right-button'
-    })
+    rightButton = animatable(
+        new St.Button({style_class: 'right-button'}),
+    )
+    rightButton.set_position(1800, 588)
+    rightButton.inTransition = slide
+    global.stage.add_child(rightButton)
     Main.pushModal(getEventHandlerActor())
 
-    rightButton.set_position(1800, 588)
+    rightButton.easeIn()
     // rightButton.enter_transition = [[fade, slide], 350ms, ease]
     // global.stage.add_child(rightButton)
     // translateActor(rightButton, { from: [1920, 588], to: [1800,588] })
-    slideIn({actor: rightButton, position: {x: 1800, y: 588}})
+    // slideIn({actor: rightButton, position: {x: 1800, y: 588}})
     rightButtonPressEvent = rightButton.connect('clicked', handleRightButtonPress)
 
     rightButton.connect('enter-event', () => { 
@@ -264,6 +267,8 @@ async function slideLeft() {
     pendingTransitions--
     log('pendingTransitions', pendingTransitions)
     if (pendingTransitions === 0) {
+        tabList[0].maximize(Meta.MaximizeFlags.BOTH)
+        tabList[tabList.length - 1].maximize(Meta.MaximizeFlags.BOTH)
         const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
         clicks = 0
         focusOrder.map(mw => log(mw.title))
