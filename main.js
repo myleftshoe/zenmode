@@ -39,6 +39,31 @@ function start() {
     signals.connect(global.display, 'notify::focus-window', focusWindow)
 
 
+
+
+    global.display.connect('grab-op-begin', (display, screen, metaWindow, op) => {
+        log('grab-op-begin', op)
+        if (!metaWindow) return;
+        log('grab-op-begin', op, metaWindow.title);
+        if (grabOpIsResizingHorizontally(op)) {
+            const { width: startWidth } = metaWindow.get_frame_rect();
+            const nmwa = getNextMetaWindow()
+            log('tttttttttttttt', nmwa)
+            metaWindow.connect('size-changed', () => {
+                const { x, y, width, height } = metaWindow.get_frame_rect();
+                nmwa.move_resize_frame(true, width, y, 1920 - width, height)
+            });
+        }
+        else
+            display.end_grab_op(display);
+    });
+
+
+}
+
+function grabOpIsResizingHorizontally(op) {
+    return (op === Meta.GrabOp.RESIZING_E || op === Meta.GrabOp.RESIZING_W);
+
 }
 
 function handleChromeLeftClick(actor, event) {
@@ -83,6 +108,7 @@ async function toggle2UpLeft() {
     await slideInFromRight(nextMetaWindow)
     nextMetaWindow.get_compositor_private().show()
     // metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
+
 }
 
 
@@ -131,6 +157,7 @@ async function expandRight(metaWindow) {
 
 function getNextMetaWindow() {
     const tabList = getActiveWorkspaceTabList()
+    log('ttttt2', tabList)
     return tabList[1]
 }
 
