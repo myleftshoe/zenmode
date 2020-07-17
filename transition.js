@@ -28,9 +28,7 @@ var slide = {
         const width = container.get_width()
         const height = container.get_height()
         const [x,y] = actor.get_position()
-        log('qqqqq', x, y)
         const from = { x: width, y }
-        log(from.x, from.y, x, y)
         actor.set_position(from.x, from.y)
         actor.show()
 
@@ -47,9 +45,7 @@ function slideIn(actor) {
     const width = container.get_width()
     const height = container.get_height()
     const [x,y] = actor.get_position()
-    log('qqqqq', x, y)
     const from = { x: width, y }
-    log(from.x, from.y, x, y)
     actor.set_position(from.x, from.y)
     actor.show()
 
@@ -59,18 +55,14 @@ function slideIn(actor) {
 }
 
 async function slideOut(actor) {
-    log('slideOut')
     const width = actor.get_parent().get_width()
     const height = actor.get_parent().get_height()
     const [x,y] = actor.get_position()
-    log('qqqqq', x, y, width)
     const to = { x: width, y }
     // log(from.x, from.y, x, y)
     // actor.set_position(from.x, from.y)
     // log(actor, from.x, from.y ,to.x, to.y)
     await translateActor(actor, { from: {x,y}, to } )
-    log('y2yyyyyy')
-
     actor.get_parent().remove_child(actor)
 }
 
@@ -85,11 +77,9 @@ async function translateActor(actor, {from, to, duration = 250}) {
     actor.save_easing_state()
     actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_BACK)
     duration && actor.set_easing_duration(duration)
-    log('yyyyyyy', x0, y0,x1, y1)
     actor.set_position(x1, y1)
     return new Promise(resolve => {
         const signal = actor.connect('transition-stopped', () => {
-            log('ppppppp')
             actor.restore_easing_state()
             actor.disconnect(signal)
             resolve('complete')
