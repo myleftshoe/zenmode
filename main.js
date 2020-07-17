@@ -42,13 +42,10 @@ function start() {
 
 
     global.display.connect('grab-op-begin', (display, screen, metaWindow, op) => {
-        log('grab-op-begin', op)
         if (!metaWindow) return;
-        log('grab-op-begin', op, metaWindow.title);
         if (grabOpIsResizingHorizontally(op)) {
             const { width: startWidth } = metaWindow.get_frame_rect();
             const nmwa = getNextMetaWindow()
-            log('tttttttttttttt', nmwa)
             metaWindow.connect('size-changed', () => {
                 const { x, y, width, height } = metaWindow.get_frame_rect();
                 nmwa.move_resize_frame(true, width, y, 1920 - width, height)
@@ -98,7 +95,6 @@ async function toggle2UpLeft() {
     //     return
     // }
     // const metaWindow = left
-    log(metaWindow.title)
     metaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
     metaWindow.move_resize_frame(true, 0, 0, 960, 500)
     const nextMetaWindow = getNextMetaWindow()
@@ -125,7 +121,6 @@ async function toggle2UpRight() {
     //     return
     // }
     // const metaWindow = left
-    log(metaWindow.title)
     metaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
     metaWindow.move_resize_frame(true, 960, 0, 960, 500)
     const prevMetaWindow = getPrevMetaWindow()
@@ -138,7 +133,6 @@ async function toggle2UpRight() {
 }
 
 async function expandLeft(metaWindow) {
-    log(metaWindow.title)
     metaWindow.maximize(Meta.MaximizeFlags.BOTH)
     const nextMetaWindow = getNextMetaWindow()
     await slideOutRight(nextMetaWindow)
@@ -147,7 +141,6 @@ async function expandLeft(metaWindow) {
 }
 
 async function expandRight(metaWindow) {
-    log(metaWindow.title)
     metaWindow.maximize(Meta.MaximizeFlags.BOTH)
     const prevMetaWindow = getPrevMetaWindow()
     await slideOutLeft(prevMetaWindow)
@@ -157,7 +150,6 @@ async function expandRight(metaWindow) {
 
 function getNextMetaWindow() {
     const tabList = getActiveWorkspaceTabList()
-    log('ttttt2', tabList)
     return tabList[1]
 }
 
@@ -225,7 +217,6 @@ function focusWindow(display, paramSpec) {
             const [otherMetaWindow] = tabList.filter(mw => {
                 return mw.get_maximized() !== Meta.MaximizeFlags.BOTH && mw !== metaWindow
             })
-            log('otehrfdffsdf', otherMetaWindow.title)
             otherMetaWindow.get_compositor_private().show()
         }
     }
@@ -266,12 +257,10 @@ let pendingTransitions = 0
 
 
 async function slideLeft() {
-    log('clicks', clicks)
     if (!clicks) {
         tabList = getActiveWorkspaceTabList()
         if (tabList.length < 2) return
         tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
-        tabList.map(metaWindow => log(metaWindow.title))
         slideOutRight(tabList[0])
     }
     clicks++
@@ -279,39 +268,31 @@ async function slideLeft() {
     const pos = tabList.length - clicks
     await slideInFromLeft(tabList[pos])
     pendingTransitions--
-    log('pendingTransitions', pendingTransitions)
     if (pendingTransitions === 0) {
         tabList[0].maximize(Meta.MaximizeFlags.BOTH)
         tabList[tabList.length - 1].maximize(Meta.MaximizeFlags.BOTH)
         const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
         clicks = 0
-        focusOrder.map(mw => log(mw.title))
         await setTabListOrder(focusOrder)
-        log('set focused order')
         focusOrder.slice(-1).get_compositor_private().show()
     }
 }
 
 async function slideRight() {
-    log('clicks', clicks)
     if (!clicks) {
         tabList = getActiveWorkspaceTabList()
         if (tabList.length < 2) return
         tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
-        tabList.map(metaWindow => log(metaWindow.title))
         slideOutLeft(tabList[0])
     }
     clicks++
     pendingTransitions++
     await slideInFromRight(tabList[clicks])
     pendingTransitions--
-    log('pendingTransitions', pendingTransitions)
     if (pendingTransitions === 0) {
         const focusOrder = [...tabList.slice(0, clicks).reverse(), ...tabList.slice(clicks).reverse()]
         clicks = 0
-        focusOrder.map(mw => log(mw.title))
         await setTabListOrder(focusOrder)
-        log('set focused order')
         focusOrder.slice(-1).get_compositor_private().show()
     }
 }
