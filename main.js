@@ -264,6 +264,8 @@ async function slideLeft() {
         slideOutRight(tabList[0])
     }
     clicks++
+    if (clicks >= tabList.length)
+        clicks = 1
     pendingTransitions++
     const pos = tabList.length - clicks
     await slideInFromLeft(tabList[pos])
@@ -286,6 +288,8 @@ async function slideRight() {
         slideOutLeft(tabList[0])
     }
     clicks++
+    if (clicks >= tabList.length)
+        clicks = 0
     pendingTransitions++
     await slideInFromRight(tabList[clicks])
     pendingTransitions--
