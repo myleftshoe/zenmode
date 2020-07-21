@@ -10,6 +10,7 @@ const signals = new Signals()
 let chrome
 let hideChromeSid
 let showChromeSid
+let lastFocusedWindow
 
 Object.defineProperty(this, 'now', { 
     get() { return global.get_current_time() }
@@ -236,18 +237,21 @@ function handleWorkspaceChange() {
 let reordering = false
 function focusWindow(display, paramSpec) {
     if (reordering) return
-    const tabList = getActiveWorkspaceTabList()
-    tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
-    const metaWindow = tabList[0]
-    if (metaWindow) {
-        metaWindow.get_compositor_private().show()
-        if (metaWindow.get_maximized() !== Meta.MaximizeFlags.BOTH) {
-            const [otherMetaWindow] = tabList.filter(mw => {
-                return mw.get_maximized() !== Meta.MaximizeFlags.BOTH && mw !== metaWindow
-            })
-            otherMetaWindow.get_compositor_private().show()
-        }
-    }
+    lastFocusedWindow && lastFocusedWindow.get_compositor_private().hide()
+    focusedWindow.get_compositor_private().show()
+    lastFocusedWindow = focusedWindow 
+    // const tabList = getActiveWorkspaceTabList()
+    // tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
+    // const metaWindow = tabList[0]
+    // if (metaWindow) {
+    //     metaWindow.get_compositor_private().show()
+    //     if (metaWindow.get_maximized() !== Meta.MaximizeFlags.BOTH) {
+    //         const [otherMetaWindow] = tabList.filter(mw => {
+    //             return mw.get_maximized() !== Meta.MaximizeFlags.BOTH && mw !== metaWindow
+    //         })
+    //         otherMetaWindow.get_compositor_private().show()
+    //     }
+    // }
 }
 
 
