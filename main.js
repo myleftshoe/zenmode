@@ -200,7 +200,7 @@ function handleChromeTopClick(actor, event) {
         Main.wm._showWorkspaceSwitcher(global.display, focusedWindow, { get_name: () => `move---${index}` })
         return
     }
-    nextWorkspace()
+    prevWorkspace()
 }
 
 function handleChromeBottomClick(actor, event) {
