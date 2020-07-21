@@ -191,11 +191,17 @@ function stop() {
 }
 
 function prevWorkspace() {
-    activeWorkspace.get_neighbor(Meta.MotionDirection.UP).activate(now);
+    switchWorkspace(Meta.MotionDirection.UP)
 }
 
 function nextWorkspace() {
-    activeWorkspace.get_neighbor(Meta.MotionDirection.DOWN).activate(now);
+    switchWorkspace(Meta.MotionDirection.DOWN)
+}
+
+function switchWorkspace(direction = Meta.MotionDirection.DOWN) {
+    const index = activeWorkspace.get_neighbor(direction).index() + 1
+    Main.wm._showWorkspaceSwitcher(global.display, null, { get_name: () => `switch---${index}` })
+    // ws.activate(now);
 }
 
 function handleWorkspaceChange() {
