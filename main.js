@@ -23,12 +23,16 @@ function getActiveWorkspaceTabList() {
     return global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
 }
 
+Object.defineProperty(this, 'focusedWindow', {
+    get() { return  getActiveWorkspaceTabList()[0] }
+})
+
 function start() {
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
     chrome.right.onButtonPress = handleChromeRightClick
-    chrome.top.onButtonPress = prevWorkspace
-    chrome.bottom.onButtonPress = nextWorkspace
+    chrome.top.onButtonPress = handleChromeTopClick
+    chrome.bottom.onButtonPress = handleChromeBottomClick
 
     hideChromeSid = Main.overview.connect('shown', hideChrome);
     showChromeSid = Main.overview.connect('hidden', showChrome);
@@ -190,7 +194,25 @@ function stop() {
     chrome.bottom.destroy()
 }
 
-function prevWorkspace() {
+function handleChromeTopClick(actor, event) {
+    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK )) {
+        const index = activeWorkspace.get_neighbor( Meta.MotionDirection.UP).index() + 1
+        Main.wm._showWorkspaceSwitcher(global.display, focusedWindow, { get_name: () => `move---${index}` })
+        return
+    }
+    nextWorkspace()
+}
+
+function handleChromeBottomClick(actor, event) {
+    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK )) {
+        const index = activeWorkspace.get_neighbor( Meta.MotionDirection.DOWN).index() + 1
+        Main.wm._showWorkspaceSwitcher(global.display, focusedWindow, { get_name: () => `move---${index}` })
+        return
+    }
+    nextWorkspace()
+}
+
+function prevWorkspace(actor, event) {
     switchWorkspace(Meta.MotionDirection.UP)
 }
 
