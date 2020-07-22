@@ -26,7 +26,6 @@ const _workspaces = {
 
 // exported
 
-
 var workspaces = new Proxy({}, {
     get(target, property, receiver) {
         if (Number.isInteger(Number(property))) {
@@ -78,14 +77,6 @@ function nextWorkspace() {
 
 function previousWorkspace() {
     return activeWorkspace().get_neighbor(Meta.MotionDirection.UP)
-}
-
-function switchToNextWorkspace() {
-    switchWorkspace(getNextWorkspace())
-}
-
-function switchToPreviousWorkspace() {
-    switchWorkspace(getPreviousWorkspace())
 }
 
 function getWorkspaceByIndex(index) {
