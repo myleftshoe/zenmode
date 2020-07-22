@@ -214,7 +214,6 @@ let reordering = false
 function focusWindow(display, paramSpec) {
     if (reordering) return
     lastFocusedWindow && lastFocusedWindow.get_compositor_private().hide()
-    if (!focusedWindow) return
     focusedWindow.get_compositor_private().show()
     lastFocusedWindow = focusedWindow
     // const tabList = getActiveWorkspaceTabList()
