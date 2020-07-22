@@ -4,7 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 const { slide, slideOut, animatable } = Extension.imports.transition
 const { Signals } = Extension.imports.signals
-const { switchToWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
+const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 
 const signals = new Signals()
 
@@ -193,14 +193,14 @@ function handleChromeTopClick(actor, event) {
     if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK))
         moveWindowToWorkspace(focusedWindow, workspaces.previousWorkspace)
     else
-        switchToWorkspace(workspaces.previousWorkspace)
+        activateWorkspace(workspaces.previousWorkspace)
 }
 
 function handleChromeBottomClick(actor, event) {
     if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK))
         moveWindowToWorkspace(focusedWindow, workspaces.nextWorkspace)
     else
-        switchToWorkspace(workspaces.nextWorkspace)
+        activateWorkspace(workspaces.nextWorkspace)
 }
 
 function handleWorkspaceChange() {
@@ -214,6 +214,7 @@ let reordering = false
 function focusWindow(display, paramSpec) {
     if (reordering) return
     lastFocusedWindow && lastFocusedWindow.get_compositor_private().hide()
+    if (!focusedWindow) return
     focusedWindow.get_compositor_private().show()
     lastFocusedWindow = focusedWindow
     // const tabList = getActiveWorkspaceTabList()
