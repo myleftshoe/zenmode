@@ -26,6 +26,16 @@ const _workspaces = {
 
 // exported
 
+
+var workspaces = new Proxy({}, {
+    get(target, property, receiver) {
+        if (Number.isInteger(Number(property))) {
+            return getWorkspace(parseInt(property))
+        }
+        return _workspaces[property]
+    }
+})
+
 // accepts workspace object, function that returns a workspace object, or
 // a workspace index and return a workspace object
 function getWorkspace(workspace) {
@@ -57,15 +67,6 @@ function getWorkspaceTabList(workspace) {
 function getActiveWorkspaceTabList() {
     return getWorkspaceTabList(workspaces.activeWorkspace)
 }
-
-var workspaces = new Proxy({}, {
-    get(target, property, receiver) {
-        if (Number.isInteger(Number(property))) {
-            return getWorkspace(parseInt(property))
-        }
-        return _workspaces[property]
-    }
-})
 
 function activeWorkspace() {
     return global.workspace_manager.get_active_workspace()
