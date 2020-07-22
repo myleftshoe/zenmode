@@ -4,6 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 const {slide, slideOut, animatable} = Extension.imports.transition
 const { Signals } = Extension.imports.signals
+const { switchToWorkspace, moveWindowToWorkspace, workspaces} = Extension.imports.workspaces
 
 const signals = new Signals()
 
@@ -16,12 +17,8 @@ Object.defineProperty(this, 'now', {
     get() { return global.get_current_time() }
 })
 
-Object.defineProperty(this, 'activeWorkspace', {
-    get() { return  global.workspace_manager.get_active_workspace() }
-})
-
 function getActiveWorkspaceTabList() {
-    return global.display.get_tab_list(Meta.TabList.NORMAL, activeWorkspace)
+    return global.display.get_tab_list(Meta.TabList.NORMAL, workspaces.activeWorkspace)
 }
 
 Object.defineProperty(this, 'focusedWindow', {
@@ -196,40 +193,22 @@ function stop() {
 }
 
 function handleChromeTopClick(actor, event) {
-    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK )) {
-        const index = activeWorkspace.get_neighbor( Meta.MotionDirection.UP).index() + 1
-        Main.wm._showWorkspaceSwitcher(global.display, focusedWindow, { get_name: () => `move---${index}` })
-        return
-    }
-    prevWorkspace()
+    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK ))
+        moveWindowToWorkspace(focusedWindow, workspaces.previousWorkspace)
+    else
+        switchToWorkspace(workspaces.previousWorkspace)
 }
 
 function handleChromeBottomClick(actor, event) {
-    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK )) {
-        const index = activeWorkspace.get_neighbor( Meta.MotionDirection.DOWN).index() + 1
-        Main.wm._showWorkspaceSwitcher(global.display, focusedWindow, { get_name: () => `move---${index}` })
-        return
-    }
-    nextWorkspace()
-}
-
-function prevWorkspace(actor, event) {
-    switchWorkspace(Meta.MotionDirection.UP)
-}
-
-function nextWorkspace() {
-    switchWorkspace(Meta.MotionDirection.DOWN)
-}
-
-function switchWorkspace(direction = Meta.MotionDirection.DOWN) {
-    const index = activeWorkspace.get_neighbor(direction).index() + 1
-    Main.wm._showWorkspaceSwitcher(global.display, null, { get_name: () => `switch---${index}` })
-    // ws.activate(now);
+    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK ))
+        moveWindowToWorkspace(focusedWindow, workspaces.nextWorkspace)
+    else
+        switchToWorkspace(workspaces.nextWorkspace)
 }
 
 function handleWorkspaceChange() {
-    signals.disconnectObject(activeWorkspace)
-    signals.connect(activeWorkspace, 'window-added', addWindow)
+    signals.disconnectObject(workspaces.activeWorkspace)
+    signals.connect(workspaces.activeWorkspace, 'window-added', addWindow)
     // signals.connect(activeWorkspace, 'window-removed', removeWindow)
 }
 
