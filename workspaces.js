@@ -5,8 +5,8 @@ const Main = imports.ui.main
 // private
 const _switchToWorkspace = function _switchWorkspace(workspace) {
     const id = workspace.index() + 1
-    Main.wm._showWorkspaceSwitcher(global.display, null, { get_name: () => `switch---${id}` })    
-} 
+    Main.wm._showWorkspaceSwitcher(global.display, null, { get_name: () => `switch---${id}` })
+}
 
 const _activateWorkspace = function _activateWorkspace(workspace) {
     workspace.activate(global.get_current_time())
@@ -14,8 +14,8 @@ const _activateWorkspace = function _activateWorkspace(workspace) {
 
 const _moveWindowToWorkspace = function _moveWindowToWorkspace(window, workspace) {
     const id = workspace.index() + 1
-    Main.wm._showWorkspaceSwitcher(global.display, window, { get_name: () => `move---${id}` })    
-} 
+    Main.wm._showWorkspaceSwitcher(global.display, window, { get_name: () => `move---${id}` })
+}
 
 const _workspaces = {
     get activeWorkspace() { return activeWorkspace() },
@@ -65,18 +65,18 @@ var workspaces = new Proxy({}, {
         }
         return _workspaces[property]
     }
-}) 
+})
 
-function activeWorkspace() { 
-    return global.workspace_manager.get_active_workspace() 
+function activeWorkspace() {
+    return global.workspace_manager.get_active_workspace()
 }
 
-function nextWorkspace() { 
-    return activeWorkspace().get_neighbor(Meta.MotionDirection.DOWN) 
+function nextWorkspace() {
+    return activeWorkspace().get_neighbor(Meta.MotionDirection.DOWN)
 }
 
-function previousWorkspace() { 
-    return activeWorkspace().get_neighbor(Meta.MotionDirection.UP) 
+function previousWorkspace() {
+    return activeWorkspace().get_neighbor(Meta.MotionDirection.UP)
 }
 
 function switchToNextWorkspace() {

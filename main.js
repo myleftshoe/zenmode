@@ -2,7 +2,7 @@ const { Clutter, GLib, GObject, Meta, St } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
-const {slide, slideOut, animatable} = Extension.imports.transition
+const { slide, slideOut, animatable } = Extension.imports.transition
 const { Signals } = Extension.imports.signals
 const { switchToWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 
@@ -13,13 +13,13 @@ let hideChromeSid
 let showChromeSid
 let lastFocusedWindow
 
-Object.defineProperty(this, 'now', { 
+Object.defineProperty(this, 'now', {
     get() { return global.get_current_time() }
 })
 
 
 Object.defineProperty(this, 'focusedWindow', {
-    get() { return  getActiveWorkspaceTabList()[0] }
+    get() { return getActiveWorkspaceTabList()[0] }
 })
 
 function start() {
@@ -31,7 +31,7 @@ function start() {
 
     hideChromeSid = Main.overview.connect('shown', hideChrome);
     showChromeSid = Main.overview.connect('hidden', showChrome);
-    
+
     handleWorkspaceChange()
 
     signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
@@ -63,7 +63,7 @@ function grabOpIsResizingHorizontally(op) {
 }
 
 function handleChromeLeftClick(actor, event) {
-    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK ))
+    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK))
         toggle2UpLeft()
     else {
         getActiveWorkspaceTabList().map(mw => mw.maximize(Meta.MaximizeFlags.BOTH))
@@ -73,7 +73,7 @@ function handleChromeLeftClick(actor, event) {
 
 
 function handleChromeRightClick(actor, event) {
-    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK ))
+    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK))
         toggle2UpRight()
     else {
         getActiveWorkspaceTabList().map(mw => mw.maximize(Meta.MaximizeFlags.BOTH))
@@ -162,7 +162,7 @@ function getVisibleWindows() {
     const visibleWindows = tabList.filter(metaWindow => {
         const { x, y, width, height } = metaWindow.get_buffer_rect()
         const mwa = metaWindow.get_compositor_private()
-        return mwa.is_visible() && rectIsInViewport(x,y,width,height)
+        return mwa.is_visible() && rectIsInViewport(x, y, width, height)
     })
     return visibleWindows
 }
@@ -190,14 +190,14 @@ function stop() {
 }
 
 function handleChromeTopClick(actor, event) {
-    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK ))
+    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK))
         moveWindowToWorkspace(focusedWindow, workspaces.previousWorkspace)
     else
         switchToWorkspace(workspaces.previousWorkspace)
 }
 
 function handleChromeBottomClick(actor, event) {
-    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK ))
+    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK))
         moveWindowToWorkspace(focusedWindow, workspaces.nextWorkspace)
     else
         switchToWorkspace(workspaces.nextWorkspace)
@@ -215,7 +215,7 @@ function focusWindow(display, paramSpec) {
     if (reordering) return
     lastFocusedWindow && lastFocusedWindow.get_compositor_private().hide()
     focusedWindow.get_compositor_private().show()
-    lastFocusedWindow = focusedWindow 
+    lastFocusedWindow = focusedWindow
     // const tabList = getActiveWorkspaceTabList()
     // tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
     // const metaWindow = tabList[0]
@@ -248,7 +248,7 @@ function removeWindow(metaWindow) {
 async function setTabListOrder(metaWindows = []) {
     reordering = true
     await Promise.all(
-        metaWindows.map(metaWindow => new Promise(resolve => 
+        metaWindows.map(metaWindow => new Promise(resolve =>
             GLib.idle_add(GLib.PRIORITY_HIGH_IDLE, () => {
                 metaWindow.activate(now)
                 resolve('activated')
@@ -256,7 +256,7 @@ async function setTabListOrder(metaWindows = []) {
             })
         ))
     )
-    reordering = false 
+    reordering = false
 }
 
 let tabList = []
@@ -312,17 +312,17 @@ async function slideRight() {
 async function slideOutLeft(metaWindow) {
     if (!metaWindow) return
     const { width } = metaWindow.get_buffer_rect()
-    return translateMetaWindow(metaWindow, { to: {x: 0 - width} })
+    return translateMetaWindow(metaWindow, { to: { x: 0 - width } })
 }
 
 async function slideOutRight(metaWindow) {
     if (!metaWindow) return
-    return translateMetaWindow(metaWindow, { to: {x: 1920}})
+    return translateMetaWindow(metaWindow, { to: { x: 1920 } })
 }
 
 async function slideInFromRight(metaWindow) {
     if (!metaWindow) return
-    return translateMetaWindow(metaWindow, {from: {x: 1920}})
+    return translateMetaWindow(metaWindow, { from: { x: 1920 } })
     // Main.activateWindow(metaWindow)
     // metaWindow.activate(now())
 }
@@ -330,7 +330,7 @@ async function slideInFromRight(metaWindow) {
 async function slideInFromLeft(metaWindow) {
     if (!metaWindow) return
     const { width } = metaWindow.get_buffer_rect()
-    return translateMetaWindow(metaWindow, {from: {x: 0 - width}})
+    return translateMetaWindow(metaWindow, { from: { x: 0 - width } })
     // Main.activateWindow(metaWindow)
     // metaWindow.activate(now())
 }
@@ -340,7 +340,7 @@ function rectIsInViewport(x, y, width, height) {
     return (x < 1920 && y < 1200 && x + width > 0 && y + height > 0)
 }
 
-async function translateMetaWindow(metaWindow, {from, to, duration}) {
+async function translateMetaWindow(metaWindow, { from, to, duration }) {
     if (!metaWindow) return;
     const { x, y, width, height } = metaWindow.get_buffer_rect()
     const [x0, y0] = coalesceXY(from, [x, y])
@@ -348,10 +348,10 @@ async function translateMetaWindow(metaWindow, {from, to, duration}) {
     // if (x0 === x1 && y0 === y1) return
     const metaWindowActor = metaWindow.get_compositor_private()
     const clone = new Clutter.Clone({ source: metaWindowActor })
-    clone.set_position(x0, y0)    
+    clone.set_position(x0, y0)
     Main.uiGroup.add_child(clone)
     metaWindowActor.hide()
-    await translateActor(clone, {from: [x0, y0], to: [x1, y1], duration})
+    await translateActor(clone, { from: [x0, y0], to: [x1, y1], duration })
     if (rectIsInViewport(x1, y1, width, height)) {
         metaWindowActor.set_position(x1, y1)
         metaWindowActor.show()
@@ -359,7 +359,7 @@ async function translateMetaWindow(metaWindow, {from, to, duration}) {
     clone.destroy()
 }
 
-async function translateActor(actor, {from, to, duration = 350}) {
+async function translateActor(actor, { from, to, duration = 350 }) {
     const { x, y } = actor.get_position()
     const [x0, y0] = coalesceXY(from, [x, y])
     const [x1, y1] = coalesceXY(to, [x, y])
@@ -396,6 +396,6 @@ function coalesceXY(xy, [x, y]) {
     const rx = isNaN(ix) ? x : ix
     const ry = isNaN(iy) ? y : iy
 
-    return [rx,ry]
+    return [rx, ry]
 }
 
