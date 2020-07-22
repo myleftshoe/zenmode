@@ -4,7 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 const {slide, slideOut, animatable} = Extension.imports.transition
 const { Signals } = Extension.imports.signals
-const { switchToWorkspace, moveWindowToWorkspace, workspaces} = Extension.imports.workspaces
+const { switchToWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 
 const signals = new Signals()
 
@@ -17,9 +17,6 @@ Object.defineProperty(this, 'now', {
     get() { return global.get_current_time() }
 })
 
-function getActiveWorkspaceTabList() {
-    return global.display.get_tab_list(Meta.TabList.NORMAL, workspaces.activeWorkspace)
-}
 
 Object.defineProperty(this, 'focusedWindow', {
     get() { return  getActiveWorkspaceTabList()[0] }

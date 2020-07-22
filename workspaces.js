@@ -62,6 +62,14 @@ function moveWindowToWorkspace(window, workspace) {
     _moveWindowToWorkspace(window, getWorkspace(workspace))
 }
 
+function getWorkspaceTabList(workspace) {
+    return global.display.get_tab_list(Meta.TabList.NORMAL, getWorkspace(workspace))
+}
+
+function getActiveWorkspaceTabList() {
+    return getWorkspaceTabList(workspaces.activeWorkspace)
+}
+
 var workspaces = {
     get activeWorkspace() { return activeWorkspace() },
     get previousWorkspace() { return previousWorkspace() },
