@@ -17,26 +17,14 @@ const _moveWindowToWorkspace = function _moveWindowToWorkspace(window, workspace
     Main.wm._showWorkspaceSwitcher(global.display, window, { get_name: () => `move---${id}` })    
 } 
 
+const _workspaces = {
+    get activeWorkspace() { return activeWorkspace() },
+    get previousWorkspace() { return previousWorkspace() },
+    get nextWorkspace() { return nextWorkspace() },
+}
 
 
 // exported
-function activeWorkspace() { return global.workspace_manager.get_active_workspace() }
-
-function nextWorkspace() { return activeWorkspace().get_neighbor(Meta.MotionDirection.DOWN) }
-
-function previousWorkspace() { return activeWorkspace().get_neighbor(Meta.MotionDirection.UP) }
-
-function switchToNextWorkspace() {
-    switchWorkspace(getNextWorkspace())
-}
-
-function switchToPreviousWorkspace() {
-    switchWorkspace(getPreviousWorkspace())
-}
-
-function getWorkspaceByIndex(index) {
-    return global.workspace_manager.get_workspace_by_index(index)
-}
 
 // accepts workspace object, function that returns a workspace object, or
 // a workspace index and return a workspace object
@@ -70,9 +58,36 @@ function getActiveWorkspaceTabList() {
     return getWorkspaceTabList(workspaces.activeWorkspace)
 }
 
-var workspaces = {
-    get activeWorkspace() { return activeWorkspace() },
-    get previousWorkspace() { return previousWorkspace() },
-    get nextWorkspace() { return nextWorkspace() },
+var workspaces = new Proxy({}, {
+    get(target, property, receiver) {
+        if (Number.isInteger(Number(property))) {
+            return getWorkspace(parseInt(property))
+        }
+        return _workspaces[property]
+    }
+}) 
+
+function activeWorkspace() { 
+    return global.workspace_manager.get_active_workspace() 
+}
+
+function nextWorkspace() { 
+    return activeWorkspace().get_neighbor(Meta.MotionDirection.DOWN) 
+}
+
+function previousWorkspace() { 
+    return activeWorkspace().get_neighbor(Meta.MotionDirection.UP) 
+}
+
+function switchToNextWorkspace() {
+    switchWorkspace(getNextWorkspace())
+}
+
+function switchToPreviousWorkspace() {
+    switchWorkspace(getPreviousWorkspace())
+}
+
+function getWorkspaceByIndex(index) {
+    return global.workspace_manager.get_workspace_by_index(index)
 }
 
