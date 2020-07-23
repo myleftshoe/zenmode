@@ -1,6 +1,32 @@
 
 const { Clutter } = imports.gi
 
+const defaultOptions = {
+    duration: 3500,
+    delay: 0,
+}
+
+
+function setTransition(actor, transition, options = defaultOptions) {
+    setAddTransition(actor, transition, options)
+    return actor
+}
+
+function setAddTransition(actor, transition, options = defaultOptions) {
+    actor.connect('parent-set', async (actor, oldParent) => {
+        if (!oldParent) {
+            transition.in(actor)
+            if (options.onComplete) {
+                await transitionComplete(actor)
+                options.onComplete(actor)
+            }
+            return
+        }
+    })
+    return actor
+}
+
+
 function animatable(actor) {
     actor.hide()
     Object.defineProperty(actor, 'inTransition', {
@@ -17,24 +43,34 @@ function animatable(actor) {
         //     actor.easeOut()
         //     return
         // }
-        
+
     })
     return actor
 }
 
+
+async function transitionComplete(actor) {
+    return new Promise(resolve => {
+        const signal = actor.connect('transition-stopped', () => {
+            actor.restore_easing_state()
+            actor.disconnect(signal)
+            resolve('complete')
+        })
+    })
+}
+
+
 var slide = {
     in(actor) {
-        const container = actor.get_parent()
-        const width = container.get_width()
-        const height = container.get_height()
-        const [x,y] = actor.get_position()
+        const [width, height] = actor.get_parent().get_size()
+        const [x, y] = actor.get_position()
         const from = { x: width, y }
         actor.set_position(from.x, from.y)
         actor.show()
 
         // container.add_child(actor)
         // log(actor, from.x, from.y ,to.x, to.y)
-        translateActor(actor, { from, to: { x, y } } )
+        translateActor(actor, { from, to: { x, y } })
     }
 }
 
@@ -44,31 +80,31 @@ function slideIn(actor) {
     const container = actor.get_parent()
     const width = container.get_width()
     const height = container.get_height()
-    const [x,y] = actor.get_position()
+    const [x, y] = actor.get_position()
     const from = { x: width, y }
     actor.set_position(from.x, from.y)
     actor.show()
 
     // container.add_child(actor)
     // log(actor, from.x, from.y ,to.x, to.y)
-    translateActor(actor, { from, to: { x, y } } )
+    translateActor(actor, { from, to: { x, y } })
 }
 
 async function slideOut(actor) {
     const width = actor.get_parent().get_width()
     const height = actor.get_parent().get_height()
-    const [x,y] = actor.get_position()
+    const [x, y] = actor.get_position()
     const to = { x: width, y }
     // log(from.x, from.y, x, y)
     // actor.set_position(from.x, from.y)
     // log(actor, from.x, from.y ,to.x, to.y)
-    await translateActor(actor, { from: {x,y}, to } )
+    await translateActor(actor, { from: { x, y }, to })
     actor.get_parent().remove_child(actor)
 }
 
 
 
-async function translateActor(actor, {from, to, duration = 250}) {
+function translateActor(actor, { from, to, duration = 2500 }) {
     const { x, y } = actor.get_position()
     const [x0, y0] = coalesceXY(from, [x, y])
     const [x1, y1] = coalesceXY(to, [x, y])
@@ -78,13 +114,6 @@ async function translateActor(actor, {from, to, duration = 250}) {
     actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_BACK)
     duration && actor.set_easing_duration(duration)
     actor.set_position(x1, y1)
-    return new Promise(resolve => {
-        const signal = actor.connect('transition-stopped', () => {
-            actor.restore_easing_state()
-            actor.disconnect(signal)
-            resolve('complete')
-        })
-    })
 }
 
 // accepts point in form {x}, {y}, {x, y}, [x], [,y] or [x,y]
@@ -106,6 +135,6 @@ function coalesceXY(xy, [x, y]) {
     const rx = isNaN(ix) ? x : ix
     const ry = isNaN(iy) ? y : iy
 
-    return [rx,ry]
+    return [rx, ry]
 }
 

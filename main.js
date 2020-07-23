@@ -2,7 +2,7 @@ const { Clutter, GLib, GObject, Meta, St } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
-const { slide, slideOut, animatable } = Extension.imports.transition
+const { slide, slideOut, animatable, setTransition, setAddTransition } = Extension.imports.transition
 const { Signals } = Extension.imports.signals
 const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 
@@ -40,19 +40,19 @@ function start() {
 
 
 
-    global.display.connect('grab-op-begin', (display, screen, metaWindow, op) => {
-        if (!metaWindow) return;
-        if (grabOpIsResizingHorizontally(op)) {
-            const { width: startWidth } = metaWindow.get_frame_rect();
-            const nmwa = getNextMetaWindow()
-            metaWindow.connect('size-changed', () => {
-                const { x, y, width, height } = metaWindow.get_frame_rect();
-                nmwa.move_resize_frame(true, width, y, 1920 - width, height)
-            });
-        }
-        else
-            display.end_grab_op(display);
-    });
+    // global.display.connect('grab-op-begin', (display, screen, metaWindow, op) => {
+    //     if (!metaWindow) return;
+    //     if (grabOpIsResizingHorizontally(op)) {
+    //         const { width: startWidth } = metaWindow.get_frame_rect();
+    //         const nmwa = getNextMetaWindow()
+    //         metaWindow.connect('size-changed', () => {
+    //             const { x, y, width, height } = metaWindow.get_frame_rect();
+    //             nmwa.move_resize_frame(true, width, y, 1920 - width, height)
+    //         });
+    //     }
+    //     else
+    //         display.end_grab_op(display);
+    // });
 
 
 }
@@ -347,16 +347,24 @@ async function translateMetaWindow(metaWindow, { from, to, duration }) {
     const [x1, y1] = coalesceXY(to, [x, y])
     // if (x0 === x1 && y0 === y1) return
     const metaWindowActor = metaWindow.get_compositor_private()
+    // const clone = animatable(new Clutter.Clone({ source: metaWindowActor }))
     const clone = new Clutter.Clone({ source: metaWindowActor })
-    clone.set_position(x0, y0)
+    setTransition(clone, slide, {duration: 1000, delay: 2000, onComplete: () => {
+        metaWindowActor.show()
+        clone.destroy()
+    }})
+    // setAddTransition(clone, slide)
+    // setRemoveTransition(clone, slide)
+    // clone.inTransition = slide
+    clone.set_position(x1, y1)
     Main.uiGroup.add_child(clone)
     metaWindowActor.hide()
-    await translateActor(clone, { from: [x0, y0], to: [x1, y1], duration })
-    if (rectIsInViewport(x1, y1, width, height)) {
-        metaWindowActor.set_position(x1, y1)
-        metaWindowActor.show()
-    }
-    clone.destroy()
+    // await translateActor(clone, { from: [x0, y0], to: [x1, y1], duration })
+    // if (rectIsInViewport(x1, y1, width, height)) {
+    //     metaWindowActor.set_position(x1, y1)
+    //     metaWindowActor.show()
+    // }
+    // clone.destroy()
 }
 
 async function translateActor(actor, { from, to, duration = 350 }) {
