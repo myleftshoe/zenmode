@@ -8,7 +8,7 @@ var EventState = class EventState {
         this.state = event.get_state()
     }
     hasModifier(modifier) {
-        return this.state & Clutter.ModifierType[`${modifier}_MASK`]
+        return Boolean(this.state & Clutter.ModifierType[`${modifier}_MASK`])
     }
     hasModifiers(modifiers) {
         return modifiers.reduce((acc, cur) => acc && this.hasModifier(cur), true)
