@@ -1,9 +1,11 @@
 const { Clutter } = imports.gi
 
-var EventState = class EventState {
-    static from(event) {
-        return new EventState(event)
-    }
+function getEventState(event) {
+    return new EventState(event)
+}
+
+// Private
+class EventState {
     constructor(event) {
         this.state = event.get_state()
     }
