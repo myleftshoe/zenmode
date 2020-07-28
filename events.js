@@ -1,8 +1,7 @@
 const { Clutter } = imports.gi
 
 const aliases = {
-    ALT_KEY: 'MOD1',
-    SHIFT_KEY: 'SHIFT',
+    ALT: 'MOD1',
     LEFT_BUTTON: 'BUTTON1',
     MIDDLE_BUTTON: 'BUTTON2',
     RIGHT_BUTTON: 'BUTTON3',

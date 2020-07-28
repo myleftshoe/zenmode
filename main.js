@@ -5,6 +5,8 @@ const { addChrome } = Extension.imports.chrome
 const { slide, slideOut, animatable } = Extension.imports.transition
 const { Signals } = Extension.imports.signals
 const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
+const { Log } = Extension.imports.logger
+const { getEventModifiers } = Extension.imports.events
 
 const signals = new Signals()
 
@@ -63,7 +65,8 @@ function grabOpIsResizingHorizontally(op) {
 }
 
 function handleChromeLeftClick(actor, event) {
-    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK))
+    const { SHIFT, RIGHT_BUTTON } = getEventModifiers(event)
+    if (SHIFT || RIGHT_BUTTON)
         toggle2UpLeft()
     else {
         getActiveWorkspaceTabList().map(mw => mw.maximize(Meta.MaximizeFlags.BOTH))
@@ -71,18 +74,58 @@ function handleChromeLeftClick(actor, event) {
     }
 }
 
-
 function handleChromeRightClick(actor, event) {
-    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK))
+    const { ALT, LEFT_BUTTON, RIGHT_BUTTON } = getEventModifiers(event)
+    if (RIGHT_BUTTON)
         toggle2UpRight()
+    else if (ALT && LEFT_BUTTON) {
+        cycleWindows()
+    }
     else {
         getActiveWorkspaceTabList().map(mw => mw.maximize(Meta.MaximizeFlags.BOTH))
         slideRight()
     }
 }
 
+let windows
+let index = 0
+function cycleWindows() {
+    const vw = getVisibleWindows()
+
+    log(vw[0].title)    
+    log(vw[1].title) 
+
+    const leftWindow = vw[0]
+    // leftWindow.unstick()
+    const rightWindow = vw[1]
+
+    if (!windows) {
+        windows = getActiveWorkspaceTabList().filter(mw => mw !== leftWindow)
+        index = 0
+    }
+    index++
+    if (index >= windows.length)
+        index = 0
+
+
+    const {x, y, width, height} = rightWindow.get_frame_rect()
+    rightWindow.get_compositor_private().hide()
+    const nextWindow = windows[index]
+    nextWindow.get_compositor_private().hide()
+    nextWindow.unmaximize(Meta.MaximizeFlags.BOTH)
+    nextWindow.move_resize_frame(true, x, y, width, height)
+    nextWindow.get_compositor_private().show()
+    nextWindow.activate(now)
+    leftWindow.get_compositor_private().show()
+    
+}
+
 
 async function toggle2UpLeft() {
+    log('ttttttttttttttttttttttt')
+    const leftMetaWindow = getLeftMetaWindow()
+    log(leftMetaWindow.title)
+    leftMetaWindow.unstick()
     const [metaWindow] = getVisibleWindows()
     if (metaWindow.get_maximized() !== Meta.MaximizeFlags.BOTH) {
         expandLeft(metaWindow)
@@ -110,6 +153,7 @@ async function toggle2UpLeft() {
 
 async function toggle2UpRight() {
     const [metaWindow] = getVisibleWindows()
+    log('ggg', metaWindow.title)
     if (metaWindow.get_maximized() !== Meta.MaximizeFlags.BOTH) {
         expandRight(metaWindow)
         return
@@ -157,14 +201,37 @@ function getPrevMetaWindow() {
     return tabList[tabList.length - 1]
 }
 
+
+function getLeftMetaWindow() {
+    return getActiveWorkspaceTabList().find(metaWindow => {
+        const { x } = metaWindow.get_frame_rect()
+        return (x === 1 && metaWindow.get_compositor_private().is_visible())
+    })
+}
+
 function getVisibleWindows() {
     const tabList = getActiveWorkspaceTabList()
-    const visibleWindows = tabList.filter(metaWindow => {
-        const { x, y, width, height } = metaWindow.get_buffer_rect()
-        const mwa = metaWindow.get_compositor_private()
-        return mwa.is_visible() && rectIsInViewport(x, y, width, height)
+    // const visibleWindows = tabList.filter(metaWindow => {
+    //     const { x, y, width, height } = metaWindow.get_buffer_rect()
+    //     const mwa = metaWindow.get_compositor_private()
+    //     return mwa.is_visible() && rectIsInViewport(x, y, width, height)
+    // })
+    const details = tabList.map(metaWindow => {
+        const rect = metaWindow.get_buffer_rect()
+        const metaWindowActor = metaWindow.get_compositor_private()
+        return { metaWindow, metaWindowActor, rect }
     })
-    return visibleWindows
+    const visibleWindows = details.filter(({metaWindow, metaWindowActor, rect}) => {
+        const { x, y, width, height } = rect
+        return metaWindowActor.is_visible() && rectIsInViewport(x, y, width, height)
+    })
+    log(visibleWindows.length)
+    const sorted = visibleWindows.sort((a,b) => {
+        return a.rect.x > b.rect.x
+    })
+    log(sorted.length)
+
+    return sorted.map(({metaWindow}) => metaWindow)
 }
 
 
@@ -190,14 +257,16 @@ function stop() {
 }
 
 function handleChromeTopClick(actor, event) {
-    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK))
+    const { SHIFT, LEFT_BUTTON } = getEventModifiers(event)
+    if (SHIFT && LEFT_BUTTON)
         moveWindowToWorkspace(focusedWindow, workspaces.previousWorkspace)
     else
         activateWorkspace(workspaces.previousWorkspace)
 }
 
 function handleChromeBottomClick(actor, event) {
-    if (event.get_state() & (Clutter.ModifierType.BUTTON3_MASK | Clutter.ModifierType.SHIFT_MASK))
+    const { SHIFT, LEFT_BUTTON } = getEventModifiers(event)
+    if (SHIFT && LEFT_BUTTON)
         moveWindowToWorkspace(focusedWindow, workspaces.nextWorkspace)
     else
         activateWorkspace(workspaces.nextWorkspace)
@@ -212,10 +281,10 @@ function handleWorkspaceChange() {
 
 let reordering = false
 function focusWindow(display, paramSpec) {
-    if (reordering) return
-    lastFocusedWindow && lastFocusedWindow.get_compositor_private().hide()
-    focusedWindow.get_compositor_private().show()
-    lastFocusedWindow = focusedWindow
+    // if (reordering) return
+    // lastFocusedWindow && lastFocusedWindow.get_compositor_private().hide()
+    // focusedWindow.get_compositor_private().show()
+    // lastFocusedWindow = focusedWindow
     // const tabList = getActiveWorkspaceTabList()
     // tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
     // const metaWindow = tabList[0]
