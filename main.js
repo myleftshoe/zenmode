@@ -39,16 +39,13 @@ function start() {
     signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
     signals.connect(global.display, 'notify::focus-window', focusWindow)
 
-
-
-
     global.display.connect('grab-op-begin', (display, screen, metaWindow, op) => {
         if (!metaWindow) return;
         if (grabOpIsResizingHorizontally(op)) {
-            const { width: startWidth } = metaWindow.get_frame_rect();
+            const { width: startWidth } = metaWindow.get_buffer_rect();
             const nmwa = getNextMetaWindow()
             metaWindow.connect('size-changed', () => {
-                const { x, y, width, height } = metaWindow.get_frame_rect();
+                const { x, y, width, height } = metaWindow.get_buffer_rect();
                 nmwa.move_resize_frame(true, width, y, 1920 - width, height)
             });
         }
@@ -65,10 +62,15 @@ function grabOpIsResizingHorizontally(op) {
 }
 
 function handleChromeLeftClick(actor, event) {
-    const { SHIFT, RIGHT_BUTTON } = getEventModifiers(event)
+    const { SHIFT,  ALT, LEFT_BUTTON, RIGHT_BUTTON  } = getEventModifiers(event)
     if (SHIFT || RIGHT_BUTTON)
         toggle2UpLeft()
+    else if (ALT && LEFT_BUTTON) {
+        cycleLeftWindows()
+    }
     else {
+        windows = null
+        index = 0
         getActiveWorkspaceTabList().map(mw => mw.maximize(Meta.MaximizeFlags.BOTH))
         slideLeft()
     }
@@ -82,6 +84,8 @@ function handleChromeRightClick(actor, event) {
         cycleWindows()
     }
     else {
+        windows = null
+        index = 0
         getActiveWorkspaceTabList().map(mw => mw.maximize(Meta.MaximizeFlags.BOTH))
         slideRight()
     }
@@ -89,45 +93,50 @@ function handleChromeRightClick(actor, event) {
 
 let windows
 let index = 0
-function cycleWindows() {
-    const vw = getVisibleWindows()
 
-    log(vw[0].title)    
-    log(vw[1].title) 
+function cycleLeftWindows() {
+    const [ leftWindow, rightWindow ] = getVisibleWindows()
 
-    const leftWindow = vw[0]
-    // leftWindow.unstick()
-    const rightWindow = vw[1]
+    const windows = getActiveWorkspaceTabList().filter(mw => mw !== rightWindow)
 
-    if (!windows) {
-        windows = getActiveWorkspaceTabList().filter(mw => mw !== leftWindow)
-        index = 0
-    }
-    index++
+    index = windows.indexOf(leftWindow) + 1
     if (index >= windows.length)
         index = 0
 
-
-    const {x, y, width, height} = rightWindow.get_frame_rect()
-    rightWindow.get_compositor_private().hide()
+    const {x, y, width, height} = leftWindow.get_frame_rect()
+    leftWindow.get_compositor_private().hide()
     const nextWindow = windows[index]
-    nextWindow.get_compositor_private().hide()
     nextWindow.unmaximize(Meta.MaximizeFlags.BOTH)
     nextWindow.move_resize_frame(true, x, y, width, height)
     nextWindow.get_compositor_private().show()
     nextWindow.activate(now)
-    leftWindow.get_compositor_private().show()
     
 }
 
 
+
+function cycleWindows() {
+    const [ leftWindow, rightWindow ] = getVisibleWindows()
+
+    const windows = getActiveWorkspaceTabList().filter(mw => mw !== leftWindow)
+
+    index = windows.indexOf(rightWindow) + 1
+    if (index >= windows.length)
+        index = 0
+
+    const {x, y, width, height} = rightWindow.get_frame_rect()
+    rightWindow.get_compositor_private().hide()
+    const nextWindow = windows[index]
+    nextWindow.unmaximize(Meta.MaximizeFlags.BOTH)
+    nextWindow.move_resize_frame(true, x, y, width, height)
+    nextWindow.get_compositor_private().show()
+    nextWindow.activate(now)
+}
+
+
 async function toggle2UpLeft() {
-    log('ttttttttttttttttttttttt')
-    const leftMetaWindow = getLeftMetaWindow()
-    log(leftMetaWindow.title)
-    leftMetaWindow.unstick()
-    const [metaWindow] = getVisibleWindows()
-    if (metaWindow.get_maximized() !== Meta.MaximizeFlags.BOTH) {
+    const [ metaWindow, rightWindow ] = getVisibleWindows()
+    if (metaWindow && rightWindow) {
         expandLeft(metaWindow)
         return
     }
@@ -152,10 +161,10 @@ async function toggle2UpLeft() {
 
 
 async function toggle2UpRight() {
-    const [metaWindow] = getVisibleWindows()
-    log('ggg', metaWindow.title)
-    if (metaWindow.get_maximized() !== Meta.MaximizeFlags.BOTH) {
-        expandRight(metaWindow)
+    const [metaWindow, rightMetaWindow] = getVisibleWindows()
+
+    if (rightMetaWindow) {
+        expandRight(rightMetaWindow)
         return
     }
     // if (right) {
@@ -176,19 +185,21 @@ async function toggle2UpRight() {
 }
 
 async function expandLeft(metaWindow) {
+    log('iii',metaWindow.title)
     metaWindow.maximize(Meta.MaximizeFlags.BOTH)
     const nextMetaWindow = getNextMetaWindow()
     await slideOutRight(nextMetaWindow)
-    nextMetaWindow.get_compositor_private().hide()
     nextMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
+    nextMetaWindow.get_compositor_private().hide()
 }
 
 async function expandRight(metaWindow) {
+    log('iii',metaWindow.title)
     metaWindow.maximize(Meta.MaximizeFlags.BOTH)
     const prevMetaWindow = getPrevMetaWindow()
     await slideOutLeft(prevMetaWindow)
-    prevMetaWindow.get_compositor_private().hide()
     prevMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
+    prevMetaWindow.get_compositor_private().hide()
 }
 
 function getNextMetaWindow() {
@@ -204,7 +215,7 @@ function getPrevMetaWindow() {
 
 function getLeftMetaWindow() {
     return getActiveWorkspaceTabList().find(metaWindow => {
-        const { x } = metaWindow.get_frame_rect()
+        const { x } = metaWindow.get_buffer_rect()
         return (x === 1 && metaWindow.get_compositor_private().is_visible())
     })
 }
@@ -223,12 +234,11 @@ function getVisibleWindows() {
     })
     const visibleWindows = details.filter(({metaWindow, metaWindowActor, rect}) => {
         const { x, y, width, height } = rect
-        return metaWindowActor.is_visible() && rectIsInViewport(x, y, width, height)
+        return metaWindowActor.is_visible() 
+        //&& rectIsInViewport(x, y, width, height)
     })
     log(visibleWindows.length)
-    const sorted = visibleWindows.sort((a,b) => {
-        return a.rect.x > b.rect.x
-    })
+    const sorted = visibleWindows.sort((a,b) => a.rect.x > b.rect.x)
     log(sorted.length)
 
     return sorted.map(({metaWindow}) => metaWindow)
