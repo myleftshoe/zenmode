@@ -97,6 +97,11 @@ let index = 0
 function cycleLeftWindows() {
     const [ leftWindow, rightWindow ] = getVisibleWindows()
 
+    if (!rightWindow) {
+        toggle2UpRight()
+        return
+    }
+
     const windows = getActiveWorkspaceTabList().filter(mw => mw !== rightWindow)
 
     index = windows.indexOf(leftWindow) + 1
@@ -117,6 +122,11 @@ function cycleLeftWindows() {
 
 function cycleWindows() {
     const [ leftWindow, rightWindow ] = getVisibleWindows()
+
+    if (!rightWindow) {
+        toggle2UpLeft()
+        return
+    }
 
     const windows = getActiveWorkspaceTabList().filter(mw => mw !== leftWindow)
 
@@ -140,12 +150,6 @@ async function toggle2UpLeft() {
         expandLeft(metaWindow)
         return
     }
-    // if (right) {
-    //     log('RIGHT')
-    //     expand(right)
-    //     return
-    // }
-    // const metaWindow = left
     metaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
     metaWindow.move_resize_frame(true, 0, 0, 960, 500)
     const nextMetaWindow = getNextMetaWindow()
@@ -154,25 +158,16 @@ async function toggle2UpLeft() {
     nextMetaWindow.move_resize_frame(true, 960, 0, 960, 500)
     await slideInFromRight(nextMetaWindow)
     nextMetaWindow.get_compositor_private().show()
-    // metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
-
 }
 
 
 
 async function toggle2UpRight() {
     const [metaWindow, rightMetaWindow] = getVisibleWindows()
-
     if (rightMetaWindow) {
         expandRight(rightMetaWindow)
         return
     }
-    // if (right) {
-    //     log('RIGHT')
-    //     expand(right)
-    //     return
-    // }
-    // const metaWindow = left
     metaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
     metaWindow.move_resize_frame(true, 960, 0, 960, 500)
     const prevMetaWindow = getPrevMetaWindow()
@@ -181,7 +176,6 @@ async function toggle2UpRight() {
     prevMetaWindow.move_resize_frame(true, 0, 0, 960, 500)
     await slideInFromLeft(prevMetaWindow)
     prevMetaWindow.get_compositor_private().show()
-    // metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
 }
 
 async function expandLeft(metaWindow) {
