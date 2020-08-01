@@ -15,6 +15,9 @@ let hideChromeSid
 let showChromeSid
 let lastFocusedWindow
 
+const left = Symbol('left')
+const right = Symbol('right')
+
 Object.defineProperty(this, 'now', {
     get() { return global.get_current_time() }
 })
@@ -40,6 +43,7 @@ function start() {
     signals.connect(global.display, 'notify::focus-window', focusWindow)
 
     global.display.connect('grab-op-begin', (display, screen, metaWindow, op) => {
+        return
         if (!metaWindow) return;
         if (grabOpIsResizingHorizontally(op)) {
             const { width: startWidth } = metaWindow.get_buffer_rect();
@@ -115,6 +119,8 @@ function cycleLeftWindows() {
     nextWindow.move_resize_frame(true, x, y, width, height)
     nextWindow.get_compositor_private().show()
     nextWindow.activate(now)
+    leftWindow.left = false
+    nextWindow.left = true
     
 }
 
@@ -141,15 +147,20 @@ function cycleWindows() {
     nextWindow.move_resize_frame(true, x, y, width, height)
     nextWindow.get_compositor_private().show()
     nextWindow.activate(now)
+    rightWindow.right = false
+    nextWindow.right = true
 }
 
 
 async function toggle2UpLeft() {
-    const [ metaWindow, rightWindow ] = getVisibleWindows()
-    if (metaWindow && rightWindow) {
-        expandLeft(metaWindow)
+    const [ leftWindow, rightWindow ] = getVisibleWindows()
+    if (leftWindow && rightWindow) {
+        expandLeft(leftWindow)
+        leftWindow['left'] = false
+        rightWindow['right'] = false
         return
     }
+    const metaWindow = focusedWindow
     metaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
     metaWindow.move_resize_frame(true, 0, 0, 960, 500)
     const nextMetaWindow = getNextMetaWindow()
@@ -158,16 +169,21 @@ async function toggle2UpLeft() {
     nextMetaWindow.move_resize_frame(true, 960, 0, 960, 500)
     await slideInFromRight(nextMetaWindow)
     nextMetaWindow.get_compositor_private().show()
+    metaWindow.left = true
+    nextMetaWindow.right = true
 }
 
 
 
 async function toggle2UpRight() {
-    const [metaWindow, rightMetaWindow] = getVisibleWindows()
-    if (rightMetaWindow) {
-        expandRight(rightMetaWindow)
+    const [ leftWindow, rightWindow ] = getVisibleWindows()
+    if (leftWindow && rightWindow) {
+        expandRight(rightWindow)
+        leftWindow['left'] = false
+        rightWindow['right'] = false
         return
     }
+    const metaWindow = focusedWindow
     metaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
     metaWindow.move_resize_frame(true, 960, 0, 960, 500)
     const prevMetaWindow = getPrevMetaWindow()
@@ -176,10 +192,11 @@ async function toggle2UpRight() {
     prevMetaWindow.move_resize_frame(true, 0, 0, 960, 500)
     await slideInFromLeft(prevMetaWindow)
     prevMetaWindow.get_compositor_private().show()
+    prevMetaWindow.left = true
+    metaWindow.right = true
 }
 
 async function expandLeft(metaWindow) {
-    log('iii',metaWindow.title)
     metaWindow.maximize(Meta.MaximizeFlags.BOTH)
     const nextMetaWindow = getNextMetaWindow()
     await slideOutRight(nextMetaWindow)
@@ -188,7 +205,6 @@ async function expandLeft(metaWindow) {
 }
 
 async function expandRight(metaWindow) {
-    log('iii',metaWindow.title)
     metaWindow.maximize(Meta.MaximizeFlags.BOTH)
     const prevMetaWindow = getPrevMetaWindow()
     await slideOutLeft(prevMetaWindow)
@@ -215,6 +231,21 @@ function getLeftMetaWindow() {
 }
 
 function getVisibleWindows() {
+    const tabList = getActiveWorkspaceTabList()
+    log('sdfsdfsdsd')
+    const left = tabList.filter(metaWindow => {
+        // log('uuuuuuuuuuuuuuuuuuuuuuuuuu', metaWindow['left'])
+        return Boolean(metaWindow.left && true || false)
+    })[0]
+    const right = tabList.filter(metaWindow => Boolean(metaWindow.right && true || false))[0]
+    log('hhh')
+    log(left && left.title || '', right && right.title || '')
+    log('1hhh')
+    return [left, right]
+}
+
+
+function _getVisibleWindows() {
     const tabList = getActiveWorkspaceTabList()
     // const visibleWindows = tabList.filter(metaWindow => {
     //     const { x, y, width, height } = metaWindow.get_buffer_rect()
@@ -276,16 +307,35 @@ function handleChromeBottomClick(actor, event) {
         activateWorkspace(workspaces.nextWorkspace)
 }
 
+
 function handleWorkspaceChange() {
+    log('workspace')
     signals.disconnectObject(workspaces.activeWorkspace)
     signals.connect(workspaces.activeWorkspace, 'window-added', addWindow)
     // signals.connect(activeWorkspace, 'window-removed', removeWindow)
 }
 
+function hideOtherWindows() {
+    const tabList = getActiveWorkspaceTabList()
+    tabList.map(metaWindow => {
+        const mwa = metaWindow.get_compositor_private()
+        if (metaWindow.left || metaWindow.right || metaWindow === focusedWindow) {
+            metaWindow.unminimize()
+            mwa.show()
+        }
+        else {
+            mwa.hide()
+            metaWindow.minimize()
+        }
+    })
+}
+
 
 let reordering = false
 function focusWindow(display, paramSpec) {
-    // if (reordering) return
+    log('focusWindow', focusedWindow.title)
+    if (reordering) return
+    hideOtherWindows()
     // lastFocusedWindow && lastFocusedWindow.get_compositor_private().hide()
     // focusedWindow.get_compositor_private().show()
     // lastFocusedWindow = focusedWindow
@@ -330,6 +380,7 @@ async function setTabListOrder(metaWindows = []) {
         ))
     )
     reordering = false
+    return Promise.resolve('setTabListOrder')
 }
 
 let tabList = []
@@ -349,6 +400,7 @@ async function slideLeft() {
         clicks = 1
     pendingTransitions++
     const pos = tabList.length - clicks
+    tabList[pos].unminimize()
     await slideInFromLeft(tabList[pos])
     pendingTransitions--
     if (pendingTransitions === 0) {
@@ -356,8 +408,10 @@ async function slideLeft() {
         tabList[tabList.length - 1].maximize(Meta.MaximizeFlags.BOTH)
         const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
         clicks = 0
-        await setTabListOrder(focusOrder)
-        focusOrder.slice(-1).get_compositor_private().show()
+        const res = await setTabListOrder(focusOrder)
+        // hideOtherWindows()
+        // await setTabListOrder(focusOrder)
+        // focusOrder.slice(-1).get_compositor_private().show()
     }
 }
 
@@ -372,13 +426,16 @@ async function slideRight() {
     if (clicks >= tabList.length)
         clicks = 0
     pendingTransitions++
+    tabList[clicks].unminimize()
     await slideInFromRight(tabList[clicks])
     pendingTransitions--
     if (pendingTransitions === 0) {
         const focusOrder = [...tabList.slice(0, clicks).reverse(), ...tabList.slice(clicks).reverse()]
         clicks = 0
-        await setTabListOrder(focusOrder)
-        focusOrder.slice(-1).get_compositor_private().show()
+        const res = await setTabListOrder(focusOrder)
+        // hideOtherWindows()
+        // await setTabListOrder(focusOrder)
+        // focusOrder.slice(-1).get_compositor_private().show()
     }
 }
 
