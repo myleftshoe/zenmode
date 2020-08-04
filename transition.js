@@ -75,7 +75,7 @@ async function translateActor(actor, {from, to, duration = 250}) {
     if (x0 === x1 && y0 === y1) return Promise.resolve()
     actor.set_position(x0, y0)
     actor.save_easing_state()
-    actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_BACK)
+    actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUAD)
     duration && actor.set_easing_duration(duration)
     actor.set_position(x1, y1)
     return new Promise(resolve => {
