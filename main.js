@@ -69,7 +69,7 @@ function handleWorkspaceChange() {
 }
 
 function handleChromeLeftClick(actor, event) {
-    const { SHIFT,  ALT, LEFT_BUTTON, RIGHT_BUTTON  } = getEventModifiers(event)
+    const { SHIFT, ALT, LEFT_BUTTON, RIGHT_BUTTON } = getEventModifiers(event)
     if (SHIFT || RIGHT_BUTTON)
         toggle2UpLeft()
     else if (ALT && LEFT_BUTTON) {
@@ -115,7 +115,7 @@ function handleChromeBottomClick(actor, event) {
 // --------------------------------------------------------------------------------
 
 function cycleLeftWindows() {
-    const [ leftWindow, rightWindow ] = getTopWindows()
+    const [leftWindow, rightWindow] = getTopWindows()
 
     if (!rightWindow) {
         toggle2UpRight()
@@ -128,17 +128,17 @@ function cycleLeftWindows() {
     if (index >= windows.length)
         index = 0
 
-    const {x, y, width, height} = leftWindow.get_frame_rect()
+    const { x, y, width, height } = leftWindow.get_frame_rect()
     leftWindow.get_compositor_private().hide()
     const nextWindow = windows[index]
     nextWindow.move_resize_frame(true, x, y, width, height)
     nextWindow.get_compositor_private().show()
     nextWindow.activate(now)
-    
+
 }
 
 function cycleWindows() {
-    const [ leftWindow, rightWindow ] = getTopWindows()
+    const [leftWindow, rightWindow] = getTopWindows()
 
     if (!rightWindow) {
         toggle2UpLeft()
@@ -151,7 +151,7 @@ function cycleWindows() {
     if (index >= windows.length)
         index = 0
 
-    const {x, y, width, height} = rightWindow.get_frame_rect()
+    const { x, y, width, height } = rightWindow.get_frame_rect()
     rightWindow.get_compositor_private().hide()
     const nextWindow = windows[index]
     nextWindow.move_resize_frame(true, x, y, width, height)
@@ -162,7 +162,7 @@ function cycleWindows() {
 // --------------------------------------------------------------------------------
 
 async function toggle2UpLeft() {
-    const [ metaWindow, rightWindow ] = getTopWindows()
+    const [metaWindow, rightWindow] = getTopWindows()
     if (metaWindow && rightWindow) {
         expandLeft(metaWindow)
         return
@@ -225,7 +225,7 @@ function tileLeft(metaWindow) {
     }
     const { x, y, width, height } = geometry
     const actor = metaWindow.get_compositor_private()
-    
+
     actor.remove_all_transitions()
     actor.save_easing_state()
     actor.set_easing_duration(250)
@@ -258,7 +258,7 @@ function tileRight(metaWindow) {
     }
     const { x, y, width, height } = geometry
     const actor = metaWindow.get_compositor_private()
-    
+
     actor.remove_all_transitions()
     actor.save_easing_state()
     actor.set_easing_duration(250)
@@ -275,7 +275,7 @@ function tileRight(metaWindow) {
 }
 
 async function expandLeft(metaWindow) {
-    log('iii',metaWindow.title)
+    log('iii', metaWindow.title)
     maximize(metaWindow)
     const nextMetaWindow = getNextMetaWindow()
     await slideOutRight(nextMetaWindow)
@@ -300,7 +300,7 @@ async function expandRight(metaWindow) {
     }
     const { x, y, width, height } = geometry
     const actor = metaWindow.get_compositor_private()
-    
+
     actor.remove_all_transitions()
     actor.save_easing_state()
     actor.set_easing_duration(250)
@@ -345,7 +345,7 @@ function getTopWindows() {
     const mwas = tabList
         .map(metaWindow => metaWindow.get_compositor_private())
         .filter(mwa => mwa.is_visible())
-        .sort((a,b) => a.x > b.x)
+        .sort((a, b) => a.x > b.x)
         .map(mwa => mwa.meta_window)
     log('YYYY>')
     mwas.map(mw => log(mw.title))
