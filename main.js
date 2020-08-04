@@ -189,6 +189,7 @@ async function toggle2UpRight() {
 
 function maximize(metaWindow) {
     log('MAXIMIZE', metaWindow.title)
+    metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
     let geometry = {
         x: 3,
         y: 27,
