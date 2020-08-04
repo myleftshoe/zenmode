@@ -163,12 +163,15 @@ function cycleWindows() {
 
 async function toggle2UpLeft() {
     const [metaWindow, rightWindow] = getTopWindows()
+    const nextMetaWindow = getNextMetaWindow()
     if (metaWindow && rightWindow) {
-        expandLeft(metaWindow)
+        maximize(metaWindow)
+        await slideOutRight(nextMetaWindow)
+        maximize(nextMetaWindow)
+        nextMetaWindow.get_compositor_private().hide()
         return
     }
-    const nextMetaWindow = getNextMetaWindow()
-    nextMetaWindow.move_frame(true, 1000, 27)
+    nextMetaWindow.move_frame(true, 963 + 250, 27)
     nextMetaWindow.get_compositor_private().show()
     tileRight(nextMetaWindow)
     metaWindow.move_resize_frame(true, 3, 27, 957, 1172)
@@ -176,20 +179,26 @@ async function toggle2UpLeft() {
 
 async function toggle2UpRight() {
     const [metaWindow, rightMetaWindow] = getTopWindows()
+    const prevMetaWindow = getPrevMetaWindow()
     if (metaWindow && rightMetaWindow) {
-        expandRight(rightMetaWindow)
+        maximize(rightMetaWindow)
+        await slideOutLeft(prevMetaWindow)
+        maximize(prevMetaWindow)
+        prevMetaWindow.get_compositor_private().hide()
         return
     }
-    const prevMetaWindow = getPrevMetaWindow()
-    prevMetaWindow.move_resize_frame(false, 3, 27, 957, 1172)
+    prevMetaWindow.move_resize_frame(true, 3 - 250, 27, 957, 1172)
     prevMetaWindow.get_compositor_private().show()
-    tileRight(metaWindow)
+    prevMetaWindow.raise()
+    tileLeft(prevMetaWindow)
+    metaWindow.move_resize_frame(true, 963, 27, 957, 1172)
+    prevMetaWindow.lower()
 }
-
 
 function maximize(metaWindow) {
     log('MAXIMIZE', metaWindow.title)
     metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
+    metaWindow.raise()
     let geometry = {
         x: 3,
         y: 27,
@@ -274,52 +283,6 @@ function tileRight(metaWindow) {
 
     metaWindow.move_frame(true, x, y)
 }
-
-async function expandLeft(metaWindow) {
-    log('iii', metaWindow.title)
-    maximize(metaWindow)
-    const nextMetaWindow = getNextMetaWindow()
-    await slideOutRight(nextMetaWindow)
-    maximize(nextMetaWindow)
-    nextMetaWindow.get_compositor_private().hide()
-}
-
-async function expandRight(metaWindow) {
-    let geometry = {
-        x: 3,
-        y: 27,
-        width: 1917,
-        height: 1172,
-    }
-    if (metaWindow.is_client_decorated()) {
-        geometry = {
-            x: 23,
-            y: 47,
-            width: 1876,
-            height: 1132,
-        }
-    }
-    const { x, y, width, height } = geometry
-    const actor = metaWindow.get_compositor_private()
-
-    actor.remove_all_transitions()
-    actor.save_easing_state()
-    actor.set_easing_duration(250)
-    actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUAD)
-
-    const sid = actor.connect('transitions-completed', (a, b) => {
-        actor.disconnect(sid)
-        actor.restore_easing_state()
-        log('COMPLETED', a, b)
-        metaWindow.move_resize_frame(false, x, y, width, height)
-        const prevMetaWindow = getPrevMetaWindow()
-        maximize(prevMetaWindow)
-        prevMetaWindow.get_compositor_private().hide()
-    })
-
-    metaWindow.move_resize_frame(false, x, y, width, height)
-}
-
 
 // --------------------------------------------------------------------------------
 
@@ -480,7 +443,7 @@ async function translateMetaWindow(metaWindow, { from, to, duration }) {
     clone.destroy()
 }
 
-async function translateActor(actor, { from, to, duration = 350 }) {
+async function translateActor(actor, { from, to, duration = 250 }) {
     const { x, y } = actor.get_position()
     const [x0, y0] = coalesceXY(from, [x, y])
     const [x1, y1] = coalesceXY(to, [x, y])
@@ -488,6 +451,7 @@ async function translateActor(actor, { from, to, duration = 350 }) {
     actor.set_position(x0, y0)
     actor.save_easing_state()
     actor.set_easing_duration(duration)
+    actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUAD)
     actor.set_position(x1, y1)
     return new Promise(resolve => {
         const signal = actor.connect('transition-stopped', () => {
