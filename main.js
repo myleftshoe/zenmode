@@ -130,11 +130,8 @@ function cycleLeftWindows() {
 
     const {x, y, width, height} = leftWindow.get_frame_rect()
     leftWindow.get_compositor_private().hide()
-    // leftWindow.maximize(Meta.MaximizeFlags.BOTH)
     const nextWindow = windows[index]
-    // nextWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
     nextWindow.move_resize_frame(true, x, y, width, height)
-    // nextWindow.maximize(Meta.MaximizeFlags.VERTICAL)
     nextWindow.get_compositor_private().show()
     nextWindow.activate(now)
     
@@ -156,12 +153,8 @@ function cycleWindows() {
 
     const {x, y, width, height} = rightWindow.get_frame_rect()
     rightWindow.get_compositor_private().hide()
-    // rightWindow.minimize()
-    // rightWindow.maximize(Meta.MaximizeFlags.BOTH)
     const nextWindow = windows[index]
-    // nextWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
     nextWindow.move_resize_frame(true, x, y, width, height)
-    // nextWindow.maximize(Meta.MaximizeFlags.VERTICAL)
     nextWindow.get_compositor_private().show()
     nextWindow.activate(now)
 }
@@ -174,15 +167,11 @@ async function toggle2UpLeft() {
         expandLeft(metaWindow)
         return
     }
-    // metaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
-    // metaWindow.move_resize_frame(true, 0, 30, 960, 1170)
     const nextMetaWindow = getNextMetaWindow()
     nextMetaWindow.move_frame(true, 1000, 27)
     nextMetaWindow.get_compositor_private().show()
     tileRight(nextMetaWindow)
     metaWindow.move_resize_frame(true, 3, 27, 957, 1172)
-    // nextMetaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
-    // nextMetaWindow.move_resize_frame(true, 960, 30, 960, 1170)
 }
 
 async function toggle2UpRight() {
@@ -191,23 +180,15 @@ async function toggle2UpRight() {
         expandRight(rightMetaWindow)
         return
     }
-    // metaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
     const prevMetaWindow = getPrevMetaWindow()
     prevMetaWindow.move_resize_frame(false, 3, 27, 957, 1172)
     prevMetaWindow.get_compositor_private().show()
     tileRight(metaWindow)
-    // prevMetaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
-    // tileLeft(prevMetaWindow)
-    // // prevMetaWindow.move_resize_frame(true, 0, 30, 960, 1170)
-    // await slideInFromLeft(prevMetaWindow)
-    // prevMetaWindow.get_compositor_private().show()
 }
 
 
 function maximize(metaWindow) {
     log('MAXIMIZE', metaWindow.title)
-    // const mwa = metaWindow.get_compositor_private()
-    // metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
     let geometry = {
         x: 3,
         y: 27,
@@ -222,16 +203,12 @@ function maximize(metaWindow) {
             height: 1132,
         }
     }
-    // animateActor(metaWindow, geometry)
-    // await easeMoveResize(metaWindow, geometry)
     const { x, y, width, height } = geometry
     metaWindow.move_resize_frame(false, x, y, width, height)
 }
 
 
 function tileLeft(metaWindow) {
-    // const mwa = metaWindow.get_compositor_private()
-    // metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
     let geometry = {
         x: 3,
         y: 27,
@@ -246,36 +223,25 @@ function tileLeft(metaWindow) {
             height: 1132,
         }
     }
-    // animateActor(metaWindow, geometry)
     const { x, y, width, height } = geometry
-
     const actor = metaWindow.get_compositor_private()
     
     actor.remove_all_transitions()
-    // actor.set_position(960, y)
-    // metaWindow.move_frame(true, 960, y, width, height)
-    // actor.set_pivot_point(1, 0)
     actor.save_easing_state()
-    // actor.set_easing_delay(2000)
     actor.set_easing_duration(250)
     actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUAD)
 
     const sid = actor.connect('transitions-completed', (a, b) => {
         actor.disconnect(sid)
         actor.restore_easing_state()
-        // actor.set_scale(1,1)
         log('COMPLETED', a, b)
         metaWindow.move_resize_frame(false, x, y, width, height)
     })
 
     metaWindow.move_frame(true, x, y)
-
 }
 
-
 function tileRight(metaWindow) {
-    // const mwa = metaWindow.get_compositor_private()
-    // metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
     let geometry = {
         x: 963,
         y: 27,
@@ -290,47 +256,34 @@ function tileRight(metaWindow) {
             height: 1132,
         }
     }
-    // animateActor(metaWindow, geometry)
     const { x, y, width, height } = geometry
-
     const actor = metaWindow.get_compositor_private()
     
     actor.remove_all_transitions()
-    // actor.set_position(960, y)
-    // metaWindow.move_frame(true, 960, y, width, height)
-    // actor.set_pivot_point(1, 0)
     actor.save_easing_state()
-    // actor.set_easing_delay(2000)
     actor.set_easing_duration(250)
     actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUAD)
 
     const sid = actor.connect('transitions-completed', (a, b) => {
         actor.disconnect(sid)
         actor.restore_easing_state()
-        // actor.set_scale(1,1)
         log('COMPLETED', a, b)
         metaWindow.move_resize_frame(false, x, y, width, height)
     })
 
     metaWindow.move_frame(true, x, y)
-
 }
-
 
 async function expandLeft(metaWindow) {
     log('iii',metaWindow.title)
     maximize(metaWindow)
-    // metaWindow.maximize(Meta.MaximizeFlags.BOTH)
     const nextMetaWindow = getNextMetaWindow()
     await slideOutRight(nextMetaWindow)
     maximize(nextMetaWindow)
-    // nextMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
     nextMetaWindow.get_compositor_private().hide()
 }
 
 async function expandRight(metaWindow) {
-    // const mwa = metaWindow.get_compositor_private()
-    // metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
     let geometry = {
         x: 3,
         y: 27,
@@ -345,34 +298,25 @@ async function expandRight(metaWindow) {
             height: 1132,
         }
     }
-    // animateActor(metaWindow, geometry)
     const { x, y, width, height } = geometry
-
     const actor = metaWindow.get_compositor_private()
     
     actor.remove_all_transitions()
-    // actor.set_position(960, y)
-    // metaWindow.move_frame(true, 960, y, width, height)
-    // actor.set_pivot_point(1, 0)
     actor.save_easing_state()
-    // actor.set_easing_delay(2000)
     actor.set_easing_duration(250)
     actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUAD)
 
     const sid = actor.connect('transitions-completed', (a, b) => {
         actor.disconnect(sid)
         actor.restore_easing_state()
-        // actor.set_scale(1,1)
         log('COMPLETED', a, b)
         metaWindow.move_resize_frame(false, x, y, width, height)
         const prevMetaWindow = getPrevMetaWindow()
         maximize(prevMetaWindow)
-        // prevMetaWindow.maximize(Meta.MaximizeFlags.BOTH)
         prevMetaWindow.get_compositor_private().hide()
     })
 
     metaWindow.move_resize_frame(false, x, y, width, height)
-    // metaWindow.move_frame(true, x, y)
 }
 
 
@@ -415,11 +359,8 @@ let reordering = false
 
 async function addWindow(workspace, metaWindow) {
     log('add window')
-    // if (metaWindow.is_client_decorated()) return;
     if (metaWindow.get_window_type() > 1) return;
-    // metaWindow.maximize(Meta.MaximizeFlags.BOTH)
     maximize(metaWindow)
-    // metaWindow.move_resize_frame(true,0,0,global.stage.get_width(), global.stage.get_height())
     const tabList = getActiveWorkspaceTabList()
     await slideOutRight(tabList[1])
 }
@@ -462,10 +403,8 @@ async function slideLeft() {
     await slideInFromLeft(tabList[pos])
     pendingTransitions--
     if (pendingTransitions === 0) {
-        // tabList[0].maximize(Meta.MaximizeFlags.BOTH)
         maximize(tabList[0])
         maximize(tabList[tabList.length - 1])
-        // tabList[tabList.length - 1].maximize(Meta.MaximizeFlags.BOTH)
         const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
         clicks = 0
         await setTabListOrder(focusOrder)
@@ -508,16 +447,12 @@ async function slideOutRight(metaWindow) {
 async function slideInFromRight(metaWindow) {
     if (!metaWindow) return
     return translateMetaWindow(metaWindow, { from: { x: 1920 } })
-    // Main.activateWindow(metaWindow)
-    // metaWindow.activate(now())
 }
 
 async function slideInFromLeft(metaWindow) {
     if (!metaWindow) return
     const { width } = metaWindow.get_buffer_rect()
     return translateMetaWindow(metaWindow, { from: { x: 0 - width } })
-    // Main.activateWindow(metaWindow)
-    // metaWindow.activate(now())
 }
 
 
