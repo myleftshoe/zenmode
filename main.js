@@ -21,7 +21,7 @@ Object.defineProperty(this, 'now', {
 
 
 Object.defineProperty(this, 'focusedWindow', {
-    get() { return getActiveWorkspaceTabList()[0] }
+    get() { return global.display.get_focus_window()}
 })
 
 
