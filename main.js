@@ -44,13 +44,17 @@ function _finishWorkspaceSwitch(switchData) {
     }
     const visibleWindows = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
 
-    if (!visibleWindows && focusedWindow.get_workspace() === workspaces.activeWorkspace) {
+    if (!focusedWindow) {
+        visibleWorkspaceWindows.set(workspaces.activeWorkspace, [])
+    }
+    else if (!visibleWindows && focusedWindow.get_workspace() === workspaces.activeWorkspace) {
         visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
         maximize(focusedWindow)
         focusedWindow.get_compositor_private().show()
     }
-    else 
+    else {
         visibleWindows.map(show)
+    }
 
     switchData.container.destroy();
     switchData.movingWindowBin.destroy();
