@@ -85,3 +85,7 @@ function getWorkspaceByIndex(index) {
     return global.workspace_manager.get_workspace_by_index(index)
 }
 
+function getTopNWindows(n) {
+    return global.display.sort_windows_by_stacking(getActiveWorkspaceTabList()).slice(-n)
+}
+
