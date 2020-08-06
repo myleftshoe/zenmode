@@ -64,7 +64,7 @@ function _finishWorkspaceSwitch(switchData) {
 }
 
 function show(metaWindow) {
-    log('showing', metaWindow.title, focusedWindow.title)
+    log('show', metaWindow.title)
     metaWindow.get_compositor_private().show();
     return metaWindow
 }
@@ -81,8 +81,6 @@ function start() {
     hideChromeSid = Main.overview.connect('shown', hideChrome);
     showChromeSid = Main.overview.connect('hidden', showChrome);
 
-
-    Log.properties(global.window_manager)
     Main.wm._finishWorkspaceSwitch = _finishWorkspaceSwitch
     Main.wm._switchWorkspaceDone = _switchWorkspaceDone
 
@@ -96,7 +94,7 @@ function start() {
 }
 
 function hide(metaWindow) {
-    log(metaWindow.title)
+    log('hide', metaWindow.title)
     metaWindow.get_compositor_private().hide()
     return metaWindow
 }
@@ -194,25 +192,9 @@ function cycleLeftWindows() {
     if (index > windows.length - 1)
         index = 0
 
-    log(leftWindow.title)
-    let f = leftWindow.get_frame_rect()
-    log('frame-rect', f.x, f.y, f.width, f.height)
-    let b = leftWindow.get_buffer_rect()
-    log('buffer-rect', b.x, b.y, b.width, b.height)
-    let c = leftWindow.frame_rect_to_client_rect(f)
-    log('client-rect',  c.x, c.y, c.width, c.height)
-    let a = {}
-    const mwa = leftWindow.get_compositor_private() 
-    a.x = mwa.get_position()[0]
-    a.y = mwa.get_position()[1]
-    a.width = mwa.get_size()[0]
-    a.height = mwa.get_size()[1]
-    log('actor-rect',  a.x, a.y, a.width, a.height)
 
     let { x, y, width, height } = leftWindow.get_frame_rect()
-
     leftWindow.get_compositor_private().hide()
-
     const nextWindow = windows[index]
 
     if (!leftWindow.is_client_decorated() && nextWindow.is_client_decorated()) {
@@ -298,8 +280,6 @@ async function toggle2UpLeft() {
 
 async function toggle2UpRight() {
     const [metaWindow, rightMetaWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
-    log('***********1', metaWindow.title)
-    rightMetaWindow && log('***********2', rightMetaWindow.title)
     if (metaWindow && rightMetaWindow) {
         maximize(rightMetaWindow)
         await slideOutLeft(metaWindow)
@@ -383,7 +363,7 @@ function easeInLeft(metaWindow) {
 }
 
 function maximize(metaWindow) {
-    log('MAXIMIZE', metaWindow.title)
+    log('maximize', metaWindow.title)
     metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
     metaWindow.raise()
     let geometry = {
@@ -423,7 +403,7 @@ function getPrevMetaWindow() {
 let reordering = false
 
 async function addWindow(workspace, metaWindow) {
-    log('add window')
+    log('addWindow', metaWindow.title)
     if (metaWindow.get_window_type() > 1) return;
     maximize(metaWindow)
     const tabList = getActiveWorkspaceTabList()
