@@ -4,7 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 const { slide, slideOut, animatable } = Extension.imports.transition
 const { Signals } = Extension.imports.signals
-const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList, getTopNWindows } = Extension.imports.workspaces
+const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
 
@@ -30,31 +30,41 @@ function _switchWorkspaceDone(shellwm) {
 //    shellwm.completed_switch_workspace();
 }
 
+const visibleWorkspaceWindows = new Map()
+
 function _finishWorkspaceSwitch(switchData) {
-    log('fffffffffffffffffffffffffffffffffffff')
     this._switchData = null;
 
     for (let i = 0; i < switchData.windows.length; i++) {
-        let w = switchData.windows[i];
-
+        const w = switchData.windows[i];
         w.window.disconnect(w.windowDestroyId);
         w.window.get_parent().remove_child(w.window);
         w.parent.add_child(w.window);
-
-        // if (w.window.get_meta_window().get_workspace() !=
-        //     global.workspace_manager.get_active_workspace())
-        if (w.window.get_meta_window() !== focusedWindow) {
-            log('hiding', w.window.get_meta_window().title, focusedWindow.title)
-            w.window.hide();
-        }
+        w.window.hide();
     }
+    const visibleWindows = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
+
+    if (!visibleWindows && focusedWindow.get_workspace() === workspaces.activeWorkspace) {
+        visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
+        maximize(focusedWindow)
+        focusedWindow.get_compositor_private().show()
+    }
+    else 
+        visibleWindows.map(show)
+
     switchData.container.destroy();
     switchData.movingWindowBin.destroy();
 
     this._movingWindow = null;
-    log('tttttttttttttttttt')
 
 }
+
+function show(metaWindow) {
+    log('showing', metaWindow.title, focusedWindow.title)
+    metaWindow.get_compositor_private().show();
+    return metaWindow
+}
+
 
 
 function start() {
@@ -72,12 +82,13 @@ function start() {
     Main.wm._finishWorkspaceSwitch = _finishWorkspaceSwitch
     Main.wm._switchWorkspaceDone = _switchWorkspaceDone
 
-    handleWorkspaceChange()
     signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
 
     const tabList = getActiveWorkspaceTabList()
     tabList.map(hide).map(maximize)
     focusedWindow.get_compositor_private().show()
+    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
+    handleWorkspaceChange()
 }
 
 function hide(metaWindow) {
@@ -121,12 +132,14 @@ function handleChromeLeftClick(actor, event) {
     const { RIGHT_BUTTON } = getEventModifiers(event)
     if (RIGHT_BUTTON) {
         toggle2UpLeft()
+        cycling = ''
         return
     }
     if (twoUp) {
         cycleLeftWindows()
         return
     }
+    cycling = ''
     slideLeft()
 }
 
@@ -134,12 +147,14 @@ function handleChromeRightClick(actor, event) {
     const { RIGHT_BUTTON } = getEventModifiers(event)
     if (RIGHT_BUTTON) {
         toggle2UpRight()
+        cycling = ''
         return
     }
     if (twoUp) {
         cycleWindows()
         return
     }
+    cycling = ''
     slideRight()
 }
 
@@ -160,48 +175,97 @@ function handleChromeBottomClick(actor, event) {
 }
 
 // --------------------------------------------------------------------------------
-
+let index = 0
+let windows
+let cycling = ''
 function cycleLeftWindows() {
-    const [leftWindow, rightWindow] = getTopWindows()
+    const [leftWindow, rightWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
 
-    if (!rightWindow) {
-        toggle2UpRight()
-        return
+    if (cycling !== 'left') {
+        cycling = 'left'
+        windows = getActiveWorkspaceTabList().filter(mw => mw !== rightWindow)
+        index = 0
     }
-
-    const windows = getActiveWorkspaceTabList().filter(mw => mw !== rightWindow)
-
-    let index = windows.indexOf(leftWindow) + 1
-    if (index >= windows.length)
+    index++
+    if (index > windows.length - 1)
         index = 0
 
-    const { x, y, width, height } = leftWindow.get_frame_rect()
+    log(leftWindow.title)
+    let f = leftWindow.get_frame_rect()
+    log('frame-rect', f.x, f.y, f.width, f.height)
+    let b = leftWindow.get_buffer_rect()
+    log('buffer-rect', b.x, b.y, b.width, b.height)
+    let c = leftWindow.frame_rect_to_client_rect(f)
+    log('client-rect',  c.x, c.y, c.width, c.height)
+    let a = {}
+    const mwa = leftWindow.get_compositor_private() 
+    a.x = mwa.get_position()[0]
+    a.y = mwa.get_position()[1]
+    a.width = mwa.get_size()[0]
+    a.height = mwa.get_size()[1]
+    log('actor-rect',  a.x, a.y, a.width, a.height)
+
+    let { x, y, width, height } = leftWindow.get_frame_rect()
+
     leftWindow.get_compositor_private().hide()
+
     const nextWindow = windows[index]
+
+    if (!leftWindow.is_client_decorated() && nextWindow.is_client_decorated()) {
+        x = x + 20
+        y = y + 20
+        width = width - 40
+        height = height - 40        
+    }
+    if (leftWindow.is_client_decorated() && !nextWindow.is_client_decorated()) {
+        x = x - 20
+        y = y - 20
+        width = width + 40
+        height = height + 40        
+    }
+
+
+    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [nextWindow, rightWindow])
     nextWindow.move_resize_frame(true, x, y, width, height)
+    // adjustWindowPosition(nextWindow, {x, y})
     nextWindow.get_compositor_private().show()
     nextWindow.activate(now)
 
 }
 
 function cycleWindows() {
-    const [leftWindow, rightWindow] = getTopWindows()
+    const [leftWindow, rightWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
 
-    if (!rightWindow) {
-        toggle2UpLeft()
-        return
+    if (cycling !== 'right') {
+        cycling = 'right'
+        windows = getActiveWorkspaceTabList().filter(mw => mw !== leftWindow)
+        index = 0
     }
-
-    const windows = getActiveWorkspaceTabList().filter(mw => mw !== leftWindow)
-
-    let index = windows.indexOf(rightWindow) + 1
-    if (index >= windows.length)
+    index++
+    if (index > windows.length - 1)
         index = 0
 
-    const { x, y, width, height } = rightWindow.get_frame_rect()
+    let { x, y, width, height } = rightWindow.get_frame_rect()
     rightWindow.get_compositor_private().hide()
     const nextWindow = windows[index]
+
+    if (!rightWindow.is_client_decorated() && nextWindow.is_client_decorated()) {
+        x = x + 20
+        y = y + 20
+        width = width - 40
+        height = height - 40        
+    }
+    if (rightWindow.is_client_decorated() && !nextWindow.is_client_decorated()) {
+        x = x - 20
+        y = y - 20
+        width = width + 40
+        height = height + 40        
+    }
+
+
+    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [leftWindow, nextWindow])
     nextWindow.move_resize_frame(true, x, y, width, height)
+    // adjustWindowPosition(nextWindow, {x, y})
     nextWindow.get_compositor_private().show()
     nextWindow.activate(now)
 }
@@ -209,45 +273,109 @@ function cycleWindows() {
 // --------------------------------------------------------------------------------
 
 async function toggle2UpLeft() {
-    const [metaWindow, rightWindow] = getTopWindows()
-    const nextMetaWindow = getNextMetaWindow()
-    log('aaaaaaa')
+    const [metaWindow, rightWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
     if (metaWindow && rightWindow) {
-        log('bbbbaaa')
         maximize(metaWindow)
-        await slideOutRight(nextMetaWindow)
-        maximize(nextMetaWindow)
-        nextMetaWindow.get_compositor_private().hide()
+        await slideOutRight(rightWindow)
+        maximize(rightWindow)
+        rightWindow.get_compositor_private().hide()
         twoUp = false
+        visibleWorkspaceWindows.set(workspaces.activeWorkspace, [metaWindow])
         return
     }
-    log('cccc')
-
-    nextMetaWindow.move_frame(true, 963 + 250, 27)
-    nextMetaWindow.get_compositor_private().show()
-    tileRight(nextMetaWindow)
-    metaWindow.move_resize_frame(true, 3, 27, 957, 1172)
+    const nextMetaWindow = getNextMetaWindow()
+    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [metaWindow, nextMetaWindow])
+    easeInRight(nextMetaWindow)
+    const { x, y, width, height } = getTileSize(metaWindow)
+    metaWindow.move_resize_frame(true, x, y, width, height)
+    adjustWindowPosition(metaWindow, {x, y})
     twoUp = true
 }
 
 async function toggle2UpRight() {
-    const [metaWindow, rightMetaWindow] = getTopWindows()
-    const prevMetaWindow = getPrevMetaWindow()
+    const [metaWindow, rightMetaWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
+    log('***********1', metaWindow.title)
+    rightMetaWindow && log('***********2', rightMetaWindow.title)
     if (metaWindow && rightMetaWindow) {
         maximize(rightMetaWindow)
-        await slideOutLeft(prevMetaWindow)
-        maximize(prevMetaWindow)
-        prevMetaWindow.get_compositor_private().hide()
+        await slideOutLeft(metaWindow)
+        maximize(metaWindow)
+        metaWindow.get_compositor_private().hide()
         twoUp = false
+        visibleWorkspaceWindows.set(workspaces.activeWorkspace, [rightMetaWindow])
         return
     }
-    prevMetaWindow.move_resize_frame(true, 3 - 250, 27, 957, 1172)
-    prevMetaWindow.get_compositor_private().show()
-    prevMetaWindow.raise()
-    tileLeft(prevMetaWindow)
-    metaWindow.move_resize_frame(true, 963, 27, 957, 1172)
-    prevMetaWindow.lower()
+    const prevMetaWindow = getPrevMetaWindow()
+    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [prevMetaWindow, metaWindow])
+    easeInLeft(prevMetaWindow)
+    let { x, y, width, height } = getTileSize(metaWindow)
+    x = x + 960
+    metaWindow.move_resize_frame(true, x, y, width, height)
+    adjustWindowPosition(metaWindow, {x, y})
     twoUp = true
+}
+
+function getTileSize(metaWindow) {
+    let [ x, y, width, height ] = [ 2, 27, 957, 1172 ]
+    if (metaWindow.is_client_decorated()) {
+        x = x - 10
+        y = y - 2 
+        width = width - 40
+        height = height - 40
+    }
+    return { x, y, width, height }
+}
+
+function adjustWindowPosition(metaWindow, {x, y}) {
+    if (metaWindow.is_client_decorated()) {
+        x = x + 30
+        y = y + 22
+    }
+    metaWindow.move_frame(true, x, y)
+}
+
+
+function easeInRight(metaWindow) {
+    const mwa = metaWindow.get_compositor_private()
+    mwa.hide()
+    let { x, y, width, height } = getTileSize(metaWindow)
+    x = x + 960
+    metaWindow.move_resize_frame(true, x, y, width, height)
+    const clone = new Clutter.Clone({ source: mwa })
+    clone.set_position(x, y - 8)
+    clone.translation_x = 250
+    global.stage.add_child(clone)
+    clone.ease({
+        translation_x: 0,
+        duration: 250,
+        mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+        onComplete() {
+            adjustWindowPosition(metaWindow, {x, y})
+            mwa.show()
+            global.stage.remove_child(clone) 
+        }
+    })
+}
+
+function easeInLeft(metaWindow) {
+    const mwa = metaWindow.get_compositor_private()
+    mwa.hide()
+    let { x, y, width, height } = getTileSize(metaWindow)
+    metaWindow.move_resize_frame(true, x, y, width, height)
+    const clone = new Clutter.Clone({ source: mwa })
+    clone.set_position(x, y - 8)
+    clone.translation_x = -250
+    global.stage.add_child(clone)
+    clone.ease({
+        translation_x: 0,
+        duration: 250,
+        mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+        onComplete() {
+            adjustWindowPosition(metaWindow, {x, y})
+            mwa.show()
+            global.stage.remove_child(clone)            
+        }
+    })
 }
 
 function maximize(metaWindow) {
@@ -262,7 +390,7 @@ function maximize(metaWindow) {
     }
     if (metaWindow.is_client_decorated()) {
         geometry = {
-            x: 23,
+            x: 22,
             y: 47,
             width: 1876,
             height: 1132,
@@ -274,71 +402,6 @@ function maximize(metaWindow) {
 }
 
 
-function tileLeft(metaWindow) {
-    let geometry = {
-        x: 3,
-        y: 27,
-        width: 957,
-        height: 1172,
-    }
-    if (metaWindow.is_client_decorated()) {
-        geometry = {
-            x: 23,
-            y: 47,
-            width: 916,
-            height: 1132,
-        }
-    }
-    const { x, y, width, height } = geometry
-    const actor = metaWindow.get_compositor_private()
-
-    actor.remove_all_transitions()
-    actor.save_easing_state()
-    actor.set_easing_duration(250)
-    actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUAD)
-
-    const sid = actor.connect('transitions-completed', (a, b) => {
-        actor.disconnect(sid)
-        actor.restore_easing_state()
-        log('COMPLETED', a, b)
-        metaWindow.move_resize_frame(false, x, y, width, height)
-    })
-
-    metaWindow.move_frame(true, x, y)
-}
-
-function tileRight(metaWindow) {
-    let geometry = {
-        x: 963,
-        y: 27,
-        width: 957,
-        height: 1172,
-    }
-    if (metaWindow.is_client_decorated()) {
-        geometry = {
-            x: 983,
-            y: 47,
-            width: 916,
-            height: 1132,
-        }
-    }
-    const { x, y, width, height } = geometry
-    const actor = metaWindow.get_compositor_private()
-
-    actor.remove_all_transitions()
-    actor.save_easing_state()
-    actor.set_easing_duration(250)
-    actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUAD)
-
-    const sid = actor.connect('transitions-completed', (a, b) => {
-        actor.disconnect(sid)
-        actor.restore_easing_state()
-        log('COMPLETED', a, b)
-        metaWindow.move_resize_frame(false, x, y, width, height)
-    })
-
-    metaWindow.move_frame(true, x, y)
-}
 
 // --------------------------------------------------------------------------------
 
@@ -350,54 +413,6 @@ function getNextMetaWindow() {
 function getPrevMetaWindow() {
     const tabList = getActiveWorkspaceTabList()
     return tabList[tabList.length - 1]
-}
-
-
-function getLeftMetaWindow() {
-    return getActiveWorkspaceTabList().find(metaWindow => {
-        const { x } = metaWindow.get_buffer_rect()
-        return (x === 1 && metaWindow.get_compositor_private().is_visible())
-    })
-}
-
-// function getTopWindows() {
-//     const tabList = getActiveWorkspaceTabList()
-//     const mwas = tabList
-//         .map(metaWindow => metaWindow.get_compositor_private())
-//         .filter(mwa => mwa.is_visible())
-//         .sort((a, b) => a.x > b.x)
-//         .map(mwa => mwa.meta_window)
-//     log('YYYY>')
-//     mwas.map(mw => log(mw.title))
-//     log('<YYYY>')
-//     if (!mwas.length)
-//         return [focusedWindow]
-//     return mwas
-// }
-
-function getTopWindows() {
-    const [one, two] = getTopNWindows(2).reverse()
-    const ofr = one.get_frame_rect() 
-    const tfr = two.get_frame_rect() 
-    log('one**', one.title, ofr.x)
-    log('two**', two.title, tfr.x)
-    let left = one.get_compositor_private().is_visible() ? one : two
-    let right
-    if (ofr.x > 800 && ofr.x < 1800) {
-        right = one
-        left = two
-    }
-    else if (tfr.x > 800 && tfr.x < 1800) {
-        right = two
-        left = one
-    }
-    // else {
-    //     left = one
-    //     right = undefined
-    // }
-    log('left', left.title)
-    log('right', right && right.title)
-    return [left, right]
 }
 
 
@@ -429,54 +444,29 @@ async function setTabListOrder(metaWindows = []) {
     reordering = false
 }
 
-let tabList = []
-let clicks = 0
-let pendingTransitions = 0
-
-
 async function slideLeft() {
-    if (!clicks) {
-        tabList = getActiveWorkspaceTabList()
-        if (tabList.length < 2) return
-        tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
-        slideOutRight(tabList[0])
-    }
-    clicks++
-    if (clicks >= tabList.length)
-        clicks = 1
-    pendingTransitions++
-    const pos = tabList.length - clicks
+    const tabList = getActiveWorkspaceTabList()
+    if (tabList.length < 2) return
+    slideOutRight(tabList[0])
+    const pos = tabList.length - 1
     await slideInFromLeft(tabList[pos])
-    pendingTransitions--
-    if (pendingTransitions === 0) {
-        maximize(tabList[0])
-        maximize(tabList[tabList.length - 1])
-        const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
-        clicks = 0
-        await setTabListOrder(focusOrder)
-        focusOrder.slice(-1).get_compositor_private().show()
-    }
+    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[pos]])
+    maximize(tabList[0])
+    maximize(tabList[pos])
+    const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
+    await setTabListOrder(focusOrder)
+    focusOrder.slice(-1).get_compositor_private().show()
 }
 
 async function slideRight() {
-    if (!clicks) {
-        tabList = getActiveWorkspaceTabList()
-        if (tabList.length < 2) return
-        tabList.map(metaWindow => metaWindow.get_compositor_private().hide())
-        slideOutLeft(tabList[0])
-    }
-    clicks++
-    if (clicks >= tabList.length)
-        clicks = 0
-    pendingTransitions++
-    await slideInFromRight(tabList[clicks])
-    pendingTransitions--
-    if (pendingTransitions === 0) {
-        const focusOrder = [...tabList.slice(0, clicks).reverse(), ...tabList.slice(clicks).reverse()]
-        clicks = 0
-        await setTabListOrder(focusOrder)
-        focusOrder.slice(-1).get_compositor_private().show()
-    }
+    const tabList = getActiveWorkspaceTabList()
+    if (tabList.length < 2) return
+    slideOutLeft(tabList[0])
+    await slideInFromRight(tabList[1])
+    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[1]])
+    const focusOrder = [...tabList.slice(0, 1).reverse(), ...tabList.slice(1).reverse()]
+    await setTabListOrder(focusOrder)
+    focusOrder.slice(-1).get_compositor_private().show()
 }
 
 async function slideOutLeft(metaWindow) {
@@ -534,7 +524,7 @@ async function translateActor(actor, { from, to, duration = 250 }) {
     actor.set_position(x0, y0)
     actor.save_easing_state()
     actor.set_easing_duration(duration)
-    actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUAD)
+    actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUINT)
     actor.set_position(x1, y1)
     return new Promise(resolve => {
         const signal = actor.connect('transition-stopped', () => {
