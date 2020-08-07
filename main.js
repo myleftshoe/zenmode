@@ -216,6 +216,7 @@ function cycleLeftWindows() {
 
     let { x, y, width, height } = leftWindow.get_frame_rect()
     hide(leftWindow)
+    maximize(leftWindow)
     const nextWindow = windows[index]
 
     if (!leftWindow.is_client_decorated() && nextWindow.is_client_decorated()) {
@@ -252,6 +253,7 @@ function cycleWindows() {
 
     let { x, y, width, height } = rightWindow.get_frame_rect()
     hide(rightWindow)
+    maximize(rightWindow)
     const nextWindow = windows[index]
 
     if (!rightWindow.is_client_decorated() && nextWindow.is_client_decorated()) {
@@ -394,7 +396,7 @@ function maximize(metaWindow) {
         geometry = {
             x: 22,
             y: 47,
-            width: 1876,
+            width: 1877,
             height: 1132,
         }
     }
