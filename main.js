@@ -160,7 +160,7 @@ function handleChromeLeftClick(actor, event) {
         return
     }
     if (twoUp) {
-        cycleLeftWindows()
+        GLib.idle_add(GLib.PRIORITY_HIGH_IDLE + 10, cycleLeftWindows)
         return
     }
     cycling = ''
@@ -175,7 +175,7 @@ function handleChromeRightClick(actor, event) {
         return
     }
     if (twoUp) {
-        cycleWindows()
+        GLib.idle_add(GLib.PRIORITY_HIGH_IDLE + 10, cycleRightWindows)
         return
     }
     cycling = ''
@@ -237,9 +237,10 @@ function cycleLeftWindows() {
     // adjustWindowPosition(nextWindow, {x, y})
     show(nextWindow)
     activate(nextWindow)
+    return false
 }
 
-function cycleWindows() {
+function cycleRightWindows() {
     const [leftWindow, rightWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
 
     if (cycling !== 'right') {
@@ -275,6 +276,7 @@ function cycleWindows() {
     // adjustWindowPosition(nextWindow, {x, y})
     show(nextWindow)
     activate(nextWindow)
+    return false
 }
 
 // --------------------------------------------------------------------------------
