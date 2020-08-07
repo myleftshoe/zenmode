@@ -455,26 +455,34 @@ async function slideLeft() {
     if (tabList.length < 2) return
     slideOutRight(tabList[0])
     const pos = tabList.length - 1
-    await slideInFromLeft(tabList[pos])
-    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[pos]])
-    maximize(tabList[0])
-    maximize(tabList[pos])
-    const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
-    await setTabListOrder(focusOrder)
-    show(focusOrder.slice(-1))
+    GLib.idle_add(GLib.PRIORITY_HIGH_IDLE + 10, () => {
+        slideInFromLeft(tabList[pos]).then(() => {
+            visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[pos]])
+            maximize(tabList[0])
+            maximize(tabList[pos])
+            const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
+            setTabListOrder(focusOrder)
+            show(focusOrder.slice(-1))
+        })            
+        return false
+    })        
 }
 
 async function slideRight() {
     const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
     slideOutLeft(tabList[0])
-    await slideInFromRight(tabList[1])
-    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[1]])
-    maximize(tabList[0])
-    maximize(tabList[1])
-    const focusOrder = [...tabList.slice(0, 1).reverse(), ...tabList.slice(1).reverse()]
-    await setTabListOrder(focusOrder)
-    show(focusOrder.slice(-1))
+    GLib.idle_add(GLib.PRIORITY_HIGH_IDLE + 10, () => {
+        slideInFromRight(tabList[1]).then(() => {
+            visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[1]])
+            maximize(tabList[0])
+            maximize(tabList[1])
+            const focusOrder = [...tabList.slice(0, 1).reverse(), ...tabList.slice(1).reverse()]
+            setTabListOrder(focusOrder)
+            show(focusOrder.slice(-1))
+        })
+    })
+    return false
 }
 
 async function slideOutLeft(metaWindow) {
