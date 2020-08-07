@@ -21,13 +21,13 @@ Object.defineProperty(this, 'now', {
 
 
 Object.defineProperty(this, 'focusedWindow', {
-    get() { return global.display.get_focus_window()}
+    get() { return global.display.get_focus_window() }
 })
 
 
 function _switchWorkspaceDone(shellwm) {
     this._finishWorkspaceSwitch(this._switchData);
-//    shellwm.completed_switch_workspace();
+    //    shellwm.completed_switch_workspace();
 }
 
 const visibleWorkspaceWindows = new Map()
@@ -222,13 +222,13 @@ function cycleLeftWindows() {
         x = x + 20
         y = y + 20
         width = width - 40
-        height = height - 40        
+        height = height - 40
     }
     if (leftWindow.is_client_decorated() && !nextWindow.is_client_decorated()) {
         x = x - 20
         y = y - 20
         width = width + 40
-        height = height + 40        
+        height = height + 40
     }
 
 
@@ -259,13 +259,13 @@ function cycleWindows() {
         x = x + 20
         y = y + 20
         width = width - 40
-        height = height - 40        
+        height = height - 40
     }
     if (rightWindow.is_client_decorated() && !nextWindow.is_client_decorated()) {
         x = x - 20
         y = y - 20
         width = width + 40
-        height = height + 40        
+        height = height + 40
     }
 
 
@@ -294,7 +294,7 @@ async function toggle2UpLeft() {
     easeInRight(nextMetaWindow)
     const { x, y, width, height } = getTileSize(metaWindow)
     metaWindow.move_resize_frame(true, x, y, width, height)
-    adjustWindowPosition(metaWindow, {x, y})
+    adjustWindowPosition(metaWindow, { x, y })
     twoUp = true
 }
 
@@ -315,22 +315,22 @@ async function toggle2UpRight() {
     let { x, y, width, height } = getTileSize(metaWindow)
     x = x + 960
     metaWindow.move_resize_frame(true, x, y, width, height)
-    adjustWindowPosition(metaWindow, {x, y})
+    adjustWindowPosition(metaWindow, { x, y })
     twoUp = true
 }
 
 function getTileSize(metaWindow) {
-    let [ x, y, width, height ] = [ 2, 27, 957, 1172 ]
+    let [x, y, width, height] = [2, 27, 957, 1172]
     if (metaWindow.is_client_decorated()) {
         x = x - 10
-        y = y - 2 
+        y = y - 2
         width = width - 40
         height = height - 40
     }
     return { x, y, width, height }
 }
 
-function adjustWindowPosition(metaWindow, {x, y}) {
+function adjustWindowPosition(metaWindow, { x, y }) {
     if (metaWindow.is_client_decorated()) {
         x = x + 30
         y = y + 22
@@ -354,9 +354,9 @@ function easeInRight(metaWindow) {
         duration: 250,
         mode: Clutter.AnimationMode.EASE_OUT_QUINT,
         onComplete() {
-            adjustWindowPosition(metaWindow, {x, y})
+            adjustWindowPosition(metaWindow, { x, y })
             mwa.show()
-            global.stage.remove_child(clone) 
+            global.stage.remove_child(clone)
         }
     })
 }
@@ -375,9 +375,9 @@ function easeInLeft(metaWindow) {
         duration: 250,
         mode: Clutter.AnimationMode.EASE_OUT_QUINT,
         onComplete() {
-            adjustWindowPosition(metaWindow, {x, y})
+            adjustWindowPosition(metaWindow, { x, y })
             mwa.show()
-            global.stage.remove_child(clone)            
+            global.stage.remove_child(clone)
         }
     })
 }
