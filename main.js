@@ -280,11 +280,11 @@ function cycleWindows() {
 async function toggle2UpLeft() {
     const [metaWindow, rightWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
     if (metaWindow && rightWindow) {
+        twoUp = false
         maximize(metaWindow)
         await slideOutRight(rightWindow)
         maximize(rightWindow)
         hide(rightWindow)
-        twoUp = false
         visibleWorkspaceWindows.set(workspaces.activeWorkspace, [metaWindow])
         return
     }
@@ -300,11 +300,11 @@ async function toggle2UpLeft() {
 async function toggle2UpRight() {
     const [metaWindow, rightMetaWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
     if (metaWindow && rightMetaWindow) {
+        twoUp = false
         maximize(rightMetaWindow)
         await slideOutLeft(metaWindow)
         maximize(metaWindow)
         hide(metaWindow)
-        twoUp = false
         visibleWorkspaceWindows.set(workspaces.activeWorkspace, [rightMetaWindow])
         return
     }
