@@ -79,7 +79,7 @@ function start() {
 
     signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
 
-    // signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
+    signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
 
     const tabList = getActiveWorkspaceTabList()
     tabList.map(hide).map(maximize)
@@ -92,9 +92,12 @@ function start() {
 
 function handleFocusWindow() {
     if (reordering) return
-    visibleWorkspaceWindows.get(workspaces.activeWorkspace).map(hide)
-    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
-    show(focusedWindow)
+    if (!visibleWorkspaceWindows.get(workspaces.activeWorkspace).includes(focusedWindow)) {
+        visibleWorkspaceWindows.get(workspaces.activeWorkspace).map(hide)
+        visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
+    }
+    visibleWorkspaceWindows.get(workspaces.activeWorkspace).map(show)
+    // show(focusedWindow)
 }
 
 // --------------------------------------------------------------------------------
@@ -238,6 +241,8 @@ function cycleLeftWindows() {
     // adjustWindowPosition(nextWindow, {x, y})
     show(nextWindow)
     activate(nextWindow)
+    nextWindow.raise()
+    rightWindow.raise()
     return false
 }
 
@@ -277,6 +282,8 @@ function cycleRightWindows() {
     // adjustWindowPosition(nextWindow, {x, y})
     show(nextWindow)
     activate(nextWindow)
+    nextWindow.raise()
+    leftWindow.raise()
     return false
 }
 
