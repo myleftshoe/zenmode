@@ -78,7 +78,7 @@ function start() {
 
     signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
 
-    signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
+    // signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
 
     const tabList = getActiveWorkspaceTabList()
     tabList.map(hide).map(maximize)
@@ -90,6 +90,7 @@ function start() {
 // --------------------------------------------------------------------------------
 
 function handleFocusWindow() {
+    if (reordering) return
     visibleWorkspaceWindows.get(workspaces.activeWorkspace).map(hide)
     visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
     show(focusedWindow)
@@ -213,7 +214,6 @@ function cycleLeftWindows() {
     if (index > windows.length - 1)
         index = 0
 
-
     let { x, y, width, height } = leftWindow.get_frame_rect()
     hide(leftWindow)
     const nextWindow = windows[index]
@@ -230,7 +230,6 @@ function cycleLeftWindows() {
         width = width + 40
         height = height + 40
     }
-
 
     visibleWorkspaceWindows.set(workspaces.activeWorkspace, [nextWindow, rightWindow])
     nextWindow.move_resize_frame(true, x, y, width, height)
@@ -273,7 +272,7 @@ function cycleWindows() {
     nextWindow.move_resize_frame(true, x, y, width, height)
     // adjustWindowPosition(nextWindow, {x, y})
     show(nextWindow)
-    nextWindow.activate(now)
+    activate(nextWindow)
 }
 
 // --------------------------------------------------------------------------------
@@ -467,6 +466,8 @@ async function slideRight() {
     slideOutLeft(tabList[0])
     await slideInFromRight(tabList[1])
     visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[1]])
+    maximize(tabList[0])
+    maximize(tabList[1])
     const focusOrder = [...tabList.slice(0, 1).reverse(), ...tabList.slice(1).reverse()]
     await setTabListOrder(focusOrder)
     show(focusOrder.slice(-1))
