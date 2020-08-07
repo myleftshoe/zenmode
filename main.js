@@ -94,6 +94,7 @@ function handleFocusWindow() {
     if (reordering) return
     if (!visibleWorkspaceWindows.get(workspaces.activeWorkspace).includes(focusedWindow)) {
         visibleWorkspaceWindows.get(workspaces.activeWorkspace).map(hide)
+        maximize(focusedWindow)
         visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
     }
     visibleWorkspaceWindows.get(workspaces.activeWorkspace).map(show)
