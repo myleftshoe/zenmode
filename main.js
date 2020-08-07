@@ -1,4 +1,4 @@
-const { Clutter, GLib, GObject, Meta, St } = imports.gi
+const { Clutter, GObject, Meta, St } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
@@ -7,6 +7,7 @@ const { Signals } = Extension.imports.signals
 const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
+const { onIdle } = Extension.imports.async
 
 const signals = new Signals()
 
@@ -160,7 +161,7 @@ function handleChromeLeftClick(actor, event) {
         return
     }
     if (twoUp) {
-        GLib.idle_add(GLib.PRIORITY_HIGH_IDLE + 10, cycleLeftWindows)
+        onIdle(cycleLeftWindows)
         return
     }
     cycling = ''
@@ -175,7 +176,7 @@ function handleChromeRightClick(actor, event) {
         return
     }
     if (twoUp) {
-        GLib.idle_add(GLib.PRIORITY_HIGH_IDLE + 10, cycleRightWindows)
+        onIdle(cycleRightWindows)
         return
     }
     cycling = ''
@@ -440,10 +441,9 @@ async function setTabListOrder(metaWindows = []) {
     reordering = true
     await Promise.all(
         metaWindows.map(metaWindow => new Promise(resolve =>
-            GLib.idle_add(GLib.PRIORITY_HIGH_IDLE, () => {
+            onIdle(() => {
                 metaWindow.activate(now)
                 resolve('activated')
-                return false
             })
         ))
     )
@@ -455,7 +455,7 @@ async function slideLeft() {
     if (tabList.length < 2) return
     slideOutRight(tabList[0])
     const pos = tabList.length - 1
-    GLib.idle_add(GLib.PRIORITY_HIGH_IDLE + 10, () => {
+    onIdle(() => {
         slideInFromLeft(tabList[pos]).then(() => {
             visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[pos]])
             maximize(tabList[0])
@@ -464,7 +464,6 @@ async function slideLeft() {
             setTabListOrder(focusOrder)
             show(focusOrder.slice(-1))
         })            
-        return false
     })        
 }
 
@@ -472,7 +471,7 @@ async function slideRight() {
     const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
     slideOutLeft(tabList[0])
-    GLib.idle_add(GLib.PRIORITY_HIGH_IDLE + 10, () => {
+    onIdle(() => {
         slideInFromRight(tabList[1]).then(() => {
             visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[1]])
             maximize(tabList[0])
@@ -482,7 +481,6 @@ async function slideRight() {
             show(focusOrder.slice(-1))
         })
     })
-    return false
 }
 
 async function slideOutLeft(metaWindow) {
