@@ -50,7 +50,7 @@ function _finishWorkspaceSwitch(switchData) {
     else if (!visibleWindows && focusedWindow.get_workspace() === workspaces.activeWorkspace) {
         visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
         maximize(focusedWindow)
-        focusedWindow.get_compositor_private().show()
+        show(focusedWindow)
     }
     else {
         visibleWindows.map(show)
@@ -62,14 +62,6 @@ function _finishWorkspaceSwitch(switchData) {
     this._movingWindow = null;
 
 }
-
-function show(metaWindow) {
-    log('show', metaWindow.title)
-    metaWindow.get_compositor_private().show();
-    return metaWindow
-}
-
-
 
 function start() {
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
@@ -86,17 +78,46 @@ function start() {
 
     signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
 
+    signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
+
     const tabList = getActiveWorkspaceTabList()
     tabList.map(hide).map(maximize)
-    focusedWindow.get_compositor_private().show()
+    show(focusedWindow)
     visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
     handleWorkspaceChange()
 }
 
+// --------------------------------------------------------------------------------
+
+function handleFocusWindow() {
+    visibleWorkspaceWindows.get(workspaces.activeWorkspace).map(hide)
+    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
+    show(focusedWindow)
+}
+
+// --------------------------------------------------------------------------------
+
+
+function show(metaWindow) {
+    log('show', metaWindow.title)
+    getActor(metaWindow).show();
+    return metaWindow
+}
+
 function hide(metaWindow) {
     log('hide', metaWindow.title)
-    metaWindow.get_compositor_private().hide()
+    getActor(metaWindow).hide();
     return metaWindow
+}
+
+function activate(metaWindow) {
+    log('activate', metaWindow.title)
+    metaWindow.activate(now)
+    return metaWindow
+}
+
+function getActor(metaWindow) {
+    return metaWindow.get_compositor_private()
 }
 
 
@@ -194,7 +215,7 @@ function cycleLeftWindows() {
 
 
     let { x, y, width, height } = leftWindow.get_frame_rect()
-    leftWindow.get_compositor_private().hide()
+    hide(leftWindow)
     const nextWindow = windows[index]
 
     if (!leftWindow.is_client_decorated() && nextWindow.is_client_decorated()) {
@@ -214,9 +235,8 @@ function cycleLeftWindows() {
     visibleWorkspaceWindows.set(workspaces.activeWorkspace, [nextWindow, rightWindow])
     nextWindow.move_resize_frame(true, x, y, width, height)
     // adjustWindowPosition(nextWindow, {x, y})
-    nextWindow.get_compositor_private().show()
-    nextWindow.activate(now)
-
+    show(nextWindow)
+    activate(nextWindow)
 }
 
 function cycleWindows() {
@@ -232,7 +252,7 @@ function cycleWindows() {
         index = 0
 
     let { x, y, width, height } = rightWindow.get_frame_rect()
-    rightWindow.get_compositor_private().hide()
+    hide(rightWindow)
     const nextWindow = windows[index]
 
     if (!rightWindow.is_client_decorated() && nextWindow.is_client_decorated()) {
@@ -252,7 +272,7 @@ function cycleWindows() {
     visibleWorkspaceWindows.set(workspaces.activeWorkspace, [leftWindow, nextWindow])
     nextWindow.move_resize_frame(true, x, y, width, height)
     // adjustWindowPosition(nextWindow, {x, y})
-    nextWindow.get_compositor_private().show()
+    show(nextWindow)
     nextWindow.activate(now)
 }
 
@@ -264,7 +284,7 @@ async function toggle2UpLeft() {
         maximize(metaWindow)
         await slideOutRight(rightWindow)
         maximize(rightWindow)
-        rightWindow.get_compositor_private().hide()
+        hide(rightWindow)
         twoUp = false
         visibleWorkspaceWindows.set(workspaces.activeWorkspace, [metaWindow])
         return
@@ -284,7 +304,7 @@ async function toggle2UpRight() {
         maximize(rightMetaWindow)
         await slideOutLeft(metaWindow)
         maximize(metaWindow)
-        metaWindow.get_compositor_private().hide()
+        hide(metaWindow)
         twoUp = false
         visibleWorkspaceWindows.set(workspaces.activeWorkspace, [rightMetaWindow])
         return
@@ -320,7 +340,7 @@ function adjustWindowPosition(metaWindow, {x, y}) {
 
 
 function easeInRight(metaWindow) {
-    const mwa = metaWindow.get_compositor_private()
+    const mwa = getActor(metaWindow)
     mwa.hide()
     let { x, y, width, height } = getTileSize(metaWindow)
     x = x + 960
@@ -342,7 +362,7 @@ function easeInRight(metaWindow) {
 }
 
 function easeInLeft(metaWindow) {
-    const mwa = metaWindow.get_compositor_private()
+    const mwa = getActor(metaWindow)
     mwa.hide()
     let { x, y, width, height } = getTileSize(metaWindow)
     metaWindow.move_resize_frame(true, x, y, width, height)
@@ -365,7 +385,6 @@ function easeInLeft(metaWindow) {
 function maximize(metaWindow) {
     log('maximize', metaWindow.title)
     metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
-    metaWindow.raise()
     let geometry = {
         x: 3,
         y: 27,
@@ -439,7 +458,7 @@ async function slideLeft() {
     maximize(tabList[pos])
     const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
     await setTabListOrder(focusOrder)
-    focusOrder.slice(-1).get_compositor_private().show()
+    show(focusOrder.slice(-1))
 }
 
 async function slideRight() {
@@ -450,7 +469,7 @@ async function slideRight() {
     visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[1]])
     const focusOrder = [...tabList.slice(0, 1).reverse(), ...tabList.slice(1).reverse()]
     await setTabListOrder(focusOrder)
-    focusOrder.slice(-1).get_compositor_private().show()
+    show(focusOrder.slice(-1))
 }
 
 async function slideOutLeft(metaWindow) {
@@ -486,16 +505,16 @@ async function translateMetaWindow(metaWindow, { from, to, duration }) {
     const [x0, y0] = coalesceXY(from, [x, y])
     const [x1, y1] = coalesceXY(to, [x, y])
     // if (x0 === x1 && y0 === y1) return
-    const metaWindowActor = metaWindow.get_compositor_private()
-    metaWindowActor.show()
-    const clone = new Clutter.Clone({ source: metaWindowActor })
+    const mwa = getActor(metaWindow)
+    mwa.show()
+    const clone = new Clutter.Clone({ source: mwa })
     clone.set_position(x0, y0)
     Main.uiGroup.add_child(clone)
-    metaWindowActor.hide()
+    mwa.hide()
     await translateActor(clone, { from: [x0, y0], to: [x1, y1], duration })
     if (rectIsInViewport(x1, y1, width, height)) {
-        metaWindowActor.set_position(x1, y1)
-        metaWindowActor.show()
+        mwa.set_position(x1, y1)
+        mwa.show()
     }
     clone.destroy()
 }
