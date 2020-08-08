@@ -25,14 +25,20 @@ Object.defineProperty(this, 'focusedWindow', {
     get() { return global.display.get_focus_window() }
 })
 
+const visibleWorkspaceWindows = new Map()
 
+Object.defineProperty(this, 'visibleWindows', {
+    get() { return visibleWorkspaceWindows.get(workspaces.activeWorkspace) },
+    set(arr = []) { visibleWorkspaceWindows.set(workspaces.activeWorkspace, arr) }
+})
+
+// Monkey patch
 function _switchWorkspaceDone(shellwm) {
     this._finishWorkspaceSwitch(this._switchData);
     //    shellwm.completed_switch_workspace();
 }
 
-const visibleWorkspaceWindows = new Map()
-
+// Monkey patch
 function _finishWorkspaceSwitch(switchData) {
     this._switchData = null;
 
@@ -43,13 +49,12 @@ function _finishWorkspaceSwitch(switchData) {
         w.parent.add_child(w.window);
         w.window.hide();
     }
-    const visibleWindows = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
 
     if (!focusedWindow) {
-        visibleWorkspaceWindows.set(workspaces.activeWorkspace, [])
+        visibleWindows = []
     }
     else if (!visibleWindows && focusedWindow.get_workspace() === workspaces.activeWorkspace) {
-        visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
+        visibleWindows = [focusedWindow]
         maximize(focusedWindow)
         show(focusedWindow)
     }
@@ -84,7 +89,7 @@ function start() {
     const tabList = getActiveWorkspaceTabList()
     tabList.map(hide).map(maximize)
     show(focusedWindow)
-    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
+    visibleWindows = [focusedWindow]
     handleWorkspaceChange()
 }
 
@@ -92,12 +97,12 @@ function start() {
 
 function handleFocusWindow() {
     if (reordering) return
-    if (!visibleWorkspaceWindows.get(workspaces.activeWorkspace).includes(focusedWindow)) {
-        visibleWorkspaceWindows.get(workspaces.activeWorkspace).map(hide)
+    if (!visibleWindows.includes(focusedWindow)) {
+        visibleWindows.map(hide)
         maximize(focusedWindow)
-        visibleWorkspaceWindows.set(workspaces.activeWorkspace, [focusedWindow])
+        visibleWindows = [focusedWindow]
     }
-    visibleWorkspaceWindows.get(workspaces.activeWorkspace).map(show)
+    visibleWindows.map(show)
     // show(focusedWindow)
 }
 
@@ -208,7 +213,7 @@ let index = 0
 let windows
 let cycling = ''
 function cycleLeftWindows() {
-    const [leftWindow, rightWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
+    const [leftWindow, rightWindow] = visibleWindows
 
     if (cycling !== 'left') {
         cycling = 'left'
@@ -237,7 +242,7 @@ function cycleLeftWindows() {
         height = height + 40
     }
 
-    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [nextWindow, rightWindow])
+    visibleWindows = [nextWindow, rightWindow]
     nextWindow.move_resize_frame(true, x, y, width, height)
     // adjustWindowPosition(nextWindow, {x, y})
     show(nextWindow)
@@ -248,7 +253,7 @@ function cycleLeftWindows() {
 }
 
 function cycleRightWindows() {
-    const [leftWindow, rightWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
+    const [leftWindow, rightWindow] = visibleWindows
 
     if (cycling !== 'right') {
         cycling = 'right'
@@ -278,7 +283,7 @@ function cycleRightWindows() {
     }
 
 
-    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [leftWindow, nextWindow])
+    visibleWindows = [leftWindow, nextWindow]
     nextWindow.move_resize_frame(true, x, y, width, height)
     // adjustWindowPosition(nextWindow, {x, y})
     show(nextWindow)
@@ -291,18 +296,18 @@ function cycleRightWindows() {
 // --------------------------------------------------------------------------------
 
 async function toggle2UpLeft() {
-    const [metaWindow, rightWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
+    const [metaWindow, rightWindow] = visibleWindows
     if (metaWindow && rightWindow) {
         twoUp = false
         maximize(metaWindow)
         await slideOutRight(rightWindow)
         maximize(rightWindow)
         hide(rightWindow)
-        visibleWorkspaceWindows.set(workspaces.activeWorkspace, [metaWindow])
+        visibleWindows = [metaWindow]
         return
     }
     const nextMetaWindow = getNextMetaWindow()
-    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [metaWindow, nextMetaWindow])
+    visibleWindows = [metaWindow, nextMetaWindow]
     easeInRight(nextMetaWindow)
     const { x, y, width, height } = getTileSize(metaWindow)
     metaWindow.move_resize_frame(true, x, y, width, height)
@@ -311,18 +316,18 @@ async function toggle2UpLeft() {
 }
 
 async function toggle2UpRight() {
-    const [metaWindow, rightMetaWindow] = visibleWorkspaceWindows.get(workspaces.activeWorkspace)
+    const [metaWindow, rightMetaWindow] = visibleWindows
     if (metaWindow && rightMetaWindow) {
         twoUp = false
         maximize(rightMetaWindow)
         await slideOutLeft(metaWindow)
         maximize(metaWindow)
         hide(metaWindow)
-        visibleWorkspaceWindows.set(workspaces.activeWorkspace, [rightMetaWindow])
+        visibleWindows = [rightMetaWindow]
         return
     }
     const prevMetaWindow = getPrevMetaWindow()
-    visibleWorkspaceWindows.set(workspaces.activeWorkspace, [prevMetaWindow, metaWindow])
+    visibleWindows = [prevMetaWindow, metaWindow]
     easeInLeft(prevMetaWindow)
     let { x, y, width, height } = getTileSize(metaWindow)
     x = x + 960
@@ -465,14 +470,14 @@ async function slideLeft() {
     const pos = tabList.length - 1
     onIdle(() => {
         slideInFromLeft(tabList[pos]).then(() => {
-            visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[pos]])
+            visibleWindows = [tabList[pos]]
             maximize(tabList[0])
             maximize(tabList[pos])
             const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
             setTabListOrder(focusOrder)
             show(focusOrder.slice(-1))
-        })            
-    })        
+        })
+    })
 }
 
 async function slideRight() {
@@ -481,7 +486,7 @@ async function slideRight() {
     slideOutLeft(tabList[0])
     onIdle(() => {
         slideInFromRight(tabList[1]).then(() => {
-            visibleWorkspaceWindows.set(workspaces.activeWorkspace, [tabList[1]])
+            visibleWindows = [tabList[1]]
             maximize(tabList[0])
             maximize(tabList[1])
             const focusOrder = [...tabList.slice(0, 1).reverse(), ...tabList.slice(1).reverse()]
