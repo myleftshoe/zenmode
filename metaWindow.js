@@ -12,7 +12,7 @@ function hide(metaWindow) {
 
 function activate(metaWindow) {
     log('activate', metaWindow.title)
-    metaWindow.activate(now)
+    metaWindow.activate(global.get_current_time())
     return metaWindow
 }
 

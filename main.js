@@ -17,10 +17,6 @@ let hideChromeSid
 let showChromeSid
 let lastFocusedWindow
 
-Object.defineProperty(this, 'now', {
-    get() { return global.get_current_time() }
-})
-
 
 Object.defineProperty(this, 'focusedWindow', {
     get() { return global.display.get_focus_window() }
@@ -274,6 +270,7 @@ function cycleRightWindows() {
 
 async function toggle2UpLeft() {
     const [leftWindow, rightWindow] = visibleWindows
+    log('toggle2UpLeft', leftWindow && leftWindow.title, rightWindow && rightWindow.title)
     if (leftWindow && rightWindow) {
         twoUp = false
         maximize(leftWindow)
@@ -403,8 +400,7 @@ function maximize(metaWindow) {
 // --------------------------------------------------------------------------------
 
 function getNextMetaWindow() {
-    const tabList = getActiveWorkspaceTabList()
-    return tabList[1]
+    return getActiveWorkspaceTabList().find(metaWindow => !visibleWindows.includes(metaWindow))
 }
 
 function getPrevMetaWindow() {
@@ -432,7 +428,7 @@ async function setTabListOrder(metaWindows = []) {
     await Promise.all(
         metaWindows.map(metaWindow => new Promise(resolve =>
             onIdle(() => {
-                metaWindow.activate(now)
+                activate(metaWindow)
                 resolve('activated')
             })
         ))
