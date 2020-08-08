@@ -296,43 +296,43 @@ function cycleRightWindows() {
 // --------------------------------------------------------------------------------
 
 async function toggle2UpLeft() {
-    const [metaWindow, rightWindow] = visibleWindows
-    if (metaWindow && rightWindow) {
+    const [leftWindow, rightWindow] = visibleWindows
+    if (leftWindow && rightWindow) {
         twoUp = false
-        maximize(metaWindow)
+        maximize(leftWindow)
         await slideOutRight(rightWindow)
         maximize(rightWindow)
         hide(rightWindow)
-        visibleWindows = [metaWindow]
+        visibleWindows = [leftWindow]
         return
     }
     const nextMetaWindow = getNextMetaWindow()
-    visibleWindows = [metaWindow, nextMetaWindow]
+    visibleWindows = [leftWindow, nextMetaWindow]
     easeInRight(nextMetaWindow)
-    const { x, y, width, height } = getTileSize(metaWindow)
-    metaWindow.move_resize_frame(true, x, y, width, height)
-    adjustWindowPosition(metaWindow, { x, y })
+    const { x, y, width, height } = getTileSize(leftWindow)
+    leftWindow.move_resize_frame(true, x, y, width, height)
+    adjustWindowPosition(leftWindow, { x, y })
     twoUp = true
 }
 
 async function toggle2UpRight() {
-    const [metaWindow, rightMetaWindow] = visibleWindows
-    if (metaWindow && rightMetaWindow) {
+    const [leftWindow, rightWindow] = visibleWindows
+    if (leftWindow && rightWindow) {
         twoUp = false
-        maximize(rightMetaWindow)
-        await slideOutLeft(metaWindow)
-        maximize(metaWindow)
-        hide(metaWindow)
-        visibleWindows = [rightMetaWindow]
+        maximize(rightWindow)
+        await slideOutLeft(leftWindow)
+        maximize(leftWindow)
+        hide(leftWindow)
+        visibleWindows = [rightWindow]
         return
     }
     const prevMetaWindow = getPrevMetaWindow()
-    visibleWindows = [prevMetaWindow, metaWindow]
+    visibleWindows = [prevMetaWindow, leftWindow]
     easeInLeft(prevMetaWindow)
-    let { x, y, width, height } = getTileSize(metaWindow)
+    let { x, y, width, height } = getTileSize(leftWindow)
     x = x + 960
-    metaWindow.move_resize_frame(true, x, y, width, height)
-    adjustWindowPosition(metaWindow, { x, y })
+    leftWindow.move_resize_frame(true, x, y, width, height)
+    adjustWindowPosition(leftWindow, { x, y })
     twoUp = true
 }
 
