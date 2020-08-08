@@ -29,13 +29,16 @@ Object.defineProperty(this, 'visibleWindows', {
     set(arr = []) { visibleWorkspaceWindows.set(workspaces.activeWorkspace, arr.filter(Boolean)) }
 })
 
-// Monkey patch
+// Monkey patch Main.wm._switchWorkspaceDone
+// to not call shellwm.completed_switch_workspace()
+// as it shows all windows
 function _switchWorkspaceDone(shellwm) {
     this._finishWorkspaceSwitch(this._switchData);
     //    shellwm.completed_switch_workspace();
 }
 
-// Monkey patch
+// Monkey patch Main.wm._finishWorkspaceSwitch
+// to only show visibleWindows 
 function _finishWorkspaceSwitch(switchData) {
     this._switchData = null;
 
