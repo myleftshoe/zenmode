@@ -414,12 +414,12 @@ function getPrevMetaWindow() {
 
 let reordering = false
 
-async function addWindow(workspace, metaWindow) {
+function addWindow(workspace, metaWindow) {
     log('addWindow', metaWindow.title)
     if (metaWindow.get_window_type() > 1) return;
     maximize(metaWindow)
     const tabList = getActiveWorkspaceTabList()
-    await slideOutRight(tabList[1])
+    slideOutRight(getNextMetaWindow())
 }
 
 function removeWindow(metaWindow) {
