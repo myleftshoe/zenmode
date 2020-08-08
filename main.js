@@ -4,6 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 const { slide, slideOut, animatable } = Extension.imports.transition
 const { Signals } = Extension.imports.signals
+const { show, hide, activate, getActor } = Extension.imports.metaWindow
 const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
@@ -107,30 +108,6 @@ function handleFocusWindow() {
 }
 
 // --------------------------------------------------------------------------------
-
-
-function show(metaWindow) {
-    log('show', metaWindow.title)
-    getActor(metaWindow).show();
-    return metaWindow
-}
-
-function hide(metaWindow) {
-    log('hide', metaWindow.title)
-    getActor(metaWindow).hide();
-    return metaWindow
-}
-
-function activate(metaWindow) {
-    log('activate', metaWindow.title)
-    metaWindow.activate(now)
-    return metaWindow
-}
-
-function getActor(metaWindow) {
-    return metaWindow.get_compositor_private()
-}
-
 
 function stop() {
     signals.destroy()
