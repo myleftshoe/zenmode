@@ -25,8 +25,8 @@ Object.defineProperty(this, 'focusedWindow', {
 const visibleWorkspaceWindows = new Map()
 
 Object.defineProperty(this, 'visibleWindows', {
-    get() { return visibleWorkspaceWindows.get(workspaces.activeWorkspace) },
-    set(arr = []) { visibleWorkspaceWindows.set(workspaces.activeWorkspace, arr) }
+    get() { return visibleWorkspaceWindows.get(workspaces.activeWorkspace) || [] },
+    set(arr = []) { visibleWorkspaceWindows.set(workspaces.activeWorkspace, arr.filter(Boolean)) }
 })
 
 // Monkey patch
@@ -94,7 +94,7 @@ function start() {
 
 function handleFocusWindow() {
     if (reordering) return
-    if (!visibleWindows.includes(focusedWindow)) {
+    if (focusedWindow && !visibleWindows.includes(focusedWindow)) {
         visibleWindows.map(hide)
         maximize(focusedWindow)
         visibleWindows = [focusedWindow]
