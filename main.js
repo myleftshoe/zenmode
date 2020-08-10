@@ -86,6 +86,8 @@ function start() {
 
     signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
 
+    signals.connect(global.display, 'window-created', addWindow)
+
     const tabList = getActiveWorkspaceTabList()
     tabList.map(hide).map(maximize)
     show(focusedWindow)
@@ -131,8 +133,8 @@ function showChrome() {
 // --------------------------------------------------------------------------------
 
 function handleWorkspaceChange() {
-    signals.disconnectObject(workspaces.activeWorkspace)
-    signals.connect(workspaces.activeWorkspace, 'window-added', addWindow)
+    // signals.disconnectObject(workspaces.activeWorkspace)
+    // signals.connect(workspaces.activeWorkspace, 'window-added', addWindow)
     // signals.connect(activeWorkspace, 'window-removed', removeWindow)
 }
 
@@ -414,11 +416,11 @@ function getPrevMetaWindow() {
 
 let reordering = false
 
-function addWindow(workspace, metaWindow) {
+function addWindow(display, metaWindow) {
     log('addWindow', metaWindow.title)
     if (metaWindow.get_window_type() > 1) return;
     maximize(metaWindow)
-    const tabList = getActiveWorkspaceTabList()
+    // const tabList = getActiveWorkspaceTabList()
     slideOutRight(getNextMetaWindow())
 }
 
