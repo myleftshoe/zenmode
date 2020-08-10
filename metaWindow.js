@@ -1,3 +1,5 @@
+const { Clutter } = imports.gi
+
 function show(metaWindow) {
     log('show', metaWindow.title)
     getActor(metaWindow).show();
@@ -18,4 +20,9 @@ function activate(metaWindow) {
 
 function getActor(metaWindow) {
     return metaWindow.get_compositor_private()
+}
+
+
+function createClone(metaWindow) {
+    return new Clutter.Clone({ source: getActor(metaWindow)})
 }
