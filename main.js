@@ -82,19 +82,19 @@ function start() {
     Main.wm._finishWorkspaceSwitch = _finishWorkspaceSwitch
     Main.wm._switchWorkspaceDone = _switchWorkspaceDone
 
-    global.window_manager.connect('size-changed', (wm, actor) => {
-        const metaWindow = actor.get_meta_window()
-        const [leftWindow, rightWindow] = visibleWindows
-        if (!rightWindow) return
-        if (metaWindow === leftWindow) {
-            const {x, y, width, height} = leftWindow.get_frame_rect()
-            rightWindow.move_resize_frame(false, x + width + 1, 0, 1920 - width, height)
-        }
-        if (metaWindow === rightWindow) {
-            const {x, y, width, height} = rightWindow.get_frame_rect()
-            leftWindow.move_resize_frame(false, 0, 0, 1920 - width, height)
-        }
-    })
+    // global.window_manager.connect('size-changed', (wm, actor) => {
+    //     const metaWindow = actor.get_meta_window()
+    //     const [leftWindow, rightWindow] = visibleWindows
+    //     if (!rightWindow) return
+    //     if (metaWindow === leftWindow) {
+    //         const {x, y, width, height} = leftWindow.get_frame_rect()
+    //         rightWindow.move_resize_frame(false, x + width + 1, 0, 1920 - width, height)
+    //     }
+    //     if (metaWindow === rightWindow) {
+    //         const {x, y, width, height} = rightWindow.get_frame_rect()
+    //         leftWindow.move_resize_frame(false, 0, 0, 1920 - width, height)
+    //     }
+    // })
     // global.window_manager.connect('size-changed', (a, b, c) => {log('size-changed', a, b, c)})
 
     signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
