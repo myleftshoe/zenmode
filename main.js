@@ -4,7 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 const { slide, slideOut, animatable } = Extension.imports.transition
 const { Signals } = Extension.imports.signals
-const { show, hide, activate, getActor } = Extension.imports.metaWindow
+const { show, hide, activate, getActor, createClone } = Extension.imports.metaWindow
 const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
@@ -53,14 +53,7 @@ function _finishWorkspaceSwitch(switchData) {
     if (!focusedWindow) {
         visibleWindows = []
     }
-    else if (!visibleWindows && focusedWindow.get_workspace() === workspaces.activeWorkspace) {
-        visibleWindows = [focusedWindow]
-        maximize(focusedWindow)
-        show(focusedWindow)
-    }
-    else {
-        visibleWindows.map(show)
-    }
+    visibleWindows.map(show)
 
     switchData.container.destroy();
     switchData.movingWindowBin.destroy();
@@ -82,20 +75,28 @@ function start() {
     Main.wm._finishWorkspaceSwitch = _finishWorkspaceSwitch
     Main.wm._switchWorkspaceDone = _switchWorkspaceDone
 
+    // global.display.connect('grab-op-end', (display, screen, metaWindow, op) => {
     // global.window_manager.connect('size-changed', (wm, actor) => {
     //     const metaWindow = actor.get_meta_window()
     //     const [leftWindow, rightWindow] = visibleWindows
     //     if (!rightWindow) return
     //     if (metaWindow === leftWindow) {
-    //         const {x, y, width, height} = leftWindow.get_frame_rect()
-    //         rightWindow.move_resize_frame(false, x + width + 1, 0, 1920 - width, height)
+    //         let {x, y, width, height} = leftWindow.get_frame_rect()
+    //         x = x + width
+    //         width = 1920 - width
+    //         rightWindow.move_resize_frame(true, x, y, width, height)
+    //         adjustWindowPosition(rightWindow, { x, y })
     //     }
     //     if (metaWindow === rightWindow) {
-    //         const {x, y, width, height} = rightWindow.get_frame_rect()
-    //         leftWindow.move_resize_frame(false, 0, 0, 1920 - width, height)
+    //         let {x, y, width, height} = rightWindow.get_frame_rect()
+    //         x = 0
+    //         width = 1920 - width
+    //         leftWindow.move_resize_frame(true, x, y, width, height)
+    //         adjustWindowPosition(leftWindow, { y, y })
     //     }
     // })
-    // global.window_manager.connect('size-changed', (a, b, c) => {log('size-changed', a, b, c)})
+
+    // global.window_manager.connect('size-change', (a, b, c) => {log('size-change', a, b, c)})
 
     signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
 
@@ -108,6 +109,53 @@ function start() {
     show(focusedWindow)
     visibleWindows = [focusedWindow]
     handleWorkspaceChange()
+
+    // global.display.connect('grab-op-end', (display, screen, metaWindow, op) => {
+    //     log('grab-op-end')
+    // })
+
+    let rwsid
+
+    signals.connect(global.display, 'grab-op-begin', (display, screen, metaWindow, op) => {
+        if (!metaWindow) return;
+        const [leftWindow, rightWindow] = visibleWindows
+        if (!rightWindow) return
+        if (leftWindow === metaWindow) {
+            global.display.end_grab_op(global.get_current_time())
+            rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
+            rwsid = rightWindow.connect('size-changed', (metaWindow) => {
+                let {x, y, width, height} = rightWindow.get_frame_rect()
+                x = 0
+                width = 1920 - width
+                leftWindow.move_resize_frame(true, x, y, width, height)
+                adjustWindowPosition(leftWindow, { y, y })
+            });
+        }
+        if (rightWindow === metaWindow) {
+            // return false
+            rightWindow.connect('size-changed', (metaWindow) => {
+                let {x, y, width, height} = rightWindow.get_frame_rect()
+                x = 0
+                width = 1920 - width
+                leftWindow.move_resize_frame(true, x, y, width, height)
+                adjustWindowPosition(leftWindow, { y, y })
+            });
+        }
+    });
+
+    signals.connect(global.display, 'grab-op-end', (display, screen, metaWindow, op) => {
+        log('fffffffffff')
+        log('fffffffffff')
+        log('fffffffffff', metaWindow.title, metaWindow.get_mutter_hints())
+        rwsid && metaWindow.disconnect(rwsid)        
+    })
+
+
+
+}
+
+function grabOpIsResizingHorizontally(op) {
+    return (op === Meta.GrabOp.RESIZING_E || op === Meta.GrabOp.RESIZING_W);
 }
 
 // --------------------------------------------------------------------------------
@@ -205,6 +253,8 @@ function handleChromeBottomClick(actor, event) {
 let index = 0
 let windows
 let cycling = ''
+
+
 function cycleLeftWindows() {
     const [leftWindow, rightWindow] = visibleWindows
 
@@ -218,10 +268,23 @@ function cycleLeftWindows() {
         index = 0
 
     let { x, y, width, height } = leftWindow.get_frame_rect()
-    hide(leftWindow)
-    maximize(leftWindow)
-    const nextWindow = windows[index]
+    const actor = createClone(leftWindow)
+    if (leftWindow.is_client_decorated())
+        actor.set_position(-8, 17)
+    else    
+        actor.set_position(2, 19)
 
+    global.stage.add_child(actor)
+    hide(leftWindow)
+    actor.save_easing_state()
+    actor.set_easing_duration(200)
+    actor.set_opacity(.5)
+    signals.connectOnce(actor, 'transition-stopped', (actor, prop, complete, metaWindow) => {
+        global.stage.remove_child(actor)
+        maximize(metaWindow) 
+    }, leftWindow)
+
+    const nextWindow = windows[index]
     if (!leftWindow.is_client_decorated() && nextWindow.is_client_decorated()) {
         x = x + 20
         y = y + 20
@@ -242,6 +305,7 @@ function cycleLeftWindows() {
     activate(nextWindow)
     nextWindow.raise()
     rightWindow.raise()
+
     return false
 }
 
@@ -547,9 +611,8 @@ async function translateActor(actor, { from, to, duration = 250 }) {
     actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUINT)
     actor.set_position(x1, y1)
     return new Promise(resolve => {
-        const signal = actor.connect('transition-stopped', () => {
+        signals.connectOnce(actor, 'transition-stopped', (actor) => {
             actor.restore_easing_state()
-            actor.disconnect(signal)
             resolve('complete')
         })
     })

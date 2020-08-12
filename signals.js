@@ -9,6 +9,14 @@ var Signals = class Signals {
         this.signals.set(sid, { object, signal })
         return sid
     }
+    connectOnce(object, signal, callback, data) {
+        const sid = GObject.signal_connect(object, signal, (...args) => {
+            this.disconnect(sid)
+            callback(...args, data)
+        })
+        this.signals.set(sid, { object, signal })
+        return sid
+    }
     disconnect(sid) {
         const { object } = this.signals.get(sid) || {}
         if (!object) return
