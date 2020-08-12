@@ -255,6 +255,29 @@ let windows
 let cycling = ''
 
 
+function fadeOut(metaWindow) {
+    const actor = getActor(metaWindow)
+    const clone = createClone(metaWindow)
+    let [ x, y ] = actor.get_position()
+
+    clone.set_position(x, y)
+
+    global.stage.add_child(clone)
+    hide(metaWindow)
+
+    clone.ease({
+        opacity: 0.5,
+        duration: 250,
+        mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+        onComplete() {
+            global.stage.remove_child(clone)
+            maximize(metaWindow) 
+        }, 
+    })
+
+}
+
+
 function cycleLeftWindows() {
     const [leftWindow, rightWindow] = visibleWindows
 
@@ -268,21 +291,35 @@ function cycleLeftWindows() {
         index = 0
 
     let { x, y, width, height } = leftWindow.get_frame_rect()
-    const actor = createClone(leftWindow)
-    if (leftWindow.is_client_decorated())
-        actor.set_position(-8, 17)
-    else    
-        actor.set_position(2, 19)
 
-    global.stage.add_child(actor)
-    hide(leftWindow)
-    actor.save_easing_state()
-    actor.set_easing_duration(200)
-    actor.set_opacity(.5)
-    signals.connectOnce(actor, 'transition-stopped', (actor, prop, complete, metaWindow) => {
-        global.stage.remove_child(actor)
-        maximize(metaWindow) 
-    }, leftWindow)
+    fadeOut(leftWindow)
+
+    // const actor = createClone(leftWindow)
+    // if (leftWindow.is_client_decorated())
+    //     actor.set_position(-8, 17)
+    // else    
+    //     actor.set_position(2, 19)
+
+    // global.stage.add_child(actor)
+    // hide(leftWindow)
+
+    // actor.ease({
+    //     opacity: 0.5,
+    //     duration: 200,
+    //     mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+    //     onComplete() {
+    //         global.stage.remove_child(actor)
+    //         maximize(leftWindow) 
+    //     }, 
+    // })
+
+    // actor.save_easing_state()
+    // actor.set_easing_duration(200)
+    // actor.set_opacity(.5)
+    // signals.connectOnce(actor, 'transition-stopped', (actor, prop, complete, metaWindow) => {
+    //     global.stage.remove_child(actor)
+    //     maximize(metaWindow) 
+    // }, leftWindow)
 
     const nextWindow = windows[index]
     if (!leftWindow.is_client_decorated() && nextWindow.is_client_decorated()) {
