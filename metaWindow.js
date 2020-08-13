@@ -138,16 +138,16 @@ function sizeToOther(metaWindow, other) {
     let { x, y, width, height } = other.get_frame_rect()
 
     if (!other.is_client_decorated() && metaWindow.is_client_decorated()) {
-        x = x + 20
-        y = y + 20
-        width = width - 40
-        height = height - 40
+        x += 20
+        y += 20
+        width -= 40
+        height -= 40
     }
     else if (other.is_client_decorated() && !metaWindow.is_client_decorated()) {
-        x = x - 20
-        y = y - 20
-        width = width + 40
-        height = height + 40
+        x -= 20
+        y -= 20
+        width += 40
+        height += 40
     }
 
     metaWindow.move_resize_frame(true, x, y, width, height)
