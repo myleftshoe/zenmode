@@ -29,39 +29,6 @@ Object.defineProperty(this, 'visibleWindows', {
     set(arr = []) { visibleWorkspaceWindows.set(workspaces.activeWorkspace, arr.filter(Boolean)) }
 })
 
-// Monkey patch Main.wm._switchWorkspaceDone
-// to not call shellwm.completed_switch_workspace()
-// as it shows all windows
-function _switchWorkspaceDone(shellwm) {
-    this._finishWorkspaceSwitch(this._switchData);
-    //    shellwm.completed_switch_workspace();
-}
-
-// Monkey patch Main.wm._finishWorkspaceSwitch
-// to only show visibleWindows 
-function _finishWorkspaceSwitch(switchData) {
-    this._switchData = null;
-
-    for (let i = 0; i < switchData.windows.length; i++) {
-        const w = switchData.windows[i];
-        w.window.disconnect(w.windowDestroyId);
-        w.window.get_parent().remove_child(w.window);
-        w.parent.add_child(w.window);
-        w.window.hide();
-    }
-
-    if (!focusedWindow) {
-        visibleWindows = []
-    }
-    visibleWindows.map(show)
-
-    switchData.container.destroy();
-    switchData.movingWindowBin.destroy();
-
-    this._movingWindow = null;
-
-}
-
 function start() {
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
@@ -72,37 +39,13 @@ function start() {
     hideChromeSid = Main.overview.connect('shown', hideChrome);
     showChromeSid = Main.overview.connect('hidden', showChrome);
 
-    Main.wm._finishWorkspaceSwitch = _finishWorkspaceSwitch
-    Main.wm._switchWorkspaceDone = _switchWorkspaceDone
-
-    // global.display.connect('grab-op-end', (display, screen, metaWindow, op) => {
-    // global.window_manager.connect('size-changed', (wm, actor) => {
-    //     const metaWindow = actor.get_meta_window()
-    //     const [leftWindow, rightWindow] = visibleWindows
-    //     if (!rightWindow) return
-    //     if (metaWindow === leftWindow) {
-    //         let {x, y, width, height} = leftWindow.get_frame_rect()
-    //         x = x + width
-    //         width = 1920 - width
-    //         rightWindow.move_resize_frame(true, x, y, width, height)
-    //         adjustWindowPosition(rightWindow, { x, y })
-    //     }
-    //     if (metaWindow === rightWindow) {
-    //         let {x, y, width, height} = rightWindow.get_frame_rect()
-    //         x = 0
-    //         width = 1920 - width
-    //         leftWindow.move_resize_frame(true, x, y, width, height)
-    //         adjustWindowPosition(leftWindow, { y, y })
-    //     }
-    // })
-
-    // global.window_manager.connect('size-change', (a, b, c) => {log('size-change', a, b, c)})
-
     signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
 
     signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
-
     signals.connect(global.display, 'window-created', addWindow)
+
+    signals.connect(global.display, 'grab-op-begin', handleGrabOpBegin)
+    signals.connect(global.display, 'grab-op-end', handleGrabOpEnd)
 
     const tabList = getActiveWorkspaceTabList()
     tabList.map(hide).map(maximize)
@@ -110,48 +53,33 @@ function start() {
     visibleWindows = [focusedWindow]
     handleWorkspaceChange()
 
-    // global.display.connect('grab-op-end', (display, screen, metaWindow, op) => {
-    //     log('grab-op-end')
-    // })
+}
 
-    let rwsid
+// --------------------------------------------------------------------------------
 
-    signals.connect(global.display, 'grab-op-begin', (display, screen, metaWindow, op) => {
-        if (!metaWindow) return;
-        const [leftWindow, rightWindow] = visibleWindows
-        if (!rightWindow) return
-        if (leftWindow === metaWindow) {
-            global.display.end_grab_op(global.get_current_time())
-            rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
-            rwsid = rightWindow.connect('size-changed', (metaWindow) => {
-                let {x, y, width, height} = rightWindow.get_frame_rect()
-                x = 0
-                width = 1920 - width
-                leftWindow.move_resize_frame(true, x, y, width, height)
-                adjustWindowPosition(leftWindow, { y, y })
-            });
-        }
-        if (rightWindow === metaWindow) {
-            // return false
-            rightWindow.connect('size-changed', (metaWindow) => {
-                let {x, y, width, height} = rightWindow.get_frame_rect()
-                x = 0
-                width = 1920 - width
-                leftWindow.move_resize_frame(true, x, y, width, height)
-                adjustWindowPosition(leftWindow, { y, y })
-            });
-        }
+function handleGrabOpBegin(display, screen, metaWindow, op) {
+    if (!metaWindow) return
+    const [leftWindow, rightWindow] = visibleWindows
+    if (!rightWindow) return
+    if (leftWindow === metaWindow) {
+        global.display.end_grab_op(global.get_current_time())
+        rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
+    }
+    connectResizeListener(leftWindow, rightWindow)    
+}
+
+function connectResizeListener(leftWindow, rightWindow) {
+    signals.connect(rightWindow, 'size-changed', (metaWindow) => {
+        let {x, y, width, height} = metaWindow.get_frame_rect()
+        x = 0
+        width = global.stage.get_width() - width
+        leftWindow.move_resize_frame(true, x, y, width, height)
+        adjustWindowPosition(leftWindow, { y, y })
     });
+}
 
-    signals.connect(global.display, 'grab-op-end', (display, screen, metaWindow, op) => {
-        log('fffffffffff')
-        log('fffffffffff')
-        log('fffffffffff', metaWindow.title, metaWindow.get_mutter_hints())
-        rwsid && metaWindow.disconnect(rwsid)        
-    })
-
-
-
+function handleGrabOpEnd(display, screen, metaWindow, op) {
+    signals.disconnectObject(metaWindow)        
 }
 
 function grabOpIsResizingHorizontally(op) {
@@ -195,7 +123,7 @@ function showChrome() {
 
 // --------------------------------------------------------------------------------
 
-function handleWorkspaceChange() {
+function handleWorkspaceChange(a, b, c) {
     // signals.disconnectObject(workspaces.activeWorkspace)
     // signals.connect(workspaces.activeWorkspace, 'window-added', addWindow)
     // signals.connect(activeWorkspace, 'window-removed', removeWindow)
