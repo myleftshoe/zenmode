@@ -4,7 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 // const { slide, slideOut, animatable } = Extension.imports.transition
 const { Signals } = Extension.imports.signals
-const { show, hide, activate, getActor, createClone } = Extension.imports.metaWindow
+const { show, hide, activate, getActor, createClone, fadeOut, sizeToOther } = Extension.imports.metaWindow
 const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
@@ -255,29 +255,6 @@ let windows
 let cycling = ''
 
 
-function fadeOut(metaWindow) {
-    const actor = getActor(metaWindow)
-    const clone = createClone(metaWindow)
-    let [ x, y ] = actor.get_position()
-
-    clone.set_position(x, y)
-
-    global.stage.add_child(clone)
-    hide(metaWindow)
-
-    clone.ease({
-        opacity: 0.5,
-        duration: 250,
-        mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-        onComplete() {
-            global.stage.remove_child(clone)
-            maximize(metaWindow) 
-        }, 
-    })
-
-}
-
-
 function cycleLeftWindows() {
     const [leftWindow, rightWindow] = visibleWindows
 
@@ -290,54 +267,13 @@ function cycleLeftWindows() {
     if (index > windows.length - 1)
         index = 0
 
-    let { x, y, width, height } = leftWindow.get_frame_rect()
+    const nextWindow = windows[index]
+
+    sizeToOther(nextWindow, leftWindow)
 
     fadeOut(leftWindow)
 
-    // const actor = createClone(leftWindow)
-    // if (leftWindow.is_client_decorated())
-    //     actor.set_position(-8, 17)
-    // else    
-    //     actor.set_position(2, 19)
-
-    // global.stage.add_child(actor)
-    // hide(leftWindow)
-
-    // actor.ease({
-    //     opacity: 0.5,
-    //     duration: 200,
-    //     mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-    //     onComplete() {
-    //         global.stage.remove_child(actor)
-    //         maximize(leftWindow) 
-    //     }, 
-    // })
-
-    // actor.save_easing_state()
-    // actor.set_easing_duration(200)
-    // actor.set_opacity(.5)
-    // signals.connectOnce(actor, 'transition-stopped', (actor, prop, complete, metaWindow) => {
-    //     global.stage.remove_child(actor)
-    //     maximize(metaWindow) 
-    // }, leftWindow)
-
-    const nextWindow = windows[index]
-    if (!leftWindow.is_client_decorated() && nextWindow.is_client_decorated()) {
-        x = x + 20
-        y = y + 20
-        width = width - 40
-        height = height - 40
-    }
-    if (leftWindow.is_client_decorated() && !nextWindow.is_client_decorated()) {
-        x = x - 20
-        y = y - 20
-        width = width + 40
-        height = height + 40
-    }
-
     visibleWindows = [nextWindow, rightWindow]
-    nextWindow.move_resize_frame(true, x, y, width, height)
-    // adjustWindowPosition(nextWindow, {x, y})
     show(nextWindow)
     activate(nextWindow)
     nextWindow.raise()
@@ -358,32 +294,18 @@ function cycleRightWindows() {
     if (index > windows.length - 1)
         index = 0
 
-    let { x, y, width, height } = rightWindow.get_frame_rect()
-    hide(rightWindow)
-    maximize(rightWindow)
     const nextWindow = windows[index]
 
-    if (!rightWindow.is_client_decorated() && nextWindow.is_client_decorated()) {
-        x = x + 20
-        y = y + 20
-        width = width - 40
-        height = height - 40
-    }
-    if (rightWindow.is_client_decorated() && !nextWindow.is_client_decorated()) {
-        x = x - 20
-        y = y - 20
-        width = width + 40
-        height = height + 40
-    }
+    sizeToOther(nextWindow, rightWindow)
 
+    fadeOut(rightWindow)
 
     visibleWindows = [leftWindow, nextWindow]
-    nextWindow.move_resize_frame(true, x, y, width, height)
-    // adjustWindowPosition(nextWindow, {x, y})
     show(nextWindow)
     activate(nextWindow)
     nextWindow.raise()
     leftWindow.raise()
+
     return false
 }
 
