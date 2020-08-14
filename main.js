@@ -3,7 +3,7 @@ const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
-const { show, hide, activate, maximize, getActor, createClone, replaceWith } = Extension.imports.metaWindow
+const { show, hide, activate, maximize, getActor, createClone, replaceWith, easeIn } = Extension.imports.metaWindow
 const { slideOutLeft, slideOutRight, slideInFromLeft, slideInFromRight } = Extension.imports.slide
 const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
@@ -298,46 +298,37 @@ function adjustWindowPosition(metaWindow, { x, y }) {
 
 
 function easeInRight(metaWindow) {
-    const mwa = getActor(metaWindow)
-    mwa.hide()
     let { x, y, width, height } = getTileSize(metaWindow)
     x = x + 960
-    metaWindow.move_resize_frame(true, x, y, width, height)
-    const clone = new Clutter.Clone({ source: mwa })
-    clone.set_position(x, y - 8)
-    clone.translation_x = 250
-    global.stage.add_child(clone)
-    clone.ease({
-        translation_x: 0,
-        duration: 250,
-        mode: Clutter.AnimationMode.EASE_OUT_QUINT,
-        onComplete() {
-            adjustWindowPosition(metaWindow, { x, y })
-            mwa.show()
-            global.stage.remove_child(clone)
-        }
-    })
+    metaWindow.move_resize_frame(true, x + 250, y, width, height)
+    easeIn(metaWindow, { x })
 }
 
 function easeInLeft(metaWindow) {
-    const mwa = getActor(metaWindow)
-    mwa.hide()
     let { x, y, width, height } = getTileSize(metaWindow)
-    metaWindow.move_resize_frame(true, x, y, width, height)
-    const clone = new Clutter.Clone({ source: mwa })
-    clone.set_position(x, y - 8)
-    clone.translation_x = -250
-    global.stage.add_child(clone)
-    clone.ease({
-        translation_x: 0,
-        duration: 250,
-        mode: Clutter.AnimationMode.EASE_OUT_QUINT,
-        onComplete() {
-            adjustWindowPosition(metaWindow, { x, y })
-            mwa.show()
-            global.stage.remove_child(clone)
-        }
-    })
+    metaWindow.move_resize_frame(true, x - 250, y, width, height)
+    easeIn(metaWindow, { x })
+    
+    
+
+    // const mwa = getActor(metaWindow)
+    // mwa.hide()
+    // let { x, y, width, height } = getTileSize(metaWindow)
+    // metaWindow.move_resize_frame(true, x, y, width, height)
+    // const clone = new Clutter.Clone({ source: mwa })
+    // clone.set_position(x, y - 8)
+    // clone.translation_x = -250
+    // global.stage.add_child(clone)
+    // clone.ease({
+    //     translation_x: 0,
+    //     duration: 250,
+    //     mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+    //     onComplete() {
+    //         adjustWindowPosition(metaWindow, { x, y })
+    //         mwa.show()
+    //         global.stage.remove_child(clone)
+    //     }
+    // })
 }
 
 

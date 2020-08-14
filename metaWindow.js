@@ -119,27 +119,40 @@ function replaceCloneWithMetaWindow(clone, metaWindow) {
 }
 
 
-function actorRectToFrameRect(actor) {
+function _actorRectToFrameRect(actor) {
     const [x, y, width, height] = getRect(actor)
+    return [x, y + 8, width, height - 8]
+}
+
+function actorRectToFrameRect(actor, metaWindow) {
+    let [x, y, width, height] = getRect(actor)
+    y += 8
+    height -= 8
+    if (metaWindow.is_client_decorated()) {
+        x += 30
+        y += 22
+        width -= 60
+        height -= 52
+    }
     return [x, y, width, height]
 }
 
 function frameRectToActorRect(metaWindow) {
     let { x, y, width, height } = metaWindow.get_frame_rect()
-    y = y - 8
-    height = height + 8
+    y -= 8
+    height += 8
     if (metaWindow.is_client_decorated()) {
-        x = x - 30
-        y = y - 22
-        width = width + 60
-        height = height + 52
+        x -= 30
+        // y -= 22
+        width += 60
+        height += 52
     }
     return [x, y, width, height]
 }
 
 
 function alignWithActor(metaWindow, actor) {
-    metaWindow.move_resize_frame(true, ...actorRectToFrameRect(actor))
+    metaWindow.move_resize_frame(true, ...actorRectToFrameRect(actor, metaWindow))
 }
 
 function alignActorWithMetaWindow(actor, metaWindow) {
