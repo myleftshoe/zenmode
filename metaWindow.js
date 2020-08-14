@@ -132,11 +132,14 @@ function getRect(actor) {
     return [x, y, width, height]
 }
 
+function replaceWith(metaWindow, other) {
+    colocate(other, metaWindow)
+    fadeOut(metaWindow)
+    return metaWindow
+}
 
-function sizeToOther(metaWindow, other) {
-
+function colocate(metaWindow, other) {
     let { x, y, width, height } = other.get_frame_rect()
-
     if (!other.is_client_decorated() && metaWindow.is_client_decorated()) {
         x += 20
         y += 20
@@ -149,7 +152,6 @@ function sizeToOther(metaWindow, other) {
         width += 40
         height += 40
     }
-
     metaWindow.move_resize_frame(true, x, y, width, height)
     return metaWindow
 }

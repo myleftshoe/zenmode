@@ -4,7 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 // const { slide, slideOut, animatable } = Extension.imports.transition
 const { Signals } = Extension.imports.signals
-const { show, hide, activate, getActor, createClone, fadeOut, sizeToOther } = Extension.imports.metaWindow
+const { show, hide, activate, getActor, createClone, replaceWith } = Extension.imports.metaWindow
 const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
@@ -197,9 +197,7 @@ function cycleLeftWindows() {
 
     const nextWindow = windows[index]
 
-    sizeToOther(nextWindow, leftWindow)
-
-    fadeOut(leftWindow)
+    replaceWith(leftWindow, nextWindow)
 
     visibleWindows = [nextWindow, rightWindow]
     show(nextWindow)
@@ -224,9 +222,7 @@ function cycleRightWindows() {
 
     const nextWindow = windows[index]
 
-    sizeToOther(nextWindow, rightWindow)
-
-    fadeOut(rightWindow)
+    replaceWith(rightWindow, nextWindow)
 
     visibleWindows = [leftWindow, nextWindow]
     show(nextWindow)
