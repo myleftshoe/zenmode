@@ -1,10 +1,10 @@
-const { Clutter, GObject, Meta, St } = imports.gi
+const { Clutter, Meta } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
-// const { slide, slideOut, animatable } = Extension.imports.transition
 const { Signals } = Extension.imports.signals
 const { show, hide, activate, maximize, getActor, createClone, replaceWith } = Extension.imports.metaWindow
+const { slideOutLeft, slideOutRight, slideInFromLeft, slideInFromRight } = Extension.imports.slide
 const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
@@ -55,52 +55,6 @@ function start() {
 
 }
 
-// --------------------------------------------------------------------------------
-
-function handleGrabOpBegin(display, screen, metaWindow, op) {
-    if (!metaWindow) return
-    const [leftWindow, rightWindow] = visibleWindows
-    if (!rightWindow) return
-    if (leftWindow === metaWindow) {
-        global.display.end_grab_op(global.get_current_time())
-        rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
-    }
-    connectResizeListener(leftWindow, rightWindow)    
-}
-
-function connectResizeListener(leftWindow, rightWindow) {
-    signals.connect(rightWindow, 'size-changed', (metaWindow) => {
-        let {x, y, width, height} = metaWindow.get_frame_rect()
-        x = 0
-        width = global.stage.get_width() - width
-        leftWindow.move_resize_frame(true, x, y, width, height)
-        adjustWindowPosition(leftWindow, { y, y })
-    });
-}
-
-function handleGrabOpEnd(display, screen, metaWindow, op) {
-    signals.disconnectObject(metaWindow)        
-}
-
-function grabOpIsResizingHorizontally(op) {
-    return (op === Meta.GrabOp.RESIZING_E || op === Meta.GrabOp.RESIZING_W);
-}
-
-// --------------------------------------------------------------------------------
-
-function handleFocusWindow() {
-    if (reordering) return
-    if (focusedWindow && !visibleWindows.includes(focusedWindow)) {
-        visibleWindows.map(hide)
-        maximize(focusedWindow)
-        visibleWindows = [focusedWindow]
-    }
-    visibleWindows.map(show)
-    // show(focusedWindow)
-}
-
-// --------------------------------------------------------------------------------
-
 function stop() {
     signals.destroy()
     Main.overview.disconnect(hideChromeSid);
@@ -120,6 +74,52 @@ function showChrome() {
     chrome.left.show()
     chrome.right.show()
 }
+
+
+// --------------------------------------------------------------------------------
+
+function handleGrabOpBegin(display, screen, metaWindow, op) {
+    if (!metaWindow) return
+    const [leftWindow, rightWindow] = visibleWindows
+    if (!rightWindow) return
+    if (leftWindow === metaWindow) {
+        global.display.end_grab_op(global.get_current_time())
+        rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
+    }
+    connectResizeListener(leftWindow, rightWindow)
+}
+
+function connectResizeListener(leftWindow, rightWindow) {
+    signals.connect(rightWindow, 'size-changed', (metaWindow) => {
+        let { x, y, width, height } = metaWindow.get_frame_rect()
+        x = 0
+        width = global.stage.get_width() - width
+        leftWindow.move_resize_frame(true, x, y, width, height)
+        adjustWindowPosition(leftWindow, { y, y })
+    });
+}
+
+function handleGrabOpEnd(display, screen, metaWindow, op) {
+    signals.disconnectObject(metaWindow)
+}
+
+function grabOpIsResizingHorizontally(op) {
+    return (op === Meta.GrabOp.RESIZING_E || op === Meta.GrabOp.RESIZING_W);
+}
+
+// --------------------------------------------------------------------------------
+
+function handleFocusWindow() {
+    if (reordering) return
+    if (focusedWindow && !visibleWindows.includes(focusedWindow)) {
+        visibleWindows.map(hide)
+        maximize(focusedWindow)
+        visibleWindows = [focusedWindow]
+    }
+    visibleWindows.map(show)
+    // show(focusedWindow)
+}
+
 
 // --------------------------------------------------------------------------------
 
@@ -411,92 +411,5 @@ async function slideRight() {
             show(focusOrder.slice(-1))
         })
     })
-}
-
-async function slideOutLeft(metaWindow) {
-    if (!metaWindow) return
-    const { width } = metaWindow.get_buffer_rect()
-    return translateMetaWindow(metaWindow, { to: { x: 0 - width } })
-}
-
-async function slideOutRight(metaWindow) {
-    if (!metaWindow) return
-    return translateMetaWindow(metaWindow, { to: { x: 1920 } })
-}
-
-async function slideInFromRight(metaWindow) {
-    if (!metaWindow) return
-    return translateMetaWindow(metaWindow, { from: { x: 1920 } })
-}
-
-async function slideInFromLeft(metaWindow) {
-    if (!metaWindow) return
-    const { width } = metaWindow.get_buffer_rect()
-    return translateMetaWindow(metaWindow, { from: { x: 0 - width } })
-}
-
-
-function rectIsInViewport(x, y, width, height) {
-    return (x < 1920 && y < 1200 && x + width > 0 && y + height > 0)
-}
-
-async function translateMetaWindow(metaWindow, { from, to, duration }) {
-    if (!metaWindow) return;
-    const { x, y, width, height } = metaWindow.get_buffer_rect()
-    const [x0, y0] = coalesceXY(from, [x, y])
-    const [x1, y1] = coalesceXY(to, [x, y])
-    // if (x0 === x1 && y0 === y1) return
-    const mwa = getActor(metaWindow)
-    mwa.show()
-    const clone = new Clutter.Clone({ source: mwa })
-    clone.set_position(x0, y0)
-    Main.uiGroup.add_child(clone)
-    mwa.hide()
-    await translateActor(clone, { from: [x0, y0], to: [x1, y1], duration })
-    if (rectIsInViewport(x1, y1, width, height)) {
-        mwa.set_position(x1, y1)
-        mwa.show()
-    }
-    clone.destroy()
-}
-
-async function translateActor(actor, { from, to, duration = 250 }) {
-    const { x, y } = actor.get_position()
-    const [x0, y0] = coalesceXY(from, [x, y])
-    const [x1, y1] = coalesceXY(to, [x, y])
-    if (x0 === x1 && y0 === y1) return Promise.resolve()
-    actor.set_position(x0, y0)
-    actor.save_easing_state()
-    actor.set_easing_duration(duration)
-    actor.set_easing_mode(Clutter.AnimationMode.EASE_OUT_QUINT)
-    actor.set_position(x1, y1)
-    return new Promise(resolve => {
-        signals.connectOnce(actor, 'transition-stopped', (actor) => {
-            actor.restore_easing_state()
-            resolve('complete')
-        })
-    })
-}
-
-// accepts point in form {x}, {y}, {x, y}, [x], [,y] or [x,y]
-// replaces missing values with x and y from second parameter [x, y]
-// returns point in form [x,y] 
-function coalesceXY(xy, [x, y]) {
-    let nx = x
-    let ny = y
-    if (Array.isArray(xy)) {
-        nx = xy[0]
-        ny = xy[1]
-    }
-    else if (typeof xy === 'object') {
-        nx = xy.x
-        ny = xy.y
-    }
-    const ix = parseInt(nx)
-    const iy = parseInt(ny)
-    const rx = isNaN(ix) ? x : ix
-    const ry = isNaN(iy) ? y : iy
-
-    return [rx, ry]
 }
 

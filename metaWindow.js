@@ -45,11 +45,11 @@ function getActor(metaWindow) {
 }
 
 function createClone(metaWindow) {
-    return new Clutter.Clone({ source: getActor(metaWindow)})
+    return new Clutter.Clone({ source: getActor(metaWindow) })
 }
 
 function cloneActor(actor) {
-    return new Clutter.Clone({ source: actor})
+    return new Clutter.Clone({ source: actor })
 }
 
 
@@ -65,7 +65,7 @@ async function ease(actor, props) {
         duration: 250,
         mode: Clutter.AnimationMode.EASE_OUT_QUINT,
         ...props,
-        onComplete() { resolve(actor) }, 
+        onComplete() { resolve(actor) },
     }))
 }
 
@@ -75,14 +75,14 @@ async function fadeOut(metaWindow) {
 
 async function slideOut(metaWindow) {
     const actor = getActor(metaWindow)
-    const [ width ] = actor.get_size()
+    const [width] = actor.get_size()
     return easeOut(metaWindow, { x: -width })
 }
 
 async function slideIn(metaWindow) {
     log('slideIn', metaWindow && metaWindow.title)
     const actor = getActor(metaWindow)
-    const [ width ] = actor.get_size()
+    const [width] = actor.get_size()
     actor.set_x(-width)
     return easeIn(metaWindow, { x: 0 })
 }
@@ -120,8 +120,8 @@ function replaceCloneWithMetaWindow(clone, metaWindow) {
 
 
 function actorRectToFrameRect(actor) {
-    const [ x, y, width, height ] = getRect(actor)
-    return [ x, y, width, height ]
+    const [x, y, width, height] = getRect(actor)
+    return [x, y, width, height]
 }
 
 function frameRectToActorRect(metaWindow) {
@@ -133,8 +133,8 @@ function frameRectToActorRect(metaWindow) {
         y = y - 22
         width = width + 60
         height = height + 52
-    }    
-    return [ x, y, width, height ]
+    }
+    return [x, y, width, height]
 }
 
 
@@ -149,8 +149,8 @@ function alignActorWithMetaWindow(actor, metaWindow) {
 }
 
 function getRect(actor) {
-    const [ x, y ] = actor.get_position()
-    const [ width, height ] = actor.get_size()
+    const [x, y] = actor.get_position()
+    const [width, height] = actor.get_size()
     return [x, y, width, height]
 }
 
@@ -177,3 +177,6 @@ function colocate(metaWindow, other) {
     metaWindow.move_resize_frame(true, x, y, width, height)
     return metaWindow
 }
+
+
+
