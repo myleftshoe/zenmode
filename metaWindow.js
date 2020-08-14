@@ -97,6 +97,8 @@ async function easeIn(metaWindow, transition = fade) {
 
 async function easeOut(metaWindow, transition = fade) {
     const clone = replaceWithClone(metaWindow)
+    if (metaWindow.is_client_decorated())
+        clone.y -=22 // TODO: Work out why this is necessary
     await ease(clone, transition)
     global.stage.remove_child(clone)
     return metaWindow
