@@ -17,7 +17,6 @@ let hideChromeSid
 let showChromeSid
 let lastFocusedWindow
 
-
 Object.defineProperty(this, 'focusedWindow', {
     get() { return global.display.get_focus_window() }
 })
@@ -39,8 +38,6 @@ function start() {
     hideChromeSid = Main.overview.connect('shown', hideChrome);
     showChromeSid = Main.overview.connect('hidden', showChrome);
 
-    signals.connect(global.workspace_manager, 'active-workspace-changed', handleWorkspaceChange)
-
     signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
     signals.connect(global.display, 'window-created', addWindow)
 
@@ -51,8 +48,6 @@ function start() {
     tabList.map(hide).map(maximize)
     show(focusedWindow)
     visibleWindows = [focusedWindow]
-    handleWorkspaceChange()
-
 }
 
 function stop() {
@@ -120,16 +115,7 @@ function handleFocusWindow() {
     // show(focusedWindow)
 }
 
-
 // --------------------------------------------------------------------------------
-
-function handleWorkspaceChange(a, b, c) {
-    // signals.disconnectObject(workspaces.activeWorkspace)
-    // signals.connect(workspaces.activeWorkspace, 'window-added', addWindow)
-    // signals.connect(activeWorkspace, 'window-removed', removeWindow)
-}
-
-let twoUp = false
 
 function handleChromeLeftClick(actor, event) {
     const { RIGHT_BUTTON } = getEventModifiers(event)
@@ -138,7 +124,7 @@ function handleChromeLeftClick(actor, event) {
         cycling = ''
         return
     }
-    if (twoUp) {
+    if (visibleWindows.length === 2) {
         onIdle(cycleLeftWindows)
         return
     }
@@ -153,7 +139,7 @@ function handleChromeRightClick(actor, event) {
         cycling = ''
         return
     }
-    if (twoUp) {
+    if (visibleWindows.length === 2) {
         onIdle(cycleRightWindows)
         return
     }
@@ -178,6 +164,7 @@ function handleChromeBottomClick(actor, event) {
 }
 
 // --------------------------------------------------------------------------------
+
 let index = 0
 let windows
 let cycling = ''
@@ -239,7 +226,6 @@ async function toggle2UpLeft() {
     const [leftWindow, rightWindow] = visibleWindows
     log('toggle2UpLeft', leftWindow && leftWindow.title, rightWindow && rightWindow.title)
     if (leftWindow && rightWindow) {
-        twoUp = false
         maximize(leftWindow)
         await slideOutRight(rightWindow)
         maximize(rightWindow)
@@ -253,13 +239,11 @@ async function toggle2UpLeft() {
     const { x, y, width, height } = getTileSize(leftWindow)
     leftWindow.move_resize_frame(true, x, y, width, height)
     adjustWindowPosition(leftWindow, { x, y })
-    twoUp = true
 }
 
 async function toggle2UpRight() {
     const [leftWindow, rightWindow] = visibleWindows
     if (leftWindow && rightWindow) {
-        twoUp = false
         maximize(rightWindow)
         await slideOutLeft(leftWindow)
         maximize(leftWindow)
@@ -274,7 +258,6 @@ async function toggle2UpRight() {
     x = x + 960
     leftWindow.move_resize_frame(true, x, y, width, height)
     adjustWindowPosition(leftWindow, { x, y })
-    twoUp = true
 }
 
 function getTileSize(metaWindow) {
@@ -308,27 +291,6 @@ function easeInLeft(metaWindow) {
     let { x, y, width, height } = getTileSize(metaWindow)
     metaWindow.move_resize_frame(true, x - 250, y, width, height)
     easeIn(metaWindow, { x })
-    
-    
-
-    // const mwa = getActor(metaWindow)
-    // mwa.hide()
-    // let { x, y, width, height } = getTileSize(metaWindow)
-    // metaWindow.move_resize_frame(true, x, y, width, height)
-    // const clone = new Clutter.Clone({ source: mwa })
-    // clone.set_position(x, y - 8)
-    // clone.translation_x = -250
-    // global.stage.add_child(clone)
-    // clone.ease({
-    //     translation_x: 0,
-    //     duration: 250,
-    //     mode: Clutter.AnimationMode.EASE_OUT_QUINT,
-    //     onComplete() {
-    //         adjustWindowPosition(metaWindow, { x, y })
-    //         mwa.show()
-    //         global.stage.remove_child(clone)
-    //     }
-    // })
 }
 
 
@@ -350,7 +312,6 @@ function addWindow(display, metaWindow) {
     log('addWindow', metaWindow.title)
     if (metaWindow.get_window_type() > 1) return;
     maximize(metaWindow)
-    // const tabList = getActiveWorkspaceTabList()
     slideOutRight(getNextMetaWindow())
 }
 
