@@ -1,4 +1,4 @@
-const { Clutter } = imports.gi
+const { Clutter, Meta } = imports.gi
 
 function show(metaWindow) {
     log('show', metaWindow.title)
@@ -15,6 +15,28 @@ function hide(metaWindow) {
 function activate(metaWindow) {
     log('activate', metaWindow.title)
     metaWindow.activate(global.get_current_time())
+    return metaWindow
+}
+
+function maximize(metaWindow) {
+    log('maximize', metaWindow.title)
+    metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
+    let geometry = {
+        x: 3,
+        y: 27,
+        width: global.stage.get_width() - 3,
+        height: global.stage.get_height() - 28,
+    }
+    if (metaWindow.is_client_decorated()) {
+        geometry = {
+            x: 22,
+            y: 47,
+            width: global.stage.get_width() - 43,
+            height: global.stage.get_height() - 68,
+        }
+    }
+    const { x, y, width, height } = geometry
+    metaWindow.move_resize_frame(false, x, y, width, height)
     return metaWindow
 }
 

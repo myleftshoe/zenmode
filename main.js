@@ -4,7 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 // const { slide, slideOut, animatable } = Extension.imports.transition
 const { Signals } = Extension.imports.signals
-const { show, hide, activate, getActor, createClone, replaceWith } = Extension.imports.metaWindow
+const { show, hide, activate, maximize, getActor, createClone, replaceWith } = Extension.imports.metaWindow
 const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
@@ -339,29 +339,6 @@ function easeInLeft(metaWindow) {
         }
     })
 }
-
-function maximize(metaWindow) {
-    log('maximize', metaWindow.title)
-    metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
-    let geometry = {
-        x: 3,
-        y: 27,
-        width: 1917,
-        height: 1172,
-    }
-    if (metaWindow.is_client_decorated()) {
-        geometry = {
-            x: 22,
-            y: 47,
-            width: 1877,
-            height: 1132,
-        }
-    }
-    const { x, y, width, height } = geometry
-    metaWindow.move_resize_frame(false, x, y, width, height)
-    return metaWindow
-}
-
 
 
 // --------------------------------------------------------------------------------
