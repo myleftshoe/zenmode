@@ -160,24 +160,38 @@ function handleFocusWindow() {
 
 // --------------------------------------------------------------------------------
 
-let index = 0
+function loop(array = []) {
+    function* generate(array = []) {
+        yield* array
+    }
+    let generator = generate(array)
+    function next() {
+        let { value, done } = generator.next()
+        if (done) {
+            generator = generate(array)
+            value = generator.next().value
+        }
+        return value
+    }
+    return { next }
+}
+
 let windows
 let cycling = ''
 
 function cycleLeftWindows() {
     const [leftWindow, rightWindow] = visibleWindows
+    
+    let nextWindow
 
     if (cycling !== 'left') {
         cycling = 'left'
-        windows = getActiveWorkspaceTabList().filter(mw => mw !== rightWindow)
-        index = 0
+        windows = loop(getActiveWorkspaceTabList().filter(mw => mw !== rightWindow))
+        nextWindow = windows.next()
     }
-    index++
-    if (index > windows.length - 1)
-        index = 0
 
-    const nextWindow = windows[index]
-
+    nextWindow = windows.next()
+    
     replaceWith(leftWindow, nextWindow)
 
     visibleWindows = [nextWindow, rightWindow]
@@ -192,16 +206,15 @@ function cycleLeftWindows() {
 function cycleRightWindows() {
     const [leftWindow, rightWindow] = visibleWindows
 
+    let nextWindow
+
     if (cycling !== 'right') {
         cycling = 'right'
-        windows = getActiveWorkspaceTabList().filter(mw => mw !== leftWindow)
-        index = 0
+        windows = loop(getActiveWorkspaceTabList().filter(mw => mw !== leftWindow))
+        nextWindow = windows.next()
     }
-    index++
-    if (index > windows.length - 1)
-        index = 0
 
-    const nextWindow = windows[index]
+    nextWindow = windows.next()
 
     replaceWith(rightWindow, nextWindow)
 
