@@ -216,14 +216,18 @@ function cycleRightWindows() {
 
 // --------------------------------------------------------------------------------
 
+function maximizeWindows({exclude = []}) {
+    getActiveWorkspaceTabList().filter(metaWindow => !exclude.includes(metaWindow)).map(maximize).map(hide)
+}
+
 async function toggle2UpLeft() {
     const [leftWindow, rightWindow] = visibleWindows
     log('toggle2UpLeft', leftWindow && leftWindow.title, rightWindow && rightWindow.title)
     if (leftWindow && rightWindow) {
         maximize(leftWindow)
         await slideOutRight(rightWindow)
-        maximize(rightWindow)
-        hide(rightWindow)
+        maximizeWindows({exclude: [leftWindow]})
+        getActiveWorkspaceTabList().filter(metaWindow => metaWindow !== leftWindow).map(maximize).map(hide)
         visibleWindows = [leftWindow]
         return
     }
@@ -240,8 +244,7 @@ async function toggle2UpRight() {
     if (leftWindow && rightWindow) {
         maximize(rightWindow)
         await slideOutLeft(leftWindow)
-        maximize(leftWindow)
-        hide(leftWindow)
+        maximizeWindows({exclude: [rightWindow]})
         visibleWindows = [rightWindow]
         return
     }
