@@ -71,12 +71,25 @@ var addRight = size => createChrome({
     x: monitor.width - size,
 })
 
+const destroy = function() {
+    for (const prop in this) {
+        if (prop !== 'destroy')
+            prop && this[prop].destroy()
+    }
+}
+
 function addChrome(size) {
     if (typeof size !== 'object') return;
     const top = size.top && addTop(size.top)
     const bottom = size.bottom && addBottom(size.bottom)
     const left = size.left && addLeft(size.left)
     const right = size.right && addRight(size.right)
-    return { top, bottom, left, right }
+    return { 
+        top, 
+        bottom, 
+        left, 
+        right,
+        destroy
+    }
 }
 

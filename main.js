@@ -28,6 +28,9 @@ Object.defineProperty(this, 'visibleWindows', {
     set(arr = []) { visibleWorkspaceWindows.set(workspaces.activeWorkspace, arr.filter(Boolean)) }
 })
 
+const pipe = (...fns) => (x) => fns.reduce((v, f) => f(v), x);
+const compose = (...fns) => (x) => fns.reduceRight((v, f) => f(v), x);
+
 function start() {
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
@@ -54,65 +57,7 @@ function stop() {
     signals.destroy()
     Main.overview.disconnect(hideChromeSid);
     Main.overview.disconnect(showChromeSid);
-    chrome.left.destroy()
-    chrome.right.destroy()
-    chrome.top.destroy()
-    chrome.bottom.destroy()
-}
-
-function hideChrome() {
-    chrome.left.hide()
-    chrome.right.hide()
-}
-
-function showChrome() {
-    chrome.left.show()
-    chrome.right.show()
-}
-
-
-// --------------------------------------------------------------------------------
-
-function handleGrabOpBegin(display, screen, metaWindow, op) {
-    if (!metaWindow) return
-    const [leftWindow, rightWindow] = visibleWindows
-    if (!rightWindow) return
-    if (leftWindow === metaWindow) {
-        global.display.end_grab_op(global.get_current_time())
-        rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
-    }
-    connectResizeListener(leftWindow, rightWindow)
-}
-
-function connectResizeListener(leftWindow, rightWindow) {
-    signals.connect(rightWindow, 'size-changed', (metaWindow) => {
-        let { x, y, width, height } = metaWindow.get_frame_rect()
-        x = 0
-        width = global.stage.get_width() - width
-        leftWindow.move_resize_frame(true, x, y, width, height)
-        adjustWindowPosition(leftWindow, { y, y })
-    });
-}
-
-function handleGrabOpEnd(display, screen, metaWindow, op) {
-    signals.disconnectObject(metaWindow)
-}
-
-function grabOpIsResizingHorizontally(op) {
-    return (op === Meta.GrabOp.RESIZING_E || op === Meta.GrabOp.RESIZING_W);
-}
-
-// --------------------------------------------------------------------------------
-
-function handleFocusWindow() {
-    if (reordering) return
-    if (focusedWindow && !visibleWindows.includes(focusedWindow)) {
-        visibleWindows.map(hide)
-        maximize(focusedWindow)
-        visibleWindows = [focusedWindow]
-    }
-    visibleWindows.map(show)
-    // show(focusedWindow)
+    chrome.destroy()
 }
 
 // --------------------------------------------------------------------------------
@@ -163,12 +108,61 @@ function handleChromeBottomClick(actor, event) {
         activateWorkspace(workspaces.nextWorkspace)
 }
 
+function hideChrome() {
+    chrome.left.hide()
+    chrome.right.hide()
+}
+
+function showChrome() {
+    chrome.left.show()
+    chrome.right.show()
+}
+
+// --------------------------------------------------------------------------------
+
+function handleGrabOpBegin(display, screen, metaWindow, op) {
+    if (!metaWindow) return
+    const [leftWindow, rightWindow] = visibleWindows
+    if (!rightWindow) return
+    if (leftWindow === metaWindow) {
+        global.display.end_grab_op(global.get_current_time())
+        rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
+    }
+    connectResizeListener(leftWindow, rightWindow)
+}
+
+function handleGrabOpEnd(display, screen, metaWindow, op) {
+    signals.disconnectObject(metaWindow)
+}
+
+function connectResizeListener(leftWindow, rightWindow) {
+    signals.connect(rightWindow, 'size-changed', (metaWindow) => {
+        let { x, y, width, height } = metaWindow.get_frame_rect()
+        x = 0
+        width = global.stage.get_width() - width
+        leftWindow.move_resize_frame(true, x, y, width, height)
+        adjustWindowPosition(leftWindow, { y, y })
+    });
+}
+
+// --------------------------------------------------------------------------------
+
+function handleFocusWindow() {
+    if (reordering) return
+    if (focusedWindow && !visibleWindows.includes(focusedWindow)) {
+        visibleWindows.map(hide)
+        maximize(focusedWindow)
+        visibleWindows = [focusedWindow]
+    }
+    visibleWindows.map(show)
+    // show(focusedWindow)
+}
+
 // --------------------------------------------------------------------------------
 
 let index = 0
 let windows
 let cycling = ''
-
 
 function cycleLeftWindows() {
     const [leftWindow, rightWindow] = visibleWindows
@@ -278,7 +272,6 @@ function adjustWindowPosition(metaWindow, { x, y }) {
     }
     metaWindow.move_frame(true, x, y)
 }
-
 
 function easeInRight(metaWindow) {
     let { x, y, width, height } = getTileSize(metaWindow)
