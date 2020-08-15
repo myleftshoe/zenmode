@@ -227,7 +227,6 @@ async function toggle2UpLeft() {
         maximize(leftWindow)
         await slideOutRight(rightWindow)
         maximizeWindows({exclude: [leftWindow]})
-        getActiveWorkspaceTabList().filter(metaWindow => metaWindow !== leftWindow).map(maximize).map(hide)
         visibleWindows = [leftWindow]
         return
     }
