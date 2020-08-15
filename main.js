@@ -3,6 +3,7 @@ const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
+const { stage } = Extension.imports.sizing
 const { show, hide, activate, maximize, getActor, createClone, replaceWith, easeIn } = Extension.imports.metaWindow
 const { slideOutLeft, slideOutRight, slideInFromLeft, slideInFromRight } = Extension.imports.slide
 const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
@@ -251,13 +252,13 @@ async function toggle2UpRight() {
     visibleWindows = [prevMetaWindow, leftWindow]
     easeInLeft(prevMetaWindow)
     let { x, y, width, height } = getTileSize(leftWindow)
-    x = x + 960
+    x = x + stage.width / 2
     leftWindow.move_resize_frame(true, x, y, width, height)
     adjustWindowPosition(leftWindow, { x, y })
 }
 
 function getTileSize(metaWindow) {
-    let [x, y, width, height] = [2, 27, 957, 1172]
+    let [x, y, width, height] = [2, 27, (stage.width / 2) - 3, stage.height - 28]
     if (metaWindow.is_client_decorated()) {
         x = x - 10
         y = y - 2
@@ -277,7 +278,7 @@ function adjustWindowPosition(metaWindow, { x, y }) {
 
 function easeInRight(metaWindow) {
     let { x, y, width, height } = getTileSize(metaWindow)
-    x = x + 960
+    x = x + stage.width / 2
     metaWindow.move_resize_frame(true, x + 250, y, width, height)
     easeIn(metaWindow, { x })
 }

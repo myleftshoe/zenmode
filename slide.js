@@ -2,8 +2,7 @@ const { Clutter, Meta } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { show, hide, maximize, getActor, cloneActor } = Extension.imports.metaWindow
-
-
+const { stage } = Extension.imports.sizing
 
 async function slideOutLeft(metaWindow) {
     if (!metaWindow) return
@@ -13,12 +12,12 @@ async function slideOutLeft(metaWindow) {
 
 async function slideOutRight(metaWindow) {
     if (!metaWindow) return
-    return translateMetaWindow(metaWindow, { to: { x: 1920 } })
+    return translateMetaWindow(metaWindow, { to: { x: stage.width } })
 }
 
 async function slideInFromRight(metaWindow) {
     if (!metaWindow) return
-    return translateMetaWindow(metaWindow, { from: { x: 1920 } })
+    return translateMetaWindow(metaWindow, { from: { x: stage.width } })
 }
 
 async function slideInFromLeft(metaWindow) {
@@ -29,7 +28,7 @@ async function slideInFromLeft(metaWindow) {
 
 
 function rectIsInViewport(x, y, width, height) {
-    return (x < 1920 && y < 1200 && x + width > 0 && y + height > 0)
+    return (x < stage.width && y < stage.height && x + width > 0 && y + height > 0)
 }
 
 async function translateMetaWindow(metaWindow, { from, to, duration }) {
