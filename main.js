@@ -243,7 +243,7 @@ async function toggle2UpRight() {
     if (leftWindow && rightWindow) {
         maximize(rightWindow)
         await slideOutLeft(leftWindow)
-        maximizeWindows({exclude: [rightWindow]})
+        maximizeAndHideWindows({exclude: [rightWindow]})
         visibleWindows = [rightWindow]
         return
     }
