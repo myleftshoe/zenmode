@@ -48,8 +48,7 @@ function start() {
     signals.connect(global.display, 'grab-op-begin', handleGrabOpBegin)
     signals.connect(global.display, 'grab-op-end', handleGrabOpEnd)
 
-    const tabList = getActiveWorkspaceTabList()
-    tabList.map(hide).map(maximize)
+    maximizeAndHideWindows()
     show(focusedWindow)
     visibleWindows = [focusedWindow]
 }
@@ -217,7 +216,7 @@ function cycleRightWindows() {
 
 // --------------------------------------------------------------------------------
 
-function maximizeWindows({exclude = []}) {
+function maximizeAndHideWindows({exclude = []} = {}) {
     getActiveWorkspaceTabList().filter(metaWindow => !exclude.includes(metaWindow)).map(maximize).map(hide)
 }
 
@@ -227,7 +226,7 @@ async function toggle2UpLeft() {
     if (leftWindow && rightWindow) {
         maximize(leftWindow)
         await slideOutRight(rightWindow)
-        maximizeWindows({exclude: [leftWindow]})
+        maximizeAndHideWindows({exclude: [leftWindow]})
         visibleWindows = [leftWindow]
         return
     }
