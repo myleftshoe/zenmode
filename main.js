@@ -10,6 +10,7 @@ const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspace
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
+const { not } = Extension.imports.not
 
 const signals = new Signals()
 
@@ -28,11 +29,6 @@ Object.defineProperty(this, 'visibleWindows', {
     get() { return visibleWorkspaceWindows.get(workspaces.activeWorkspace) || [] },
     set(arr = []) { visibleWorkspaceWindows.set(workspaces.activeWorkspace, arr.filter(Boolean)) }
 })
-
-const pipe = (...fns) => (x) => fns.reduce((v, f) => f(v), x);
-const compose = (...fns) => (x) => fns.reduceRight((v, f) => f(v), x);
-const not = x => y => x !== y
-
 
 function start() {
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
