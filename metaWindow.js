@@ -60,7 +60,7 @@ const fade = {
     opacity: 0
 }
 
-async function ease(actor, props) {
+function ease(actor, props) {
     return new Promise(resolve => actor.ease({
         duration: 250,
         mode: Clutter.AnimationMode.EASE_OUT_QUINT,
@@ -69,17 +69,17 @@ async function ease(actor, props) {
     }))
 }
 
-async function fadeOut(metaWindow) {
+function fadeOut(metaWindow) {
     return easeOut(metaWindow, fade)
 }
 
-async function slideOut(metaWindow) {
+function slideOut(metaWindow) {
     const actor = getActor(metaWindow)
     const [width] = actor.get_size()
     return easeOut(metaWindow, { x: -width })
 }
 
-async function slideIn(metaWindow) {
+function slideIn(metaWindow) {
     log('slideIn', metaWindow && metaWindow.title)
     const actor = getActor(metaWindow)
     const [width] = actor.get_size()

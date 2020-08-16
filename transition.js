@@ -68,7 +68,7 @@ async function slideOut(actor) {
 
 
 
-async function translateActor(actor, {from, to, duration = 250}) {
+function translateActor(actor, {from, to, duration = 250}) {
     const { x, y } = actor.get_position()
     const [x0, y0] = coalesceXY(from, [x, y])
     const [x1, y1] = coalesceXY(to, [x, y])
