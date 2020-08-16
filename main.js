@@ -10,7 +10,7 @@ const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspace
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
-const { not } = Extension.imports.not
+const { not } = Extension.imports.functional
 
 const signals = new Signals()
 
