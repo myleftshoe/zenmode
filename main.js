@@ -31,6 +31,8 @@ Object.defineProperty(this, 'visibleWindows', {
 
 const pipe = (...fns) => (x) => fns.reduce((v, f) => f(v), x);
 const compose = (...fns) => (x) => fns.reduceRight((v, f) => f(v), x);
+const not = x => y => x !== y
+
 
 function start() {
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
@@ -178,8 +180,6 @@ function loop(array = []) {
 
 let windows
 let cycling = ''
-
-const not = a => b => a !== b
 
 function cycleLeftWindows() {
     const [leftWindow, rightWindow] = visibleWindows
