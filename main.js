@@ -179,6 +179,8 @@ function loop(array = []) {
 let windows
 let cycling = ''
 
+const not = a => b => a !== b
+
 function cycleLeftWindows() {
     const [leftWindow, rightWindow] = visibleWindows
     
@@ -186,7 +188,7 @@ function cycleLeftWindows() {
 
     if (cycling !== 'left') {
         cycling = 'left'
-        windows = loop(getActiveWorkspaceTabList().filter(mw => mw !== rightWindow))
+        windows = loop(getActiveWorkspaceTabList().filter(not(rightWindow)))
         nextWindow = windows.next()
     }
 
@@ -210,7 +212,7 @@ function cycleRightWindows() {
 
     if (cycling !== 'right') {
         cycling = 'right'
-        windows = loop(getActiveWorkspaceTabList().filter(mw => mw !== leftWindow))
+        windows = loop(getActiveWorkspaceTabList().filter(not(leftWindow)))
         nextWindow = windows.next()
     }
 
