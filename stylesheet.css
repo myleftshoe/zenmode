@@ -1,29 +1,3 @@
 .chrome {
-    /* background-color: green; */
-    /* background-color: rgba(255,0,0,.2); */
-    border: 1px solid black
-}
-
-.chrome:disabled {
-    background-color: transparent;
-    /* background-color: rgba(255,0,0,.2); */
-    /* border: 2px solid black */
-}
-
-.right-button {
-    /* background-size: 20px; */
-    /* width: 20px; */
-    /* height: 20px; */
-    background-image: url("icons/columns2.svg");
-    background-color: #333;
-    padding:32px;
-    border-radius: 32px;
-    box-shadow: 6px 6px 6px 0px rgba(0,0,0,.5);
-}
-
-.right-button:active,
-.right-button:focus,
-.right-button:checked,
-.right-button:hover {
-    background-color: #555;
+    border: 1px solid transparent;
 }
