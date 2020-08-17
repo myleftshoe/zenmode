@@ -252,7 +252,7 @@ async function toggle2UpRight() {
         visibleWindows = [rightWindow]
         return
     }
-    const prevMetaWindow = getPrevMetaWindow()
+    const prevMetaWindow = getPrevMetaWindow(leftWindow)
     visibleWindows = [prevMetaWindow, leftWindow]
     easeInLeft(prevMetaWindow)
     let { x, y, width, height } = getTileSize(leftWindow)
@@ -300,9 +300,12 @@ function getNextMetaWindow() {
     return getActiveWorkspaceTabList().find(metaWindow => !visibleWindows.includes(metaWindow))
 }
 
-function getPrevMetaWindow() {
+function getPrevMetaWindow(ref) {
     const tabList = getActiveWorkspaceTabList()
-    return tabList[tabList.length - 1]
+    let ret = tabList[tabList.length - 1]
+    if (ret === ref)
+        ret = tabList[tabList.length - 2]
+    return ret
 }
 
 
