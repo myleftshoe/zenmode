@@ -225,40 +225,42 @@ function maximizeAndHideWindows({exclude = []} = {}) {
     getActiveWorkspaceTabList().filter(metaWindow => !exclude.includes(metaWindow)).map(maximize).map(hide)
 }
 
-async function toggle2UpLeft() {
-    const [leftWindow, rightWindow] = visibleWindows
-    log('toggle2UpLeft', leftWindow && leftWindow.title, rightWindow && rightWindow.title)
-    if (leftWindow && rightWindow) {
-        maximize(leftWindow)
-        await slideOutRight(rightWindow)
-        maximizeAndHideWindows({exclude: [leftWindow]})
-        visibleWindows = [leftWindow]
+function toggle2UpLeft() {
+    const [left, right] = visibleWindows
+    log('toggle2UpLeft', left && left.title, right && right.title)
+    if (left && right) {
+        maximize(left)
+        slideOutRight(right).then(() => {
+            maximizeAndHideWindows({exclude: [left]})
+            visibleWindows = [left]
+        })
         return
     }
-    const nextMetaWindow = getNextMetaWindow()
-    visibleWindows = [leftWindow, nextMetaWindow]
-    easeInRight(nextMetaWindow)
-    const { x, y, width, height } = getTileSize(leftWindow)
-    leftWindow.move_resize_frame(true, x, y, width, height)
-    adjustWindowPosition(leftWindow, { x, y })
+    const next = getNextMetaWindow()
+    visibleWindows = [left, next]
+    easeInRight(next)
+    const { x, y, width, height } = getTileSize(left)
+    left.move_resize_frame(true, x, y, width, height)
+    adjustWindowPosition(left, { x, y })
 }
 
-async function toggle2UpRight() {
-    const [leftWindow, rightWindow] = visibleWindows
-    if (leftWindow && rightWindow) {
-        maximize(rightWindow)
-        await slideOutLeft(leftWindow)
-        maximizeAndHideWindows({exclude: [rightWindow]})
-        visibleWindows = [rightWindow]
+function toggle2UpRight() {
+    const [left, right] = visibleWindows
+    if (left && right) {
+        maximize(right)
+        slideOutLeft(left).then(() => {
+            maximizeAndHideWindows({exclude: [right]})
+            visibleWindows = [right]
+        })        
         return
     }
-    const prevMetaWindow = getPrevMetaWindow(leftWindow)
-    visibleWindows = [prevMetaWindow, leftWindow]
-    easeInLeft(prevMetaWindow)
-    let { x, y, width, height } = getTileSize(leftWindow)
+    const prev = getPrevMetaWindow(left)
+    visibleWindows = [prev, left]
+    easeInLeft(prev)
+    let { x, y, width, height } = getTileSize(left)
     x = x + stage.width / 2
-    leftWindow.move_resize_frame(true, x, y, width, height)
-    adjustWindowPosition(leftWindow, { x, y })
+    left.move_resize_frame(true, x, y, width, height)
+    adjustWindowPosition(left, { x, y })
 }
 
 function getTileSize(metaWindow) {
@@ -322,20 +324,19 @@ function removeWindow(metaWindow) {
     slideInFromRight(nextMetaWindow)
 }
 
-async function setTabListOrder(metaWindows = []) {
+function setTabListOrder(metaWindows = []) {
     reordering = true
-    await Promise.all(
+    Promise.all(
         metaWindows.map(metaWindow => new Promise(resolve =>
             onIdle(() => {
                 activate(metaWindow)
                 resolve('activated')
             })
         ))
-    )
-    reordering = false
+    ).then(() => { reordering = false })
 }
 
-async function slideLeft() {
+function slideLeft() {
     const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
     slideOutRight(tabList[0])
@@ -352,7 +353,7 @@ async function slideLeft() {
     })
 }
 
-async function slideRight() {
+function slideRight() {
     const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
     slideOutLeft(tabList[0])
