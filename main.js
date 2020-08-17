@@ -10,7 +10,7 @@ const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspace
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
-const { not } = Extension.imports.functional
+const { exclude } = Extension.imports.functional
 
 const signals = new Signals()
 
@@ -178,7 +178,7 @@ function cycleLeftWindows() {
 
     if (cycling !== 'left') {
         cycling = 'left'
-        windows = loop(getActiveWorkspaceTabList().filter(not(rightWindow)))
+        windows = loop(getActiveWorkspaceTabList().filter(exclude(rightWindow)))
         nextWindow = windows.next()
     }
 
@@ -202,7 +202,7 @@ function cycleRightWindows() {
 
     if (cycling !== 'right') {
         cycling = 'right'
-        windows = loop(getActiveWorkspaceTabList().filter(not(leftWindow)))
+        windows = loop(getActiveWorkspaceTabList().filter(exclude(leftWindow)))
         nextWindow = windows.next()
     }
 
@@ -221,8 +221,8 @@ function cycleRightWindows() {
 
 // --------------------------------------------------------------------------------
 
-function maximizeAndHideWindows({exclude = []} = {}) {
-    getActiveWorkspaceTabList().filter(metaWindow => !exclude.includes(metaWindow)).map(maximize).map(hide)
+function maximizeAndHideWindows({exclude: excluded = []} = {}) {
+    getActiveWorkspaceTabList().filter(exclude(excluded)).map(maximize).map(hide)
 }
 
 function toggle2UpLeft() {
@@ -299,7 +299,7 @@ function easeInLeft(metaWindow) {
 // --------------------------------------------------------------------------------
 
 function getNextMetaWindow() {
-    return getActiveWorkspaceTabList().find(metaWindow => !visibleWindows.includes(metaWindow))
+    return getActiveWorkspaceTabList().find(exclude(visibleWindows))
 }
 
 function getPrevMetaWindow(ref) {
