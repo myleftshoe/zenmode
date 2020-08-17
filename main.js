@@ -158,10 +158,10 @@ function handleFocusWindow() {
 
 // --------------------------------------------------------------------------------
 
-function loop(array = [], startIndex = 0) {
+function loop(array = [], startIndex = 0, endIndex = array.length - 1) {
     let index = startIndex
     function next() {
-        if (index > array.length - 1)
+        if (index > endIndex)
             index = 0
         return array[index++]
     }
