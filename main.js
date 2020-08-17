@@ -339,16 +339,18 @@ function setTabListOrder(metaWindows = []) {
 function slideLeft() {
     const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
-    slideOutRight(tabList[0])
+    const visible = tabList[0]
     const pos = tabList.length - 1
+    const prev = tabList[pos]
+    slideOutRight(visible)
     onIdle(() => {
-        slideInFromLeft(tabList[pos]).then(() => {
-            visibleWindows = [tabList[pos]]
-            maximize(tabList[0])
-            maximize(tabList[pos])
+        slideInFromLeft(prev).then(() => {
+            visibleWindows = [prev]
+            maximize(visible)
+            maximize(prev)
             const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
             setTabListOrder(focusOrder)
-            show(focusOrder.slice(-1))
+            show(...focusOrder.slice(-1))
         })
     })
 }
@@ -356,15 +358,16 @@ function slideLeft() {
 function slideRight() {
     const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
-    slideOutLeft(tabList[0])
+    const [visible, next] = tabList
+    slideOutLeft(visible)
     onIdle(() => {
-        slideInFromRight(tabList[1]).then(() => {
-            visibleWindows = [tabList[1]]
-            maximize(tabList[0])
-            maximize(tabList[1])
-            const focusOrder = [...tabList.slice(0, 1).reverse(), ...tabList.slice(1).reverse()]
+        slideInFromRight(next).then(() => {
+            visibleWindows = [next]
+            maximize(visible)
+            maximize(next)
+            const focusOrder = [visible, ...tabList.slice(1).reverse()]
             setTabListOrder(focusOrder)
-            show(focusOrder.slice(-1))
+            show(...focusOrder.slice(-1))
         })
     })
 }
