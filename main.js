@@ -158,18 +158,12 @@ function handleFocusWindow() {
 
 // --------------------------------------------------------------------------------
 
-function loop(array = []) {
-    function* generate(array = []) {
-        yield* array
-    }
-    let generator = generate(array)
+function loop(array = [], startIndex = 0) {
+    let index = startIndex
     function next() {
-        let { value, done } = generator.next()
-        if (done) {
-            generator = generate(array)
-            value = generator.next().value
-        }
-        return value
+        if (index > array.length - 1)
+            index = 0
+        return array[index++]
     }
     return { next }
 }
