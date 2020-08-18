@@ -173,49 +173,31 @@ let cycling = ''
 
 function cycleLeftWindows() {
     const [leftWindow, rightWindow] = visibleWindows
-    
     let nextWindow
-
     if (cycling !== 'left') {
         cycling = 'left'
         windows = loop(getActiveWorkspaceTabList().filter(exclude(rightWindow)))
         nextWindow = windows.next()
     }
-
     nextWindow = windows.next()
-    
     replaceWith(leftWindow, nextWindow)
-
     visibleWindows = [nextWindow, rightWindow]
-    show(nextWindow)
     activate(nextWindow)
-    nextWindow.raise()
-    rightWindow.raise()
-
     return false
 }
 
 function cycleRightWindows() {
     const [leftWindow, rightWindow] = visibleWindows
-
     let nextWindow
-
     if (cycling !== 'right') {
         cycling = 'right'
         windows = loop(getActiveWorkspaceTabList().filter(exclude(leftWindow)))
         nextWindow = windows.next()
     }
-
     nextWindow = windows.next()
-
     replaceWith(rightWindow, nextWindow)
-
     visibleWindows = [leftWindow, nextWindow]
-    show(nextWindow)
     activate(nextWindow)
-    nextWindow.raise()
-    leftWindow.raise()
-
     return false
 }
 
