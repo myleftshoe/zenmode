@@ -107,8 +107,8 @@ async function easeOut(metaWindow, transition = fade) {
 function replaceWithClone(metaWindow) {
     const clone = createClone(metaWindow)
     alignActorWithMetaWindow(clone, metaWindow)
-    global.stage.add_child(clone)
     hide(metaWindow)
+    global.stage.add_child(clone)
     return clone
 }
 
