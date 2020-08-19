@@ -6,7 +6,7 @@ const { Signals } = Extension.imports.signals
 const { stage } = Extension.imports.sizing
 const { show, hide, activate, maximize, getActor, createClone, replaceWith, easeIn } = Extension.imports.metaWindow
 const { slideOutLeft, slideOutRight, slideInFromLeft, slideInFromRight } = Extension.imports.slide
-const { activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
+const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
@@ -173,13 +173,12 @@ let cycling = ''
 
 function cycleLeftWindows() {
     const [leftWindow, rightWindow] = visibleWindows
-    let nextWindow
-    if (cycling !== 'left') {
-        cycling = 'left'
-        windows = loop(getActiveWorkspaceTabList().filter(exclude(rightWindow)))
-        nextWindow = windows.next()
-    }
-    nextWindow = windows.next()
+    const windows = activeWorkspace().list_windows().filter(exclude(rightWindow))
+    let i = windows.indexOf(leftWindow) + 1
+    if (i < 1 || (i > windows.length - 1)) 
+        i = 0
+    log(i, windows[i].title)
+    const nextWindow = windows[i]
     replaceWith(leftWindow, nextWindow)
     visibleWindows = [nextWindow, rightWindow]
     activate(nextWindow)
@@ -188,13 +187,12 @@ function cycleLeftWindows() {
 
 function cycleRightWindows() {
     const [leftWindow, rightWindow] = visibleWindows
-    let nextWindow
-    if (cycling !== 'right') {
-        cycling = 'right'
-        windows = loop(getActiveWorkspaceTabList().filter(exclude(leftWindow)))
-        nextWindow = windows.next()
-    }
-    nextWindow = windows.next()
+    const windows = activeWorkspace().list_windows().filter(exclude(leftWindow))
+    let i = windows.indexOf(rightWindow) + 1
+    if (i < 1 || (i > windows.length - 1)) 
+        i = 0
+    log(i, windows[i].title)
+    const nextWindow = windows[i]
     replaceWith(rightWindow, nextWindow)
     visibleWindows = [leftWindow, nextWindow]
     activate(nextWindow)
