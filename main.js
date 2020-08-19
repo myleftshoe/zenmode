@@ -135,11 +135,21 @@ function handleGrabOpEnd(display, screen, metaWindow, op) {
 
 function connectResizeListener(leftWindow, rightWindow) {
     signals.connect(rightWindow, 'size-changed', (metaWindow) => {
-        let { x, y, width, height } = metaWindow.get_frame_rect()
-        x = 0
-        width = global.stage.get_width() - width
+        let {x, y, width, height } = leftWindow.get_work_area_current_monitor()
+        const rwidth = metaWindow.get_frame_rect().width
+        width = width - rwidth
+        if (metaWindow.is_client_decorated()) {
+            width = width - 40
+            // height = height - 20
+        }
+        if (leftWindow.is_client_decorated()) {
+            x = x + 20
+            y = y + 20
+            width = width - 40
+            height = height - 40
+        }
         leftWindow.move_resize_frame(true, x, y, width, height)
-        adjustWindowPosition(leftWindow, { y, y })
+        // adjustWindowPosition(leftWindow, { x, y })
     });
 }
 
@@ -220,8 +230,8 @@ function toggle2UpLeft() {
     visibleWindows = [left, next]
     easeInRight(next)
     const { x, y, width, height } = getTileSize(left)
-    left.move_resize_frame(true, x, y, width, height)
-    adjustWindowPosition(left, { x, y })
+    const [nx,ny] = adjustWindowPosition(left, { x, y })
+    left.move_resize_frame(true, nx, ny, width, height)
 }
 
 function toggle2UpRight() {
@@ -239,12 +249,13 @@ function toggle2UpRight() {
     easeInLeft(prev)
     let { x, y, width, height } = getTileSize(left)
     x = x + stage.width / 2
-    left.move_resize_frame(true, x, y, width, height)
-    adjustWindowPosition(left, { x, y })
+    const [nx,ny] = adjustWindowPosition(left, { x, y })
+    left.move_resize_frame(true, nx, ny, width, height)
 }
 
 function getTileSize(metaWindow) {
-    let [x, y, width, height] = [2, 27, (stage.width / 2) - 3, stage.height - 28]
+    const wa = metaWindow.get_work_area_current_monitor()
+    let [x, y, width, height] = [wa.x, wa.y, (wa.width / 2), wa.height]
     if (metaWindow.is_client_decorated()) {
         x = x - 10
         y = y - 2
@@ -257,9 +268,9 @@ function getTileSize(metaWindow) {
 function adjustWindowPosition(metaWindow, { x, y }) {
     if (metaWindow.is_client_decorated()) {
         x = x + 30
-        y = y + 22
+        y = y + 20
     }
-    metaWindow.move_frame(true, x, y)
+    return [x, y]
 }
 
 function easeInRight(metaWindow) {

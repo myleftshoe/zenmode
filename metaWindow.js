@@ -21,21 +21,13 @@ function activate(metaWindow) {
 function maximize(metaWindow) {
     log('maximize', metaWindow.title)
     metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
-    let geometry = {
-        x: 3,
-        y: 27,
-        width: global.stage.get_width() - 3,
-        height: global.stage.get_height() - 28,
-    }
+    let { x, y, width, height } = metaWindow.get_work_area_current_monitor()
     if (metaWindow.is_client_decorated()) {
-        geometry = {
-            x: 22,
-            y: 47,
-            width: global.stage.get_width() - 43,
-            height: global.stage.get_height() - 68,
-        }
+        x += 20
+        y += 20
+        width -= 40
+        height -= 40
     }
-    const { x, y, width, height } = geometry
     metaWindow.move_resize_frame(false, x, y, width, height)
     return metaWindow
 }
@@ -134,7 +126,7 @@ function actorRectToFrameRect(actor, metaWindow) {
         x += 30
         y += 22
         width -= 60
-        height -= 52
+        height -= 50
     }
     return [x, y, width, height]
 }
