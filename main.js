@@ -31,7 +31,7 @@ Object.defineProperty(this, 'visibleWindows', {
 })
 
 function start() {
-    chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
+    chrome = addChrome({ top: 50, right: 50, bottom: 50, left: 50 })
     chrome.left.onButtonPress = handleChromeLeftClick
     chrome.right.onButtonPress = handleChromeRightClick
     chrome.top.onButtonPress = handleChromeTopClick

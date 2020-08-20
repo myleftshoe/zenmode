@@ -24,9 +24,10 @@ var Signals = class Signals {
         this.signals.delete(sid)
     }
     disconnectObject(object) {
-        [...this.signals.entries()]
-            .filter((sid, value) => value.object === object)
-            .map(sid => disconnect(sid))
+        const entries = [...this.signals.entries()]
+        entries
+            .filter(([sid, value]) => value.object === object)
+            .map(([sid]) => this.disconnect(sid))
     }
     destroy() {
         this.signals.forEach(({ object }, sid) => {
