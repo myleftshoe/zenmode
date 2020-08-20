@@ -229,7 +229,7 @@ function toggle2UpLeft() {
     const next = getNextMetaWindow()
     visibleWindows = [left, next]
     easeInRight(next)
-    let [ x, y, width, height ] = getTileSize2(left)
+    let [ x, y, width, height ] = getTileSize(left)
     if (left.is_client_decorated()) {
         x += 20
         width -= 40
@@ -251,28 +251,18 @@ function toggle2UpRight() {
     const prev = getPrevMetaWindow(left)
     visibleWindows = [prev, left]
     easeInLeft(prev)
-    let { x, y, width, height } = getTileSize(left)
-    x = x + stage.width / 2
-    const [nx,ny] = adjustWindowPosition(left, { x, y })
-    left.move_resize_frame(false, nx, ny, width, height)
+    let [ x, y, width, height ] = getTileSize(left)
+    x = width 
+    if (left.is_client_decorated()) {
+        x += 20
+        width -= 40
+    }    
+    left.move_resize_frame(false, x, y, width, height)
 }
-
-function getTileSize2(metaWindow) {
-    let {x, y, width, height } = metaWindow.get_work_area_current_monitor()
-    return [x, y, width / 2, height]
-}
-
 
 function getTileSize(metaWindow) {
-    const wa = metaWindow.get_work_area_current_monitor()
-    let [x, y, width, height] = [wa.x, wa.y, (wa.width / 2), wa.height]
-    // if (metaWindow.is_client_decorated()) {
-    //     x = x - 10
-    //     y = y - 2
-    //     width = width - 40
-    //     height = height - 40
-    // }
-    return { x, y, width, height }
+    let {x, y, width, height } = metaWindow.get_work_area_current_monitor()
+    return [x, y, width / 2, height]
 }
 
 function adjustWindowPosition(metaWindow, { x, y }) {
@@ -284,7 +274,7 @@ function adjustWindowPosition(metaWindow, { x, y }) {
 }
 
 function easeInRight(metaWindow) {
-    let [ x, y, width, height ] = getTileSize2(metaWindow)
+    let [ x, y, width, height ] = getTileSize(metaWindow)
     x = x + width
     if (metaWindow.is_client_decorated()) {
         x += 20
@@ -302,7 +292,7 @@ function easeInRight(metaWindow) {
 }
 
 function easeInLeft(metaWindow) {
-    let [ x, y, width, height ] = getTileSize2(metaWindow)
+    let [ x, y, width, height ] = getTileSize(metaWindow)
     if (metaWindow.is_client_decorated()) {
         x += 20
         width -= 40
