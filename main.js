@@ -1,4 +1,4 @@
-const { Clutter, Meta } = imports.gi
+const { Clutter, Meta, St } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
@@ -130,6 +130,7 @@ function handleGrabOpBegin(display, screen, metaWindow, op) {
 }
 
 function handleGrabOpEnd(display, screen, metaWindow, op) {
+    global.stage.remove_child(handle)
     signals.disconnectObject(metaWindow)
 }
 
@@ -149,6 +150,7 @@ function connectResizeListener(leftWindow, rightWindow) {
             // height = height - 40
         }
         leftWindow.move_resize_frame(false, x, y, width, height)
+        handle.x = width - 10
     });
 }
 
@@ -214,6 +216,8 @@ function maximizeAndHideWindows({exclude: excluded = []} = {}) {
     getActiveWorkspaceTabList().filter(exclude(excluded)).map(maximize).map(hide)
 }
 
+var handle
+
 function toggle2UpLeft() {
     const [left, right] = visibleWindows
     log('toggle2UpLeft', left && left.title, right && right.title)
@@ -234,7 +238,32 @@ function toggle2UpLeft() {
         width -= 40
     }    
     left.move_resize_frame(true, x, y, width, height)
+    handle = new Clutter.Actor({backgroundColor: new Clutter.Color({red:255, alpha: 255}), height:1200, width:20, x: width - 9, reactive:true})
+    makeDraggable(handle)
+    global.stage.add_child(handle)
 }
+
+function makeDraggable(actor) {
+    const x0 = actor.x
+    const [left, right] = visibleWindows
+    const dragAction = new Clutter.DragAction({
+        dragAxis:Clutter.DragAxis.X_AXIS,
+    });
+    // dragAction.set_drag_threshold(50,-1);
+    // this.dragAction.set_drag_threshold(0,-1);
+    dragAction.connect('drag-begin', (a,b) => {
+        log('drag-begin', a, b);
+        right.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
+    });
+    dragAction.connect('drag-end', (a, b) => {
+        log('drag-end', a, b);
+    });
+    dragAction.connect('drag-motion', (a, b) => {
+        log('dragging', a, b)
+    });
+    actor.add_action(dragAction);
+}
+
 
 function toggle2UpRight() {
     const [left, right] = visibleWindows
