@@ -144,9 +144,9 @@ function connectResizeListener(leftWindow, rightWindow) {
         }
         if (leftWindow.is_client_decorated()) {
             x = x + 20
-            y = y + 20
+            // y = y + 20
             width = width - 40
-            height = height - 40
+            // height = height - 40
         }
         leftWindow.move_resize_frame(false, x, y, width, height)
     });
