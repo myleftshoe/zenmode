@@ -236,6 +236,10 @@ function toggle2UpLeft() {
         })
         return
     }
+    if (left.is_fullscreen()) {
+        left.unmake_fullscreen()
+        delete left.was_fullscreen
+    }
     const next = getNextMetaWindow()
     visibleWindows = [left, next]
     easeInRight(next)
@@ -256,6 +260,10 @@ function toggle2UpRight() {
             visibleWindows = [right]
         })        
         return
+    }
+    if (left.is_fullscreen()) {
+        left.unmake_fullscreen()
+        delete left.was_fullscreen
     }
     const prev = getPrevMetaWindow(left)
     visibleWindows = [prev, left]
@@ -356,8 +364,16 @@ function slideLeft() {
     const visible = tabList[0]
     const pos = tabList.length - 1
     const prev = tabList[pos]
+    if (visible.is_fullscreen()) {
+        visible.unmake_fullscreen()
+        visible.was_fullscreen = true
+    }
     slideOutRight(visible)
     onIdle(() => {
+        if (prev.was_fullscreen) {
+            prev.make_fullscreen()
+            delete prev.was_fullscreen
+        }
         slideInFromLeft(prev).then(() => {
             visibleWindows = [prev]
             maximize(visible)
@@ -373,8 +389,16 @@ function slideRight() {
     const tabList = getActiveWorkspaceTabList()
     if (tabList.length < 2) return
     const [visible, next] = tabList
+    if (visible.is_fullscreen()) {
+        visible.unmake_fullscreen()
+        visible.was_fullscreen = true
+    }
     slideOutLeft(visible)
     onIdle(() => {
+        if (next.was_fullscreen) {
+            next.make_fullscreen()
+            delete next.was_fullscreen
+        }
         slideInFromRight(next).then(() => {
             visibleWindows = [next]
             maximize(visible)
