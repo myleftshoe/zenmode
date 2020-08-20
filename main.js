@@ -124,7 +124,18 @@ function handleGrabOpBegin(display, screen, metaWindow, op) {
     if (!rightWindow) return
     if (leftWindow === metaWindow) {
         global.display.end_grab_op(global.get_current_time())
-        rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
+        const [x, y] = global.get_pointer()
+        global.display.begin_grab_op(
+            rightWindow,
+            Meta.GrabOp.RESIZING_W,
+            true, /* pointer grab */
+            true, /* frame action */
+            null,
+            null,
+            global.get_current_time(),
+            x, y
+        ) 
+        // rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
     }
     connectResizeListener(leftWindow, rightWindow)
 }
