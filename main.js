@@ -149,7 +149,6 @@ function connectResizeListener(leftWindow, rightWindow) {
             height = height - 40
         }
         leftWindow.move_resize_frame(false, x, y, width, height)
-        // adjustWindowPosition(leftWindow, { x, y })
     });
 }
 
@@ -234,7 +233,6 @@ function toggle2UpLeft() {
         x += 20
         width -= 40
     }    
-    // const [nx,ny] = adjustWindowPosition(left, { x, y })
     left.move_resize_frame(true, x, y, width, height)
 }
 
@@ -263,14 +261,6 @@ function toggle2UpRight() {
 function getTileSize(metaWindow) {
     let {x, y, width, height } = metaWindow.get_work_area_current_monitor()
     return [x, y, width / 2, height]
-}
-
-function adjustWindowPosition(metaWindow, { x, y }) {
-    if (metaWindow.is_client_decorated()) {
-        x = x + 30
-        y = y + 20
-    }
-    return [x, y]
 }
 
 function easeInRight(metaWindow) {
