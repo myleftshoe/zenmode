@@ -275,7 +275,7 @@ function adjustWindowPosition(metaWindow, { x, y }) {
 
 function easeInRight(metaWindow) {
     let { x, y, width, height } = getTileSize(metaWindow)
-    x = x + stage.width / 2
+    x = x + metaWindow.get_work_area_current_monitor().width / 2
     metaWindow.move_resize_frame(false, x + 250, y, width, height)
     easeIn(metaWindow, { x })
 }
