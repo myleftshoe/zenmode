@@ -146,7 +146,7 @@ function frameRectToActorRect(metaWindow) {
 
 
 function alignWithActor(metaWindow, actor) {
-    metaWindow.move_resize_frame(true, ...actorRectToFrameRect(actor, metaWindow))
+    metaWindow.move_resize_frame(false, ...actorRectToFrameRect(actor, metaWindow))
 }
 
 function alignActorWithMetaWindow(actor, metaWindow) {
@@ -181,7 +181,7 @@ function colocate(metaWindow, other) {
         width += 40
         height += 40
     }
-    metaWindow.move_resize_frame(true, x, y, width, height)
+    metaWindow.move_resize_frame(false, x, y, width, height)
     return metaWindow
 }
 

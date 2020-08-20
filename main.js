@@ -148,7 +148,7 @@ function connectResizeListener(leftWindow, rightWindow) {
             width = width - 40
             height = height - 40
         }
-        leftWindow.move_resize_frame(true, x, y, width, height)
+        leftWindow.move_resize_frame(false, x, y, width, height)
         // adjustWindowPosition(leftWindow, { x, y })
     });
 }
@@ -231,7 +231,7 @@ function toggle2UpLeft() {
     easeInRight(next)
     const { x, y, width, height } = getTileSize(left)
     const [nx,ny] = adjustWindowPosition(left, { x, y })
-    left.move_resize_frame(true, nx, ny, width, height)
+    left.move_resize_frame(false, nx, ny, width, height)
 }
 
 function toggle2UpRight() {
@@ -250,7 +250,7 @@ function toggle2UpRight() {
     let { x, y, width, height } = getTileSize(left)
     x = x + stage.width / 2
     const [nx,ny] = adjustWindowPosition(left, { x, y })
-    left.move_resize_frame(true, nx, ny, width, height)
+    left.move_resize_frame(false, nx, ny, width, height)
 }
 
 function getTileSize(metaWindow) {
@@ -276,13 +276,13 @@ function adjustWindowPosition(metaWindow, { x, y }) {
 function easeInRight(metaWindow) {
     let { x, y, width, height } = getTileSize(metaWindow)
     x = x + stage.width / 2
-    metaWindow.move_resize_frame(true, x + 250, y, width, height)
+    metaWindow.move_resize_frame(false, x + 250, y, width, height)
     easeIn(metaWindow, { x })
 }
 
 function easeInLeft(metaWindow) {
     let { x, y, width, height } = getTileSize(metaWindow)
-    metaWindow.move_resize_frame(true, x - 250, y, width, height)
+    metaWindow.move_resize_frame(false, x - 250, y, width, height)
     easeIn(metaWindow, { x })
 }
 
