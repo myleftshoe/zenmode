@@ -31,7 +31,7 @@ Object.defineProperty(this, 'visibleWindows', {
 })
 
 function start() {
-    chrome = addChrome({ top: 50, right: 50, bottom: 50, left: 50 })
+    chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
     chrome.right.onButtonPress = handleChromeRightClick
     chrome.top.onButtonPress = handleChromeTopClick
@@ -229,9 +229,13 @@ function toggle2UpLeft() {
     const next = getNextMetaWindow()
     visibleWindows = [left, next]
     easeInRight(next)
-    const { x, y, width, height } = getTileSize(left)
-    const [nx,ny] = adjustWindowPosition(left, { x, y })
-    left.move_resize_frame(false, nx, ny, width, height)
+    let [ x, y, width, height ] = getTileSize2(left)
+    if (left.is_client_decorated()) {
+        x += 20
+        width -= 40
+    }    
+    // const [nx,ny] = adjustWindowPosition(left, { x, y })
+    left.move_resize_frame(true, x, y, width, height)
 }
 
 function toggle2UpRight() {
@@ -253,15 +257,21 @@ function toggle2UpRight() {
     left.move_resize_frame(false, nx, ny, width, height)
 }
 
+function getTileSize2(metaWindow) {
+    let {x, y, width, height } = metaWindow.get_work_area_current_monitor()
+    return [x, y, width / 2, height]
+}
+
+
 function getTileSize(metaWindow) {
     const wa = metaWindow.get_work_area_current_monitor()
     let [x, y, width, height] = [wa.x, wa.y, (wa.width / 2), wa.height]
-    if (metaWindow.is_client_decorated()) {
-        x = x - 10
-        y = y - 2
-        width = width - 40
-        height = height - 40
-    }
+    // if (metaWindow.is_client_decorated()) {
+    //     x = x - 10
+    //     y = y - 2
+    //     width = width - 40
+    //     height = height - 40
+    // }
     return { x, y, width, height }
 }
 
@@ -274,16 +284,38 @@ function adjustWindowPosition(metaWindow, { x, y }) {
 }
 
 function easeInRight(metaWindow) {
-    let { x, y, width, height } = getTileSize(metaWindow)
-    x = x + metaWindow.get_work_area_current_monitor().width / 2
-    metaWindow.move_resize_frame(false, x + 250, y, width, height)
-    easeIn(metaWindow, { x })
+    let [ x, y, width, height ] = getTileSize2(metaWindow)
+    x = x + width
+    if (metaWindow.is_client_decorated()) {
+        x += 20
+        width -= 40
+    }
+    metaWindow.move_resize_frame(true, x, y, width, height)
+    const actor = getActor(metaWindow)
+    actor.translation_x = 250
+    actor.show()
+    actor.ease({
+        duration: 250,
+        mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+        translation_x: 0
+    })
 }
 
 function easeInLeft(metaWindow) {
-    let { x, y, width, height } = getTileSize(metaWindow)
-    metaWindow.move_resize_frame(false, x - 250, y, width, height)
-    easeIn(metaWindow, { x })
+    let [ x, y, width, height ] = getTileSize2(metaWindow)
+    if (metaWindow.is_client_decorated()) {
+        x += 20
+        width -= 40
+    }
+    metaWindow.move_resize_frame(true, x, y, width, height)
+    const actor = getActor(metaWindow)
+    actor.translation_x = -250
+    actor.show()
+    actor.ease({
+        duration: 250,
+        mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+        translation_x: 0
+    })
 }
 
 

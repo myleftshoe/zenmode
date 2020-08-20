@@ -24,11 +24,11 @@ function maximize(metaWindow) {
     let { x, y, width, height } = metaWindow.get_work_area_current_monitor()
     if (metaWindow.is_client_decorated()) {
         x += 20
-        y += 20
+        // y += 20
         width -= 40
-        height -= 40
+        // height -= 40
     }
-    metaWindow.move_resize_frame(false, x, y, width, height)
+    metaWindow.move_resize_frame(true, x, y, width, height)
     return metaWindow
 }
 
@@ -49,12 +49,14 @@ function cloneActor(actor) {
 // Transitions
 
 const fade = {
-    opacity: 0
+    opacity: 0,
+    // duration: 0
 }
 
 function ease(actor, props) {
     return new Promise(resolve => actor.ease({
         duration: 250,
+        // delay:2000,
         mode: Clutter.AnimationMode.EASE_OUT_QUINT,
         ...props,
         onComplete() { resolve(actor) },
@@ -106,7 +108,7 @@ function replaceWithClone(metaWindow) {
 
 
 function replaceCloneWithMetaWindow(clone, metaWindow) {
-    alignWithActor(metaWindow, clone)
+    // alignWithActor(metaWindow, clone)
     show(metaWindow)
     global.stage.remove_child(clone)
     return metaWindow
@@ -121,12 +123,12 @@ function _actorRectToFrameRect(actor) {
 function actorRectToFrameRect(actor, metaWindow) {
     let [x, y, width, height] = getRect(actor)
     y += 8
-    height -= 8
+    height -= 18
     if (metaWindow.is_client_decorated()) {
-        x += 30
-        y += 22
-        width -= 60
-        height -= 50
+        x += 20
+        y += 2
+        width -= 40
+        // height += 40
     }
     return [x, y, width, height]
 }
@@ -134,12 +136,12 @@ function actorRectToFrameRect(actor, metaWindow) {
 function frameRectToActorRect(metaWindow) {
     let { x, y, width, height } = metaWindow.get_frame_rect()
     y -= 8
-    height += 8
+    height += 18
     if (metaWindow.is_client_decorated()) {
         x -= 30
-        // y -= 22
+        y += 20
         width += 60
-        height += 52
+        // height += 40
     }
     return [x, y, width, height]
 }
@@ -163,7 +165,8 @@ function getRect(actor) {
 
 function replaceWith(metaWindow, other) {
     colocate(other, metaWindow)
-    fadeOut(metaWindow)
+    hide(metaWindow)
+    // fadeOut(metaWindow)
     return metaWindow
 }
 
@@ -171,15 +174,15 @@ function colocate(metaWindow, other) {
     let { x, y, width, height } = other.get_frame_rect()
     if (!other.is_client_decorated() && metaWindow.is_client_decorated()) {
         x += 20
-        y += 20
+        // y += 20
         width -= 40
-        height -= 40
+        // height -= 40
     }
     else if (other.is_client_decorated() && !metaWindow.is_client_decorated()) {
         x -= 20
-        y -= 20
+        // y -= 20
         width += 40
-        height += 40
+        // height += 40
     }
     metaWindow.move_resize_frame(false, x, y, width, height)
     return metaWindow
