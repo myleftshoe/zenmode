@@ -1,7 +1,7 @@
 const { Clutter, Meta } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
-const { addChrome } = Extension.imports.chrome
+const { addChrome, addMargins } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
 const { stage } = Extension.imports.sizing
 const { show, hide, activate, maximize, getActor, createClone, replaceWith, easeIn } = Extension.imports.metaWindow
@@ -31,6 +31,9 @@ Object.defineProperty(this, 'visibleWindows', {
 })
 
 function start() {
+
+    addMargins()
+
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
     chrome.right.onButtonPress = handleChromeRightClick

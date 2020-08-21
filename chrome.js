@@ -31,7 +31,7 @@ function composeChrome() {
     return ComposedChrome
 }
 
-const Chrome = composeChrome()
+var Chrome = composeChrome()
 
 function createChrome(...props) {
     const edge = new Chrome(...props)
@@ -83,5 +83,30 @@ function addChrome(size) {
         right,
         destroy
     }
+}
+
+function addMargins(size = 50) {
+    const top = new Chrome({ 
+        height: size,
+        width: monitor.width,
+        reactive:false,
+    })
+    const bottom = new Chrome({ 
+        y: monitor.height - size,
+        height: size,
+        width: monitor.width,
+        reactive:false,
+    })
+    const left = new Chrome({ 
+        height: monitor.height,
+        width: size,
+        reactive:false,
+    })
+    const right = new Chrome({ 
+        x: monitor.width - size,
+        height: monitor.height,
+        width: size,
+        reactive:false,
+    })
 }
 
