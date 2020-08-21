@@ -201,6 +201,7 @@ let cycling = ''
 function cycleLeftWindows() {
     const [leftWindow, rightWindow] = visibleWindows
     const windows = activeWorkspace().list_windows().filter(exclude(rightWindow))
+    if (windows.length < 2) return
     let i = windows.indexOf(leftWindow) + 1
     if (i < 1 || (i > windows.length - 1)) 
         i = 0
@@ -215,6 +216,7 @@ function cycleLeftWindows() {
 function cycleRightWindows() {
     const [leftWindow, rightWindow] = visibleWindows
     const windows = activeWorkspace().list_windows().filter(exclude(leftWindow))
+    if (windows.length < 2) return
     let i = windows.indexOf(rightWindow) + 1
     if (i < 1 || (i > windows.length - 1)) 
         i = 0
