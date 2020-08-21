@@ -14,6 +14,9 @@ const { exclude } = Extension.imports.functional
 
 const signals = new Signals()
 
+const margin = 20
+const spacerWidth = 20
+
 let chrome
 let hideChromeSid
 let showChromeSid
@@ -32,7 +35,7 @@ Object.defineProperty(this, 'visibleWindows', {
 
 function start() {
 
-    addMargins()
+    addMargins(margin)
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
@@ -151,7 +154,7 @@ function connectResizeListener(leftWindow, rightWindow) {
     signals.connect(rightWindow, 'size-changed', (metaWindow) => {
         let {x, y, width, height } = leftWindow.get_work_area_current_monitor()
         const rwidth = metaWindow.get_frame_rect().width
-        width = width - rwidth
+        width = width - rwidth - spacerWidth
         leftWindow.move_resize_frame(false, x, y, width, height)
     });
 }
@@ -258,18 +261,18 @@ function toggle2UpRight() {
     visibleWindows = [prev, left]
     easeInLeft(prev)
     let [ x, y, width, height ] = getTileSize(left)
-    x = width 
+    x = width + spacerWidth * 2
     left.move_resize_frame(false, x, y, width, height)
 }
 
 function getTileSize(metaWindow) {
     let {x, y, width, height } = metaWindow.get_work_area_current_monitor()
-    return [x, y, width / 2, height]
+    return [x, y, (width - spacerWidth) / 2, height]
 }
 
 function easeInRight(metaWindow) {
     let [ x, y, width, height ] = getTileSize(metaWindow)
-    x = x + width
+    x = x + width + spacerWidth
     metaWindow.move_resize_frame(true, x, y, width, height)
     const actor = getActor(metaWindow)
     actor.translation_x = 250

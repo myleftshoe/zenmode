@@ -13,7 +13,7 @@ let monitor = global.display.get_monitor_geometry(primaryMonitor)
 
 const _Chrome = GObject.registerClass({},
     class _Chrome extends St.Widget {
-        _init(props) {
+        _init({affectsStruts = true, ...props}) {
             super._init({
                 style_class,
                 reactive: true,
@@ -33,8 +33,8 @@ function composeChrome() {
 
 var Chrome = composeChrome()
 
-function createChrome(...props) {
-    const edge = new Chrome(...props)
+function createChrome(props) {
+    const edge = new Chrome({...props, affectsStruts: false})
     edge.connect('enter-event', () => {
         global.display.set_cursor(Meta.Cursor.POINTING_HAND)
     })
