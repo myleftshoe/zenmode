@@ -33,7 +33,18 @@ Object.defineProperty(this, 'visibleWindows', {
     set(arr = []) { visibleWorkspaceWindows.set(workspaces.activeWorkspace, arr.filter(Boolean)) }
 })
 
+
+// Monkey patch Main.wm._switchWorkspaceDone
+function _switchWorkspaceDone(shellwm) {
+    this._finishWorkspaceSwitch(this._switchData);
+    shellwm.completed_switch_workspace();
+    getActiveWorkspaceTabList().filter(exclude(visibleWindows)).map(hide)
+}
+
+
 function start() {
+
+    Main.wm._switchWorkspaceDone = _switchWorkspaceDone
 
     addMargins(margin)
 
