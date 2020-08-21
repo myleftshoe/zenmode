@@ -22,12 +22,6 @@ function maximize(metaWindow) {
     log('maximize', metaWindow.title)
     metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
     let { x, y, width, height } = metaWindow.get_work_area_current_monitor()
-    if (metaWindow.is_client_decorated()) {
-        x += 20
-        // y += 20
-        width -= 40
-        // height -= 40
-    }
     metaWindow.move_resize_frame(true, x, y, width, height)
     return metaWindow
 }
@@ -125,10 +119,7 @@ function actorRectToFrameRect(actor, metaWindow) {
     y += 8
     height -= 18
     if (metaWindow.is_client_decorated()) {
-        x += 20
         y += 2
-        width -= 40
-        // height += 40
     }
     return [x, y, width, height]
 }
@@ -138,10 +129,9 @@ function frameRectToActorRect(metaWindow) {
     y -= 8
     height += 18
     if (metaWindow.is_client_decorated()) {
-        x -= 30
+        x -= 10
         y += 20
-        width += 60
-        // height += 40
+        width += 20
     }
     return [x, y, width, height]
 }
@@ -172,18 +162,6 @@ function replaceWith(metaWindow, other) {
 
 function colocate(metaWindow, other) {
     let { x, y, width, height } = other.get_frame_rect()
-    if (!other.is_client_decorated() && metaWindow.is_client_decorated()) {
-        x += 20
-        // y += 20
-        width -= 40
-        // height -= 40
-    }
-    else if (other.is_client_decorated() && !metaWindow.is_client_decorated()) {
-        x -= 20
-        // y -= 20
-        width += 40
-        // height += 40
-    }
     metaWindow.move_resize_frame(false, x, y, width, height)
     return metaWindow
 }

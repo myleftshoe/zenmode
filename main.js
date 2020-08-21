@@ -152,16 +152,6 @@ function connectResizeListener(leftWindow, rightWindow) {
         let {x, y, width, height } = leftWindow.get_work_area_current_monitor()
         const rwidth = metaWindow.get_frame_rect().width
         width = width - rwidth
-        if (metaWindow.is_client_decorated()) {
-            width = width - 40
-            // height = height - 20
-        }
-        if (leftWindow.is_client_decorated()) {
-            x = x + 20
-            // y = y + 20
-            width = width - 40
-            // height = height - 40
-        }
         leftWindow.move_resize_frame(false, x, y, width, height)
     });
 }
@@ -247,10 +237,6 @@ function toggle2UpLeft() {
     visibleWindows = [left, next]
     easeInRight(next)
     let [ x, y, width, height ] = getTileSize(left)
-    if (left.is_client_decorated()) {
-        x += 20
-        width -= 40
-    }    
     left.move_resize_frame(true, x, y, width, height)
 }
 
@@ -273,10 +259,6 @@ function toggle2UpRight() {
     easeInLeft(prev)
     let [ x, y, width, height ] = getTileSize(left)
     x = width 
-    if (left.is_client_decorated()) {
-        x += 20
-        width -= 40
-    }    
     left.move_resize_frame(false, x, y, width, height)
 }
 
@@ -288,10 +270,6 @@ function getTileSize(metaWindow) {
 function easeInRight(metaWindow) {
     let [ x, y, width, height ] = getTileSize(metaWindow)
     x = x + width
-    if (metaWindow.is_client_decorated()) {
-        x += 20
-        width -= 40
-    }
     metaWindow.move_resize_frame(true, x, y, width, height)
     const actor = getActor(metaWindow)
     actor.translation_x = 250
@@ -305,10 +283,6 @@ function easeInRight(metaWindow) {
 
 function easeInLeft(metaWindow) {
     let [ x, y, width, height ] = getTileSize(metaWindow)
-    if (metaWindow.is_client_decorated()) {
-        x += 20
-        width -= 40
-    }
     metaWindow.move_resize_frame(true, x, y, width, height)
     const actor = getActor(metaWindow)
     actor.translation_x = -250
