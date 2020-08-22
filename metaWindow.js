@@ -1,24 +1,28 @@
 const { Clutter, Meta } = imports.gi
 
 function show(metaWindow) {
+    if (!metaWindow) return
     log('show', metaWindow.title)
     getActor(metaWindow).show();
     return metaWindow
 }
 
 function hide(metaWindow) {
+    if (!metaWindow) return
     log('hide', metaWindow.title)
     getActor(metaWindow).hide();
     return metaWindow
 }
 
 function activate(metaWindow) {
+    if (!metaWindow) return
     log('activate', metaWindow.title)
     metaWindow.activate(global.get_current_time())
     return metaWindow
 }
 
 function maximize(metaWindow) {
+    if (!metaWindow) return
     log('maximize', metaWindow.title)
     metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
     let { x, y, width, height } = metaWindow.get_work_area_current_monitor()
@@ -27,10 +31,12 @@ function maximize(metaWindow) {
 }
 
 function getActor(metaWindow) {
+    if (!metaWindow) return
     return metaWindow.get_compositor_private()
 }
 
 function createClone(metaWindow) {
+    if (!metaWindow) return
     return new Clutter.Clone({ source: getActor(metaWindow) })
 }
 
