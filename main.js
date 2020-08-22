@@ -39,6 +39,9 @@ function _switchWorkspaceDone(shellwm) {
     this._finishWorkspaceSwitch(this._switchData);
     shellwm.completed_switch_workspace();
     getActiveWorkspaceTabList().filter(exclude(visibleWindows)).map(hide)
+    visibleWindows.map(show)
+    show(focusedWindow)
+
 }
 
 
@@ -175,8 +178,8 @@ function connectResizeListener(leftWindow, rightWindow) {
 function handleFocusWindow() {
     if (reordering) return
     if (focusedWindow && !visibleWindows.includes(focusedWindow)) {
-        visibleWindows.map(hide)
         maximize(focusedWindow)
+        visibleWindows.map(hide)
         visibleWindows = [focusedWindow]
     }
     visibleWindows.map(show)
@@ -329,8 +332,7 @@ function getPrevMetaWindow(ref) {
 let reordering = false
 
 function addWindow(display, metaWindow) {
-    log('addWindow', metaWindow.title)
-    if (metaWindow.get_window_type() > 1) return;
+    if (metaWindow.get_window_type() > 0) return;
     maximize(metaWindow)
     slideOutRight(getNextMetaWindow())
 }
