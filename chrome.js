@@ -108,5 +108,6 @@ function addMargins(size = 50) {
         width: size,
         reactive:false,
     })
+    return { top, right, bottom, left }
 }
 
