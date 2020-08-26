@@ -47,19 +47,21 @@ function cloneActor(actor) {
 }
 
 
+// --------------------------------------------------------------------------------
 
-// Transitions
+const defaultProps = {
+    duration: 250,
+    mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+}
 
 
-
-
-
-function move(actor, from, to) {
+function move(actor, from, to, easing) {
     actor.translation_x = from.x - to.x
     actor.translation_y = from.y - to.y
     return ease(actor, {
         translation_x: 0,
         translation_y: 0,
+        ...easing
     })
 }
 
@@ -68,9 +70,9 @@ function moveTo(metaWindow, { x, y }) {
     const to = new Point({x, y}).merge(from)
     metaWindow.move_frame(true, to.x, to.y)
     return {
-        ease() {
+        ease(easing) {
             const actor = getActor(metaWindow)
-            return move(actor, from, to)
+            return move(actor, from, to, easing)
         }
     }
 }
@@ -80,17 +82,11 @@ function moveBy(metaWindow, { x, y }) {
     const to = from.add({x, y}).merge(from)
     metaWindow.move_frame(true, to.x, to.y)
     return { 
-        ease() {
+        ease(easing) {
             const actor = getActor(metaWindow)
-            return move(actor, from, to)
+            return move(actor, from, to, easing)
         }
     }
-}
-
-const defaultProps = {
-    duration: 250,
-    // delay:2000,
-    mode: Clutter.AnimationMode.EASE_OUT_QUINT,
 }
 
 function ease(actor, props = defaultProps) {
@@ -100,128 +96,7 @@ function ease(actor, props = defaultProps) {
     }))
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const fade = {
-    opacity: 0,
-    // duration: 0
-}
-
-// function ease(actor, props) {
-//     return new Promise(resolve => actor.ease({
-//         duration: 250,
-//         // delay:2000,
-//         mode: Clutter.AnimationMode.EASE_OUT_QUINT,
-//         ...props,
-//         onComplete() { resolve(actor) },
-//     }))
-// }
-
-function fadeOut(metaWindow) {
-    return easeOut(metaWindow, fade)
-}
-
-function slideOut(metaWindow) {
-    const actor = getActor(metaWindow)
-    const [width] = actor.get_size()
-    return easeOut(metaWindow, { x: -width })
-}
-
-function slideIn(metaWindow) {
-    log('slideIn', metaWindow && metaWindow.title)
-    const actor = getActor(metaWindow)
-    const [width] = actor.get_size()
-    actor.set_x(-width)
-    return easeIn(metaWindow, { x: 0 })
-}
-
-async function easeIn(metaWindow, transition = fade) {
-    const clone = replaceWithClone(metaWindow)
-    await ease(clone, transition)
-    replaceCloneWithMetaWindow(clone, metaWindow)
-    return metaWindow
-}
-
-
-async function easeOut(metaWindow, transition = fade) {
-    const clone = replaceWithClone(metaWindow)
-    if (metaWindow.is_client_decorated())
-        clone.y -=22 // TODO: Work out why this is necessary
-    await ease(clone, transition)
-    global.stage.remove_child(clone)
-    return metaWindow
-}
-
-function replaceWithClone(metaWindow) {
-    const clone = createClone(metaWindow)
-    alignActorWithMetaWindow(clone, metaWindow)
-    hide(metaWindow)
-    global.stage.add_child(clone)
-    return clone
-}
-
-
-function replaceCloneWithMetaWindow(clone, metaWindow) {
-    // alignWithActor(metaWindow, clone)
-    show(metaWindow)
-    global.stage.remove_child(clone)
-    return metaWindow
-}
-
-
-function _actorRectToFrameRect(actor) {
-    const [x, y, width, height] = getRect(actor)
-    return [x, y + 8, width, height - 8]
-}
-
-function actorRectToFrameRect(actor, metaWindow) {
-    let [x, y, width, height] = getRect(actor)
-    y += 8
-    height -= 18
-    if (metaWindow.is_client_decorated()) {
-        y += 2
-    }
-    return [x, y, width, height]
-}
-
-function frameRectToActorRect(metaWindow) {
-    let { x, y, width, height } = metaWindow.get_frame_rect()
-    y -= 8
-    height += 18
-    if (metaWindow.is_client_decorated()) {
-        x -= 10
-        y += 20
-        width += 20
-    }
-    return [x, y, width, height]
-}
-
-
-function alignWithActor(metaWindow, actor) {
-    metaWindow.move_resize_frame(false, ...actorRectToFrameRect(actor, metaWindow))
-}
-
-function alignActorWithMetaWindow(actor, metaWindow) {
-    const [x, y, width, height] = frameRectToActorRect(metaWindow)
-    actor.set_position(x, y)
-    actor.set_size(width, height)
-}
+// --------------------------------------------------------------------------------
 
 function getRect(actor) {
     const [x, y] = actor.get_position()
@@ -232,7 +107,6 @@ function getRect(actor) {
 function replaceWith(metaWindow, other) {
     colocate(other, metaWindow)
     hide(metaWindow)
-    // fadeOut(metaWindow)
     return metaWindow
 }
 
