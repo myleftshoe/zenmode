@@ -4,7 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
 const { stage } = Extension.imports.sizing
-const { show, hide, activate, maximize, getActor, createClone, replaceWith, easeIn } = Extension.imports.metaWindow
+const { show, hide, activate, maximize, replaceWith, easeIn, moveBy, moveTo } = Extension.imports.metaWindow
 const { slideOutLeft, slideOutRight, slideInFromLeft, slideInFromRight } = Extension.imports.slide
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
@@ -65,6 +65,12 @@ function start() {
 
     signals.connect(global.display, 'grab-op-begin', handleGrabOpBegin)
     signals.connect(global.display, 'grab-op-end', handleGrabOpEnd)
+    signals.connect(workspaces.activeWorkspace, 'window-removed', () => {
+        log('gggggggggggggggggggggggggggggggggggggggggggggggggggggggggg')
+        const nextWindow = getActiveWorkspaceTabList()[1]
+        show(nextWindow)
+        visibleWindows = [nextWindow]
+    })
 
     maximizeAndHideWindows()
     show(focusedWindow)
@@ -111,7 +117,11 @@ function handleChromeRightClick(actor, event) {
 }
 
 function handleChromeTopClick(actor, event) {
-    const { SHIFT, LEFT_BUTTON } = getEventModifiers(event)
+    const { SHIFT, LEFT_BUTTON, RIGHT_BUTTON } = getEventModifiers(event)
+    if (RIGHT_BUTTON) {
+        moveTo(focusedWindow, {x: 2000}).ease().then(() => log('DONDONDONDONDON'))
+        return
+    }
     if (SHIFT && LEFT_BUTTON)
         moveWindowToWorkspace(focusedWindow, workspaces.previousWorkspace)
     else
@@ -119,7 +129,11 @@ function handleChromeTopClick(actor, event) {
 }
 
 function handleChromeBottomClick(actor, event) {
-    const { SHIFT, LEFT_BUTTON } = getEventModifiers(event)
+    const { SHIFT, LEFT_BUTTON, RIGHT_BUTTON } = getEventModifiers(event)
+    if (RIGHT_BUTTON) {
+        moveBy(focusedWindow, {x: 100}).ease()
+        return
+    }
     if (SHIFT && LEFT_BUTTON)
         moveWindowToWorkspace(focusedWindow, workspaces.nextWorkspace)
     else
@@ -288,30 +302,21 @@ function getTileSize(metaWindow) {
 
 function easeInRight(metaWindow) {
     let [ x, y, width, height ] = getTileSize(metaWindow)
-    x = x + width + spacerWidth
+    x += width + spacerWidth + 250
     metaWindow.move_resize_frame(true, x, y, width, height)
-    const actor = getActor(metaWindow)
-    actor.translation_x = 250
-    actor.show()
-    actor.ease({
-        duration: 250,
-        mode: Clutter.AnimationMode.EASE_OUT_QUINT,
-        translation_x: 0
-    })
+    show(metaWindow)
+    moveBy(metaWindow, {x: -250}).ease()
 }
 
 function easeInLeft(metaWindow) {
     let [ x, y, width, height ] = getTileSize(metaWindow)
+    x += -250
     metaWindow.move_resize_frame(true, x, y, width, height)
-    const actor = getActor(metaWindow)
-    actor.translation_x = -250
-    actor.show()
-    actor.ease({
-        duration: 250,
-        mode: Clutter.AnimationMode.EASE_OUT_QUINT,
-        translation_x: 0
-    })
+    show(metaWindow)
+    moveBy(metaWindow, {x: 250}).ease()
 }
+
+
 
 
 // --------------------------------------------------------------------------------

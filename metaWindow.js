@@ -1,4 +1,6 @@
 const { Clutter, Meta } = imports.gi
+const Extension = imports.misc.extensionUtils.getCurrentExtension()
+const { Point } = Extension.imports.point
 
 function show(metaWindow) {
     if (!metaWindow) return
@@ -48,20 +50,88 @@ function cloneActor(actor) {
 
 // Transitions
 
+
+
+
+
+function move(actor, from, to) {
+    actor.translation_x = from.x - to.x
+    actor.translation_y = from.y - to.y
+    return ease(actor, {
+        translation_x: 0,
+        translation_y: 0,
+    })
+}
+
+function moveTo(metaWindow, { x, y }) {
+    const from = new Point(metaWindow.get_frame_rect())
+    const to = new Point({x, y}).merge(from)
+    metaWindow.move_frame(true, to.x, to.y)
+    return {
+        ease() {
+            const actor = getActor(metaWindow)
+            return move(actor, from, to)
+        }
+    }
+}
+
+function moveBy(metaWindow, { x, y }) {
+    const from = new Point(metaWindow.get_frame_rect())
+    const to = from.add({x, y}).merge(from)
+    metaWindow.move_frame(true, to.x, to.y)
+    return { 
+        ease() {
+            const actor = getActor(metaWindow)
+            return move(actor, from, to)
+        }
+    }
+}
+
+const defaultProps = {
+    duration: 250,
+    // delay:2000,
+    mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+}
+
+function ease(actor, props = defaultProps) {
+    return new Promise(resolve => actor.ease({
+        ...props, 
+        onComplete() { resolve(actor) }
+    }))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const fade = {
     opacity: 0,
     // duration: 0
 }
 
-function ease(actor, props) {
-    return new Promise(resolve => actor.ease({
-        duration: 250,
-        // delay:2000,
-        mode: Clutter.AnimationMode.EASE_OUT_QUINT,
-        ...props,
-        onComplete() { resolve(actor) },
-    }))
-}
+// function ease(actor, props) {
+//     return new Promise(resolve => actor.ease({
+//         duration: 250,
+//         // delay:2000,
+//         mode: Clutter.AnimationMode.EASE_OUT_QUINT,
+//         ...props,
+//         onComplete() { resolve(actor) },
+//     }))
+// }
 
 function fadeOut(metaWindow) {
     return easeOut(metaWindow, fade)
