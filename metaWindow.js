@@ -49,48 +49,38 @@ function cloneActor(actor) {
 
 // --------------------------------------------------------------------------------
 
-const defaultProps = {
+var defaultEasing = {
     duration: 250,
     mode: Clutter.AnimationMode.EASE_OUT_QUINT,
 }
 
-
-function move(actor, from, to, easing) {
-    actor.translation_x = from.x - to.x
-    actor.translation_y = from.y - to.y
-    return ease(actor, {
-        translation_x: 0,
-        translation_y: 0,
-        ...easing
-    })
+async function move(metaWindow, from, to, easing) {
+    if (easing) {
+        const actor = getActor(metaWindow)
+        const translation_x = to.x - from.x
+        const translation_y = to.y - from.y
+        await ease(actor, {translation_x, translation_y})
+        actor.translation_x = 0
+        actor.translation_y = 0
+    }
+    metaWindow.move_frame(true, to.x, to.y)
 }
 
-function moveTo(metaWindow, { x, y }) {
+async function moveTo(metaWindow, { x, y }, easing) {
     const from = new Point(metaWindow.get_frame_rect())
     const to = new Point({x, y}).merge(from)
-    metaWindow.move_frame(true, to.x, to.y)
-    return {
-        ease(easing) {
-            const actor = getActor(metaWindow)
-            return move(actor, from, to, easing)
-        }
-    }
+    move(metaWindow, from, to, easing)
 }
 
-function moveBy(metaWindow, { x, y }) {
+async function moveBy(metaWindow, { x, y }, easing) {
     const from = new Point(metaWindow.get_frame_rect())
-    const to = from.add({x, y}).merge(from)
-    metaWindow.move_frame(true, to.x, to.y)
-    return { 
-        ease(easing) {
-            const actor = getActor(metaWindow)
-            return move(actor, from, to, easing)
-        }
-    }
+    const to = new Point({x: from.x + x, y: from.y + y}).merge(from)
+    move(metaWindow, from, to, easing)
 }
 
-function ease(actor, props = defaultProps) {
+function ease(actor, props = defaultEasing) {
     return new Promise(resolve => actor.ease({
+        ...defaultEasing,
         ...props, 
         onComplete() { resolve(actor) }
     }))

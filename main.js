@@ -4,7 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
 const { stage } = Extension.imports.sizing
-const { show, hide, activate, maximize, replaceWith, moveBy, moveTo } = Extension.imports.metaWindow
+const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing } = Extension.imports.metaWindow
 const { slideOutLeft, slideOutRight, slideInFromLeft, slideInFromRight } = Extension.imports.slide
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
@@ -119,7 +119,7 @@ function handleChromeRightClick(actor, event) {
 function handleChromeTopClick(actor, event) {
     const { SHIFT, LEFT_BUTTON, RIGHT_BUTTON } = getEventModifiers(event)
     if (RIGHT_BUTTON) {
-        moveTo(focusedWindow, {x: 2000}).ease().then(() => log('DONDONDONDONDON'))
+        moveTo(focusedWindow, {x: 200})
         return
     }
     if (SHIFT && LEFT_BUTTON)
@@ -131,7 +131,7 @@ function handleChromeTopClick(actor, event) {
 function handleChromeBottomClick(actor, event) {
     const { SHIFT, LEFT_BUTTON, RIGHT_BUTTON } = getEventModifiers(event)
     if (RIGHT_BUTTON) {
-        moveBy(focusedWindow, {x: 100}).ease()
+        moveBy(focusedWindow, {x: 200})
         return
     }
     if (SHIFT && LEFT_BUTTON)
@@ -305,7 +305,7 @@ function easeInRight(metaWindow) {
     x += width + spacerWidth + 250
     metaWindow.move_resize_frame(true, x, y, width, height)
     show(metaWindow)
-    moveBy(metaWindow, {x: -250}).ease()
+    moveBy(metaWindow, {x: -250}, defaultEasing)
 }
 
 function easeInLeft(metaWindow) {
@@ -313,7 +313,7 @@ function easeInLeft(metaWindow) {
     x += -250
     metaWindow.move_resize_frame(true, x, y, width, height)
     show(metaWindow)
-    moveBy(metaWindow, {x: 250}).ease()
+    moveBy(metaWindow, {x: 250}, defaultEasing)
 }
 
 
