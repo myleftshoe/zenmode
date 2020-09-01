@@ -39,12 +39,38 @@ function getActor(metaWindow) {
 
 function createClone(metaWindow) {
     if (!metaWindow) return
-    return new Clutter.Clone({ source: getActor(metaWindow) })
+    return cloneActor(getActor(metaWindow))
 }
 
 function cloneActor(actor) {
     return new Clutter.Clone({ source: actor })
 }
+
+function slideFrom(metaWindow, x) {
+    const actor = getActor(metaWindow)
+    actor.translation_x = x
+    actor.show()
+    actor.ease({ translation_x: 0, ...defaultEasing }) 
+}
+
+function move(metaWindow, x, y) {
+    metaWindow.move_frame(true, x, y)
+    return {
+        ease(x) {
+            slideFrom(metaWindow, x)
+        }
+    }
+}
+
+function moveResize(metaWindow, x, y, width, height) {
+    metaWindow.move_resize_frame(true, x, y, width, height)
+    return {
+        ease(x) {
+            slideFrom(metaWindow, x)
+        }
+    }
+}
+
 
 
 // --------------------------------------------------------------------------------
@@ -54,45 +80,7 @@ var defaultEasing = {
     mode: Clutter.AnimationMode.EASE_OUT_QUINT,
 }
 
-async function move(metaWindow, from, to, easing) {
-    if (easing) {
-        const actor = getActor(metaWindow)
-        const translation_x = to.x - from.x
-        const translation_y = to.y - from.y
-        await ease(actor, {translation_x, translation_y})
-        actor.translation_x = 0
-        actor.translation_y = 0
-    }
-    metaWindow.move_frame(true, to.x, to.y)
-}
-
-async function moveTo(metaWindow, { x, y }, easing) {
-    const from = new Point(metaWindow.get_frame_rect())
-    const to = new Point({x, y}).merge(from)
-    move(metaWindow, from, to, easing)
-}
-
-async function moveBy(metaWindow, { x, y }, easing) {
-    const from = new Point(metaWindow.get_frame_rect())
-    const to = new Point({x: from.x + x, y: from.y + y}).merge(from)
-    move(metaWindow, from, to, easing)
-}
-
-function ease(actor, props = defaultEasing) {
-    return new Promise(resolve => actor.ease({
-        ...defaultEasing,
-        ...props, 
-        onComplete() { resolve(actor) }
-    }))
-}
-
 // --------------------------------------------------------------------------------
-
-function getRect(actor) {
-    const [x, y] = actor.get_position()
-    const [width, height] = actor.get_size()
-    return [x, y, width, height]
-}
 
 function replaceWith(metaWindow, other) {
     colocate(other, metaWindow)
