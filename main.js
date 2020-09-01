@@ -4,7 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
 const { stage } = Extension.imports.sizing
-const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing } = Extension.imports.metaWindow
+const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor } = Extension.imports.metaWindow
 const { slideOutLeft, slideOutRight, slideInFromLeft, slideInFromRight } = Extension.imports.slide
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
@@ -302,18 +302,21 @@ function getTileSize(metaWindow) {
 
 function easeInRight(metaWindow) {
     let [ x, y, width, height ] = getTileSize(metaWindow)
-    x += width + spacerWidth + 250
+    x += width + spacerWidth
     metaWindow.move_resize_frame(true, x, y, width, height)
-    show(metaWindow)
-    moveBy(metaWindow, {x: -250}, defaultEasing)
+    const actor = getActor(metaWindow)
+    actor.translation_x = 250
+    actor.show()
+    actor.ease({ translation_x: 0, ...defaultEasing })
 }
 
 function easeInLeft(metaWindow) {
     let [ x, y, width, height ] = getTileSize(metaWindow)
-    x += -250
     metaWindow.move_resize_frame(true, x, y, width, height)
-    show(metaWindow)
-    moveBy(metaWindow, {x: 250}, defaultEasing)
+    const actor = getActor(metaWindow)
+    actor.translation_x = -250
+    actor.show()
+    actor.ease({ translation_x: 0, ...defaultEasing })
 }
 
 
