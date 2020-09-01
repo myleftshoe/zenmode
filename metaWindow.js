@@ -54,28 +54,43 @@ var defaultEasing = {
     mode: Clutter.AnimationMode.EASE_OUT_QUINT,
 }
 
-async function move(metaWindow, from, to, easing) {
-    if (easing) {
-        const actor = getActor(metaWindow)
-        const translation_x = to.x - from.x
-        const translation_y = to.y - from.y
-        await ease(actor, {translation_x, translation_y})
-        actor.translation_x = 0
-        actor.translation_y = 0
-    }
+function move(metaWindow, {x, y}) {
+    const from = new Point(metaWindow.get_frame_rect())
+    const to = new Point({x, y}).merge(from)
+    metaWindow.move_frame(true, to.x, to.y)
+}
+
+function getDistance(metaWindow, {x, y}) {
+    const from = new Point(metaWindow.get_frame_rect())
+    const to = new Point({x, y}).merge(from)
+    const translation = {x: to.x - from.x, y: to.y - from.y}
+    return { from, to, translation }
+}
+
+
+async function translateActor(actor, { x, y }, easing) {
+    actor.translation_x = -x || 0
+    actor.translation_y = -y || 0
+    await ease(actor, {translation_x: 0, translation_y: 0}, easing)
+    actor.translation_x = 0
+    actor.translation_y = 0
     metaWindow.move_frame(true, to.x, to.y)
 }
 
 async function moveTo(metaWindow, { x, y }, easing) {
-    const from = new Point(metaWindow.get_frame_rect())
-    const to = new Point({x, y}).merge(from)
-    move(metaWindow, from, to, easing)
+    const { to , translation } = getDistance(metaWindow, { x, y })
+    if (easing) {
+        await translateActor(getActor(metaWindow), translation, easing)
+    }
+    metaWindow.move_frame(true, to.x, to.y)
 }
 
 async function moveBy(metaWindow, { x, y }, easing) {
-    const from = new Point(metaWindow.get_frame_rect())
-    const to = new Point({x: from.x + x, y: from.y + y}).merge(from)
-    move(metaWindow, from, to, easing)
+    const { to, translation } = getDistance(metaWindow, {x, y})
+    if (easing) {
+        await translateActor(getActor(metaWindow), translation, easing)
+    }
+    metaWindow.move_frame(true, to.x, to.y)
 }
 
 function ease(actor, props = defaultEasing) {

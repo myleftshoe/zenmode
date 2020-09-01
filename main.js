@@ -302,15 +302,15 @@ function getTileSize(metaWindow) {
 
 function easeInRight(metaWindow) {
     let [ x, y, width, height ] = getTileSize(metaWindow)
-    x += width + spacerWidth + 250
+    x += width + spacerWidth 
     metaWindow.move_resize_frame(true, x, y, width, height)
     show(metaWindow)
-    moveBy(metaWindow, {x: -250}, defaultEasing)
+    moveBy(metaWindow, {x: 250}, defaultEasing)
 }
 
 function easeInLeft(metaWindow) {
     let [ x, y, width, height ] = getTileSize(metaWindow)
-    x += -250
+    // x += -250
     metaWindow.move_resize_frame(true, x, y, width, height)
     show(metaWindow)
     moveBy(metaWindow, {x: 250}, defaultEasing)
