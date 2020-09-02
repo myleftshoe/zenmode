@@ -4,7 +4,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
 const { stage } = Extension.imports.sizing
-const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing } = Extension.imports.metaWindow
+const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor } = Extension.imports.metaWindow
 const { slideOutLeft, slideOutRight, slideInFromLeft, slideInFromRight } = Extension.imports.slide
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
@@ -368,20 +368,23 @@ function slideLeft() {
         visible.unmake_fullscreen()
         visible.was_fullscreen = true
     }
-    slideOutRight(visible)
-    onIdle(() => {
-        if (prev.was_fullscreen) {
-            prev.make_fullscreen()
-            delete prev.was_fullscreen
-        }
-        slideInFromLeft(prev).then(() => {
+    if (prev.was_fullscreen) {
+        prev.make_fullscreen()
+        delete prev.was_fullscreen
+    }
+    const actor = getActor(visible)
+    actor.ease({translation_x: global.screen_width, ...defaultEasing})
+    const prevActor = getActor(prev)
+    prevActor.translation_x = -global.screen_width
+    prevActor.show()
+    prevActor.ease({translation_x: 0, ...defaultEasing,
+        onComplete() {
             visibleWindows = [prev]
             maximize(visible)
             maximize(prev)
             const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
             setTabListOrder(focusOrder)
-            show(...focusOrder.slice(-1))
-        })
+        }
     })
 }
 
@@ -393,20 +396,23 @@ function slideRight() {
         visible.unmake_fullscreen()
         visible.was_fullscreen = true
     }
-    slideOutLeft(visible)
-    onIdle(() => {
-        if (next.was_fullscreen) {
-            next.make_fullscreen()
-            delete next.was_fullscreen
-        }
-        slideInFromRight(next).then(() => {
+    if (next.was_fullscreen) {
+        next.make_fullscreen()
+        delete next.was_fullscreen
+    }
+    const actor = getActor(visible)
+    actor.ease({translation_x: -global.screen_width, ...defaultEasing})
+    const nextActor = getActor(next)
+    nextActor.translation_x = global.screen_width
+    nextActor.show()
+    nextActor.ease({translation_x: 0, ...defaultEasing,
+        onComplete() {
             visibleWindows = [next]
             maximize(visible)
             maximize(next)
             const focusOrder = [visible, ...tabList.slice(1).reverse()]
             setTabListOrder(focusOrder)
-            show(...focusOrder.slice(-1))
-        })
+        }
     })
 }
 
