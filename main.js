@@ -39,7 +39,7 @@ function _switchWorkspaceDone(shellwm) {
     this._finishWorkspaceSwitch(this._switchData);
     shellwm.completed_switch_workspace();
     // Added following lines:
-    getActiveWorkspaceTabList().filter(exclude(visibleWindows)).map(hide)
+    // getActiveWorkspaceTabList().filter(exclude(visibleWindows)).map(hide)
     visibleWindows.map(show)
     show(focusedWindow)
 }
