@@ -5,14 +5,14 @@ const { Point } = Extension.imports.point
 function show(metaWindow) {
     if (!metaWindow) return
     log('show', metaWindow.title)
-    getActor(metaWindow).show();
+    getActor(metaWindow).set_scale(1,1)
     return metaWindow
 }
 
 function hide(metaWindow) {
     if (!metaWindow) return
     log('hide', metaWindow.title)
-    getActor(metaWindow).hide();
+    getActor(metaWindow).set_scale(1,1);
     return metaWindow
 }
 
@@ -23,12 +23,15 @@ function activate(metaWindow) {
     return metaWindow
 }
 
+const mx = 100
+const my = mx / 1.6
+
 function maximize(metaWindow) {
     if (!metaWindow) return
     log('maximize', metaWindow.title)
     metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
     let { x, y, width, height } = metaWindow.get_work_area_current_monitor()
-    metaWindow.move_resize_frame(true, x, y, width, height)
+    metaWindow.move_resize_frame(true, mx, my, width - 2 * mx, height - 2 * my)
     return metaWindow
 }
 

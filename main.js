@@ -112,6 +112,8 @@ function handleChromeRightClick(actor, event) {
         onIdle(cycleRightWindows)
         return
     }
+    cycleWindows()
+    return
     cycling = ''
     slideRight()
 }
@@ -215,6 +217,23 @@ function loop(array = [], startIndex = 0, endIndex = array.length - 1) {
 let windows
 let cycling = ''
 
+
+function cycleWindows() {
+    const [window] = visibleWindows
+    const windows = activeWorkspace().list_windows()
+    let i = windows.indexOf(window) + 1
+    if (i < 1 || (i > windows.length - 1)) 
+        i = 0
+    log(i, windows[i].title)
+    const nextWindow = windows[i]
+    replaceWith(window, nextWindow)
+    visibleWindows = [nextWindow]
+    activate(nextWindow)
+    return false
+}
+
+
+
 function cycleLeftWindows() {
     const [leftWindow, rightWindow] = visibleWindows
     const windows = activeWorkspace().list_windows().filter(exclude(rightWindow))
@@ -273,26 +292,31 @@ function toggle2UpLeft() {
     left.move_resize_frame(true, x, y, width, height)
 }
 
+let twoUp = false
+
+const mx = 100
+const my = mx / 1.6
+
 function toggle2UpRight() {
-    const [left, right] = visibleWindows
-    if (left && right) {
-        maximize(right)
-        slideOutLeft(left).then(() => {
-            maximizeAndHideWindows({exclude: [right]})
-            visibleWindows = [right]
-        })        
-        return
+    const tabList = getActiveWorkspaceTabList()
+    const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
+
+    const sw = global.stage.width
+    const sh = global.stage.height
+
+    const h = sh - my * 2
+    if (!twoUp) {
+        const w = (sw - 3 * x) / 2
+        tabList.forEach(w => w.move_resize_frame(true, sw - w - mx, my, w, h))
+        tabList[0].move_resize_frame(true, mx, my, w, h)
+        visibleWindows = [tabList[0], tabList[1]]
     }
-    if (left.is_fullscreen()) {
-        left.unmake_fullscreen()
-        delete left.was_fullscreen
+    else {
+        tabList.forEach(w => w.move_resize_frame(true, mx, my, sw - 2 * mx, h))
+        visibleWindows = [tabList[0]]
     }
-    const prev = getPrevMetaWindow(left)
-    visibleWindows = [prev, left]
-    easeInLeft(prev)
-    let [ x, y, width, height ] = getTileSize(left)
-    x = width + spacerWidth * 2
-    left.move_resize_frame(false, x, y, width, height)
+    twoUp = !twoUp
+    return
 }
 
 function getTileSize(metaWindow) {
