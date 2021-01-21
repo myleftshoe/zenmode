@@ -29,9 +29,11 @@ const my = mx / 1.6
 function maximize(metaWindow) {
     if (!metaWindow) return
     log('maximize', metaWindow.title)
+    // metaWindow.maximize(Meta.MaximizeFlags.BOTH)
+
     metaWindow.unmaximize(Meta.MaximizeFlags.BOTH)
     let { x, y, width, height } = metaWindow.get_work_area_current_monitor()
-    metaWindow.move_resize_frame(true, mx, my, width - 2 * mx, height - 2 * my)
+    metaWindow.move_resize_frame(false, 0, 0, width, height)
     return metaWindow
 }
 

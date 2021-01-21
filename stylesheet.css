@@ -1,3 +1,19 @@
 .chrome {
     border: 1px solid transparent;
+    background-color: rgba(74, 74, 74, 1);
+    background-color: rgba(54, 54, 54, 1);
+    background-color: rgba(30, 30, 63, 1);
+    background-color: rgba(40, 40, 78, 1);
+    background-color: rgba(0, 0, 0, 1);
+    background-color: rgba(255, 255, 255, 1);
+    background-color: rgba(48, 48, 48, 1);
+    background-color: darkgoldenrod;
+    background-color: rgba(45, 43, 85, 1);
+    background-color: transparent;
 }
+
+.chrome-transparent {
+    background-color: transparent;
+}
+
+

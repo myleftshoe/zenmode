@@ -86,14 +86,15 @@ function addChrome(size) {
 }
 
 function addMargins(size = 50) {
+    const aspect = 1.6
     const top = new Chrome({ 
-        height: size,
+        height: size / aspect,
         width: monitor.width,
         reactive:false,
     })
     const bottom = new Chrome({ 
-        y: monitor.height - size,
-        height: size,
+        y: monitor.height - size / aspect,
+        height: size / 1.6,
         width: monitor.width,
         reactive:false,
     })

@@ -1,10 +1,10 @@
-const { Clutter, Meta } = imports.gi
+const { Clutter, Gdk, GdkX11, GdkPixbuf, Meta, Wnck } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
-const { addChrome, addMargins } = Extension.imports.chrome
+const { addChrome, addMargins, createChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
 const { stage } = Extension.imports.sizing
-const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing } = Extension.imports.metaWindow
+const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor, colocate } = Extension.imports.metaWindow
 const { slideOutLeft, slideOutRight, slideInFromLeft, slideInFromRight } = Extension.imports.slide
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
@@ -14,13 +14,20 @@ const { exclude } = Extension.imports.functional
 
 const signals = new Signals()
 
-const margin = 20
-const spacerWidth = 20
+let margin = 50
+const spacerWidth = 50
 
 let chrome
 let hideChromeSid
 let showChromeSid
 let lastFocusedWindow
+
+
+
+const screen = Wnck.Screen.get_default()
+Log.properties(screen)
+
+
 
 Object.defineProperty(this, 'focusedWindow', {
     get() { return global.display.get_focus_window() }
@@ -44,12 +51,12 @@ function _switchWorkspaceDone(shellwm) {
     show(focusedWindow)
 }
 
-
+let margins
 function start() {
 
     Main.wm._switchWorkspaceDone = _switchWorkspaceDone
 
-    addMargins(margin)
+    margins = addMargins(margin)
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
@@ -72,6 +79,29 @@ function start() {
         visibleWindows = [nextWindow]
     })
 
+    signals.connect(global.display, 'in-fullscreen-changed', (a, b) => {
+        log('>>>>>>>>>>>>>>>>>>>>>>>>>>', a, b)
+        if (focusedWindow.is_fullscreen()) {
+            // margins.left.width = 0
+            margins.left.add_style_class_name('chrome-transparent')
+            margins.right.add_style_class_name('chrome-transparent')
+            margins.top.add_style_class_name('chrome-transparent')
+            margins.bottom.add_style_class_name('chrome-transparent')
+            Main.layoutManager.removeChrome(spine)
+        }
+        else {
+            margins.left.remove_style_class_name('chrome-transparent')
+            margins.right.remove_style_class_name('chrome-transparent')
+            margins.top.remove_style_class_name('chrome-transparent')
+            margins.bottom.remove_style_class_name('chrome-transparent')
+            if (twoUp) {
+                const tabList = getActiveWorkspaceTabList()
+                const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
+                spine = createChrome({x: (width + mx) / 2, y: my, width: mx, height})
+            }
+        }
+    })
+    
     maximizeAndHideWindows()
     show(focusedWindow)
     visibleWindows = [focusedWindow]
@@ -102,13 +132,57 @@ function handleChromeLeftClick(actor, event) {
 }
 
 function handleChromeRightClick(actor, event) {
-    const { RIGHT_BUTTON } = getEventModifiers(event)
+
+
+
+
+    const { ALT, SHIFT, RIGHT_BUTTON } = getEventModifiers(event)
+    if (ALT) {
+        // margin = 200
+        // margins.left.save_easing_state()
+        // margins.left.set_easing_duration(1000)
+        // margins.right.set_easing_duration(1000)
+        // margins.right.save_easing_state()
+        // margins.left.width = margin
+        // margins.left.restore_easing_state()
+        // margins.right.restore_easing_state()
+        // margins.right.width = margin
+        // margins.right.x = 1920 - margin
+        const tabList = getActiveWorkspaceTabList()
+        // const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
+
+        tabList.forEach(metaWindow => {
+            metaWindow.move_resize_frame(false, 460, 0, 1000, 1000)
+            if (metaWindow.maximized_horizontally) {
+                metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
+                metaWindow.unmaximize(Meta.MaximizeFlags.HORIZONTAL)
+            }
+            else {
+                metaWindow.maximize(Meta.MaximizeFlags.BOTH)
+            }
+        })
+    
+        return
+    }
     if (RIGHT_BUTTON) {
         toggle2UpRight()
         cycling = ''
         return
     }
     if (visibleWindows.length === 2) {
+        if (SHIFT) {
+            // let [ x, y, width, height ] = getTileSize(visibleWindows[0])
+            // log('@@@@@@@@@@@@@@@@@@@@', x, y, width, height)
+            const mw0 = visibleWindows[0] 
+            const mw1 = visibleWindows[1] 
+            let fr0 = mw0.get_frame_rect()
+            let fr1 = mw1.get_frame_rect()
+            const {x,y, width, height} = mw0.get_work_area_current_monitor()             
+            mw1.move_frame(false, 0, 0)
+            mw0.move_frame(false, width - fr0.width + margin, 0)
+            visibleWindows = visibleWindows.reverse()
+            return
+        }
         onIdle(cycleRightWindows)
         return
     }
@@ -191,14 +265,54 @@ function connectResizeListener(leftWindow, rightWindow) {
 
 // --------------------------------------------------------------------------------
 
-function handleFocusWindow() {
-    if (reordering) return
-    if (focusedWindow && !visibleWindows.includes(focusedWindow)) {
-        maximize(focusedWindow)
-        visibleWindows.map(hide)
-        visibleWindows = [focusedWindow]
-    }
-    visibleWindows.map(show)
+function handleFocusWindow(display) {
+
+
+    const tabList = getActiveWorkspaceTabList()
+    tabList.forEach(mw => {
+        getActor(mw).set_scale(0, 0)
+    })
+    getActor(focusedWindow).set_scale(1, 1)
+
+
+
+
+    // let wins = screen.get_windows()
+    // log(wins.length)
+    // wins.forEach(w => {
+    //     log(w.get_xid(), w.get_name())
+    // })
+
+
+    // const t = GdkX11.X11Window.foreign_new_for_display(Gdk.Display.get_default(), wins[7].get_xid())
+    // log("RRRRRR",t)
+    // const pixbuf = Gdk.pixbuf_get_from_window(t, 100, 100, 5, 5)
+    // const pxs = pixbuf.get_pixels()
+    // log('pixbuf length' , pxs.length)
+
+    // const colors = new Map()
+    // for (let i = 0; i < pxs.length; i += 4) {
+    //     const rgba = `${pxs[i]},${pxs[i+1]},${pxs[i+2]},${pxs[i+3]}`
+    //     let count = colors.get(rgba) || 0
+    //     colors.set(rgba, ++count)
+            
+    // }
+    // colors.forEach((v, k) => {
+    //     log(k,v)
+    // })
+
+
+
+    // pxs.forEach(p => log(p))
+    // log('gggggggggggg', pixbuf.get_pixels())
+    // Log.properties(pixbuf)
+    // if (reordering) return
+    // if (focusedWindow && !visibleWindows.includes(focusedWindow)) {
+    //     maximize(focusedWindow)
+    //     visibleWindows.map(hide)
+    //     visibleWindows = [focusedWindow]
+    // }
+    // visibleWindows.map(show)
     // show(focusedWindow)
 }
 
@@ -270,53 +384,80 @@ function maximizeAndHideWindows({exclude: excluded = []} = {}) {
     getActiveWorkspaceTabList().filter(exclude(excluded)).map(maximize).map(hide)
 }
 
-function toggle2UpLeft() {
-    const [left, right] = visibleWindows
-    log('toggle2UpLeft', left && left.title, right && right.title)
-    if (left && right) {
-        maximize(left)
-        slideOutRight(right).then(() => {
-            maximizeAndHideWindows({exclude: [left]})
-            visibleWindows = [left]
-        })
-        return
-    }
-    if (left.is_fullscreen()) {
-        left.unmake_fullscreen()
-        delete left.was_fullscreen
-    }
-    const next = getNextMetaWindow()
-    visibleWindows = [left, next]
-    easeInRight(next)
-    let [ x, y, width, height ] = getTileSize(left)
-    left.move_resize_frame(true, x, y, width, height)
-}
 
 let twoUp = false
 
-const mx = 100
+const mx = margin
 const my = mx / 1.6
+let spine
+
+
+function toggle2UpLeft() {
+    const tabList = getActiveWorkspaceTabList()
+    const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
+
+    if (!twoUp) {
+        spine = createChrome({
+            x: (width + mx) / 2, 
+            y: my, 
+            width: mx, 
+            height, 
+            // style: 'background-color: red;'
+        })
+
+        tabList.forEach(metaWindow => {
+            metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
+            metaWindow.move_resize_frame(true, width / 2 + 1.5 * mx, y, width / 2 - mx / 2, height)
+        })
+        tabList[0].move_resize_frame(true, x, y, width / 2 - mx / 2, height)
+        visibleWindows = [tabList[0], tabList[1]]
+    }
+    else {
+        Main.layoutManager.removeChrome(spine)
+        tabList.forEach(metaWindow => metaWindow.move_resize_frame(false, 0, 0, width, height))
+
+        visibleWindows = [tabList[0]]
+    }
+    twoUp = !twoUp
+}
+
+
 
 function toggle2UpRight() {
     const tabList = getActiveWorkspaceTabList()
     const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
 
-    const sw = global.stage.width
-    const sh = global.stage.height
-
-    const h = sh - my * 2
     if (!twoUp) {
-        const w = (sw - 3 * x) / 2
-        tabList.forEach(w => w.move_resize_frame(true, sw - w - mx, my, w, h))
-        tabList[0].move_resize_frame(true, mx, my, w, h)
+        spine = createChrome({
+            x: (width + mx) / 2, 
+            y: my, 
+            width: mx, 
+            height, 
+            // style: 'background-color: red;'
+        })
+
+        // clutter_bind_constraint_new (layer_a, CLUTTER_BIND_X, 0.0));
+        const bc = new Clutter.BindConstraint()
+        bc.set_source(getActor(tabList[1]))
+        bc.set_coordinate(Clutter.BindCoordinate.X)
+        bc.set_offset(-40)
+        spine.add_constraint(bc)
+        
+
+        tabList.forEach(metaWindow => {
+            metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
+            metaWindow.move_resize_frame(true, width / 2 + 1.5 * mx, y, width / 2 - mx / 2, height)
+        })
+        tabList[0].move_resize_frame(true, x, y, width / 2 - mx / 2, height)
         visibleWindows = [tabList[0], tabList[1]]
     }
     else {
-        tabList.forEach(w => w.move_resize_frame(true, mx, my, sw - 2 * mx, h))
+        Main.layoutManager.removeChrome(spine)
+        tabList.forEach(metaWindow => metaWindow.move_resize_frame(false, 0, 0, width, height))
+
         visibleWindows = [tabList[0]]
     }
     twoUp = !twoUp
-    return
 }
 
 function getTileSize(metaWindow) {
@@ -361,7 +502,21 @@ function getPrevMetaWindow(ref) {
 let reordering = false
 
 function addWindow(display, metaWindow) {
+    const tabList = getActiveWorkspaceTabList()
+    const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
+
     if (metaWindow.get_window_type() > 0) return;
+    if (twoUp) {
+        if (visibleWindows[0].has_focus()) {
+            metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
+            metaWindow.move_resize_frame(false, 0, 0, width / 2, height)
+        }
+        if (visibleWindows[1].has_focus()) {
+            metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
+            metaWindow.move_resize_frame(false, 0, 0, width / 2, height)
+        }
+
+    }
     maximize(metaWindow)
     slideOutRight(getNextMetaWindow())
 }
