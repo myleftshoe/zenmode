@@ -231,42 +231,23 @@ function showChrome() {
 let grabbed = false;
 function handleGrabOpBegin(display, screen, metaWindow, op) {
     if (!metaWindow) return
+    if (grabbed) return
     const [leftWindow, rightWindow] = visibleWindows
     if (!rightWindow) return
-    if (leftWindow === metaWindow) {
-        global.display.end_grab_op(global.get_current_time())
-        const [x, y] = global.get_pointer()
-        global.display.begin_grab_op(
-            rightWindow,
-            Meta.GrabOp.RESIZING_W,
-            true, /* pointer grab */
-            true, /* frame action */
-            null,
-            null,
-            global.get_current_time(),
-            x, y
-        ) 
-        // rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
-        connectResizeListener(leftWindow, rightWindow)
-    }
-    if (rightWindow === metaWindow) {
-        if (grabbed) return
-        global.display.end_grab_op(global.get_current_time())
-        grabbed = true
-        const [x, y] = global.get_pointer()
-        global.display.begin_grab_op(
-            rightWindow,
-            Meta.GrabOp.RESIZING_W,
-            true, /* pointer grab */
-            true, /* frame action */
-            null,
-            null,
-            global.get_current_time(),
-            x, y
-        ) 
-        // rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
-        connectResizeListener(leftWindow, rightWindow)
-    }
+    global.display.end_grab_op(global.get_current_time())
+    grabbed = true
+    const [x, y] = global.get_pointer()
+    global.display.begin_grab_op(
+        rightWindow,
+        Meta.GrabOp.RESIZING_W,
+        true, /* pointer grab */
+        true, /* frame action */
+        null,
+        null,
+        global.get_current_time(),
+        x, y
+    ) 
+    connectResizeListener(leftWindow, rightWindow)
 }
 
 function handleGrabOpEnd(display, screen, metaWindow, op) {
