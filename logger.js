@@ -46,11 +46,11 @@ function getProperties(obj) {
         const currentObjProperties = Object.getOwnPropertyNames(currentObj).sort().map(property => {
             let type = ''
             try {
-                type = typeof currentObj[property] 
-            } catch {}
+                type = typeof currentObj[property]
+            } catch { }
             return {
-                property, 
-                object: currentObj.constructor.name, 
+                property,
+                object: currentObj.constructor.name,
                 type
             }
         });

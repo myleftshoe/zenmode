@@ -13,7 +13,7 @@ let monitor = global.display.get_monitor_geometry(primaryMonitor)
 
 const _Chrome = GObject.registerClass({},
     class _Chrome extends St.Widget {
-        _init({affectsStruts = true, ...props}) {
+        _init({ affectsStruts = true, ...props }) {
             super._init({
                 style_class,
                 reactive: true,
@@ -34,7 +34,7 @@ function composeChrome() {
 var Chrome = composeChrome()
 
 function createChrome(props) {
-    const edge = new Chrome({...props, affectsStruts: false})
+    const edge = new Chrome({ ...props, affectsStruts: false })
     edge.connect('enter-event', () => {
         global.display.set_cursor(Meta.Cursor.POINTING_HAND)
     })
@@ -63,7 +63,7 @@ var addRight = size => createChrome({
     x: monitor.width - size,
 })
 
-const destroy = function() {
+const destroy = function () {
     for (const prop in this) {
         if (prop !== 'destroy')
             prop && this[prop].destroy()
@@ -76,10 +76,10 @@ function addChrome(size) {
     const bottom = size.bottom && addBottom(size.bottom)
     const left = size.left && addLeft(size.left)
     const right = size.right && addRight(size.right)
-    return { 
-        top, 
-        bottom, 
-        left, 
+    return {
+        top,
+        bottom,
+        left,
         right,
         destroy
     }
@@ -87,27 +87,27 @@ function addChrome(size) {
 
 function addMargins(size = 50) {
     const aspect = 1.6
-    const top = new Chrome({ 
+    const top = new Chrome({
         height: size / aspect,
         width: monitor.width,
-        reactive:false,
+        reactive: false,
     })
-    const bottom = new Chrome({ 
+    const bottom = new Chrome({
         y: monitor.height - size / aspect,
         height: size / 1.6,
         width: monitor.width,
-        reactive:false,
+        reactive: false,
     })
-    const left = new Chrome({ 
+    const left = new Chrome({
         height: monitor.height,
         width: size,
-        reactive:false,
+        reactive: false,
     })
-    const right = new Chrome({ 
+    const right = new Chrome({
         x: monitor.width - size,
         height: monitor.height,
         width: size,
-        reactive:false,
+        reactive: false,
     })
     return { top, right, bottom, left }
 }

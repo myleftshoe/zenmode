@@ -83,11 +83,11 @@ function start() {
             if (twoUp) {
                 const tabList = getActiveWorkspaceTabList()
                 const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
-                spine = createChrome({x: (width + mx) / 2, y: my, width: mx, height})
+                spine = createChrome({ x: (width + mx) / 2, y: my, width: mx, height })
             }
         }
     })
-    
+
     maximizeAndHideWindows()
     show(focusedWindow)
     visibleWindows = [focusedWindow]
@@ -146,7 +146,7 @@ function handleChromeRightClick(actor, event) {
                 metaWindow.maximize(Meta.MaximizeFlags.BOTH)
             }
         })
-    
+
         return
     }
     if (RIGHT_BUTTON) {
@@ -158,11 +158,11 @@ function handleChromeRightClick(actor, event) {
         if (SHIFT) {
             // let [ x, y, width, height ] = getTileSize(visibleWindows[0])
             // log('@@@@@@@@@@@@@@@@@@@@', x, y, width, height)
-            const mw0 = visibleWindows[0] 
-            const mw1 = visibleWindows[1] 
+            const mw0 = visibleWindows[0]
+            const mw1 = visibleWindows[1]
             let fr0 = mw0.get_frame_rect()
             let fr1 = mw1.get_frame_rect()
-            const {x,y, width, height} = mw0.get_work_area_current_monitor()             
+            const { x, y, width, height } = mw0.get_work_area_current_monitor()
             mw1.move_frame(false, 0, 0)
             mw0.move_frame(false, width - fr0.width + margin, 0)
             visibleWindows = visibleWindows.reverse()
@@ -177,7 +177,7 @@ function handleChromeRightClick(actor, event) {
 function handleChromeTopClick(actor, event) {
     const { SHIFT, LEFT_BUTTON, RIGHT_BUTTON } = getEventModifiers(event)
     if (RIGHT_BUTTON) {
-        moveTo(focusedWindow, {x: 200})
+        moveTo(focusedWindow, { x: 200 })
         return
     }
     if (SHIFT && LEFT_BUTTON)
@@ -189,7 +189,7 @@ function handleChromeTopClick(actor, event) {
 function handleChromeBottomClick(actor, event) {
     const { SHIFT, LEFT_BUTTON, RIGHT_BUTTON } = getEventModifiers(event)
     if (RIGHT_BUTTON) {
-        moveBy(focusedWindow, {x: 200})
+        moveBy(focusedWindow, { x: 200 })
         return
     }
     if (SHIFT && LEFT_BUTTON)
@@ -234,14 +234,14 @@ function handleGrabOpBegin(display, screen, metaWindow, op) {
         null,
         global.get_current_time(),
         x, y
-    ) 
+    )
     connectResizeListener(leftWindow, rightWindow)
 }
 
 let savedPointerPosition
 function handleGrabOpEnd(_display, _screen, metaWindow, op) {
     log('handleGrabOpEnd')
-    if (spinegrab) 
+    if (spinegrab)
         savedPointerPosition = global.get_pointer()
     if (grabbed) {
         grabbed = false
@@ -252,7 +252,7 @@ function handleGrabOpEnd(_display, _screen, metaWindow, op) {
 
 function connectResizeListener(leftWindow, rightWindow) {
     signals.connect(rightWindow, 'size-changed', (metaWindow) => {
-        let {x, y, width, height } = leftWindow.get_work_area_current_monitor()
+        let { x, y, width, height } = leftWindow.get_work_area_current_monitor()
         const rwidth = metaWindow.get_frame_rect().width
         width = width - rwidth - spacerWidth
         leftWindow.move_resize_frame(false, x, y, width, height)
@@ -291,7 +291,7 @@ function handleFocusWindow(display) {
     //     const rgba = `${pxs[i]},${pxs[i+1]},${pxs[i+2]},${pxs[i+3]}`
     //     let count = colors.get(rgba) || 0
     //     colors.set(rgba, ++count)
-            
+
     // }
     // colors.forEach((v, k) => {
     //     log(k,v)
@@ -323,7 +323,7 @@ function cycleWindows() {
     const [window] = visibleWindows
     const windows = activeWorkspace().list_windows()
     let i = windows.indexOf(window) + 1
-    if (i < 1 || (i > windows.length - 1)) 
+    if (i < 1 || (i > windows.length - 1))
         i = 0
     log(i, windows[i].title)
     const nextWindow = windows[i]
@@ -340,7 +340,7 @@ function cycleLeftWindows() {
     const windows = activeWorkspace().list_windows().filter(exclude(rightWindow))
     if (windows.length < 2) return
     let i = windows.indexOf(leftWindow) + 1
-    if (i < 1 || (i > windows.length - 1)) 
+    if (i < 1 || (i > windows.length - 1))
         i = 0
     log(i, windows[i].title)
     const nextWindow = windows[i]
@@ -355,7 +355,7 @@ function cycleRightWindows() {
     const windows = activeWorkspace().list_windows().filter(exclude(leftWindow))
     if (windows.length < 2) return
     let i = windows.indexOf(rightWindow) + 1
-    if (i < 1 || (i > windows.length - 1)) 
+    if (i < 1 || (i > windows.length - 1))
         i = 0
     log(i, windows[i].title)
     const nextWindow = windows[i]
@@ -367,7 +367,7 @@ function cycleRightWindows() {
 
 // --------------------------------------------------------------------------------
 
-function maximizeAndHideWindows({exclude: excluded = []} = {}) {
+function maximizeAndHideWindows({ exclude: excluded = [] } = {}) {
     getActiveWorkspaceTabList().filter(exclude(excluded)).map(maximize).map(hide)
 }
 
@@ -385,10 +385,10 @@ function toggle2UpLeft() {
 
     if (!twoUp) {
         spine = createChrome({
-            x: (width + mx) / 2, 
-            y: my, 
-            width: mx, 
-            height, 
+            x: (width + mx) / 2,
+            y: my,
+            width: mx,
+            height,
             // style: 'background-color: red;'
         })
 
@@ -417,10 +417,10 @@ function toggle2UpRight() {
 
     if (!twoUp) {
         spine = createChrome({
-            x: (width + mx) / 2, 
-            y: my, 
-            width: mx, 
-            height, 
+            x: (width + mx) / 2,
+            y: my,
+            width: mx,
+            height,
             // style: 'background-color: red;'
         })
 
@@ -431,12 +431,12 @@ function toggle2UpRight() {
             handleGrabOpBegin(_, _, tabList[1])
         })
         spine.connect('leave-event', () => {
-            if (!savedPointerPosition) return 
+            if (!savedPointerPosition) return
             let display = Gdk.Display.get_default();
             let deviceManager = display.get_device_manager();
             let pointer = deviceManager.get_client_pointer();
             let [screen, pointerX, pointerY] = pointer.get_position();
-            pointer.warp(screen, savedPointerPosition[0], savedPointerPosition[1]);            
+            pointer.warp(screen, savedPointerPosition[0], savedPointerPosition[1]);
             savedPointerPosition = null
             log('LEFT SPNE')
         })
@@ -450,7 +450,7 @@ function toggle2UpRight() {
         // bc2.set_source(getActor(tabList[1]))
         // bc2.set_coordinate(Clutter.BindCoordinate.WIDTH)
         // bc2.set_offset(-40)
- 
+
         const lw = tabList[0]
         const lbr = lw.get_buffer_rect()
         const lfr = lw.get_frame_rect()
@@ -481,7 +481,7 @@ function toggle2UpRight() {
 
         spine.add_constraint(sc0)
         spine.add_constraint(sc)
-        
+
 
         tabList.forEach(metaWindow => {
             metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
@@ -501,7 +501,7 @@ function toggle2UpRight() {
 }
 
 function getTileSize(metaWindow) {
-    let {x, y, width, height } = metaWindow.get_work_area_current_monitor()
+    let { x, y, width, height } = metaWindow.get_work_area_current_monitor()
     return [x, y, (width - spacerWidth) / 2, height]
 }
 

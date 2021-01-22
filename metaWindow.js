@@ -5,14 +5,14 @@ const { Point } = Extension.imports.point
 function show(metaWindow) {
     if (!metaWindow) return
     log('show', metaWindow.title)
-    getActor(metaWindow).set_scale(1,1)
+    getActor(metaWindow).set_scale(1, 1)
     return metaWindow
 }
 
 function hide(metaWindow) {
     if (!metaWindow) return
     log('hide', metaWindow.title)
-    getActor(metaWindow).set_scale(1,1);
+    getActor(metaWindow).set_scale(1, 1);
     return metaWindow
 }
 
@@ -64,7 +64,7 @@ async function move(metaWindow, from, to, easing) {
         const actor = getActor(metaWindow)
         const translation_x = to.x - from.x
         const translation_y = to.y - from.y
-        await ease(actor, {translation_x, translation_y})
+        await ease(actor, { translation_x, translation_y })
         actor.translation_x = 0
         actor.translation_y = 0
     }
@@ -73,20 +73,20 @@ async function move(metaWindow, from, to, easing) {
 
 async function moveTo(metaWindow, { x, y }, easing) {
     const from = new Point(metaWindow.get_frame_rect())
-    const to = new Point({x, y}).merge(from)
+    const to = new Point({ x, y }).merge(from)
     move(metaWindow, from, to, easing)
 }
 
 async function moveBy(metaWindow, { x, y }, easing) {
     const from = new Point(metaWindow.get_frame_rect())
-    const to = new Point({x: from.x + x, y: from.y + y}).merge(from)
+    const to = new Point({ x: from.x + x, y: from.y + y }).merge(from)
     move(metaWindow, from, to, easing)
 }
 
 function ease(actor, props = defaultEasing) {
     return new Promise(resolve => actor.ease({
         ...defaultEasing,
-        ...props, 
+        ...props,
         onComplete() { resolve(actor) }
     }))
 }

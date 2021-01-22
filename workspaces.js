@@ -9,7 +9,7 @@ const _switchToWorkspace = function _switchWorkspace(workspace) {
 }
 
 const _activateWorkspace = function _activateWorkspace(workspace) {
-    if (workspace === workspaces.activeWorkspace) 
+    if (workspace === workspaces.activeWorkspace)
         _switchToWorkspace(workspace)
     workspace.activate(global.get_current_time())
 }

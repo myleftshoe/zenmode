@@ -8,7 +8,7 @@ const aliases = {
 }
 
 function hasModifier(event, modifier) {
-    modifier = aliases[modifier] || modifier    
+    modifier = aliases[modifier] || modifier
     return Boolean(event.get_state() & Clutter.ModifierType[`${modifier}_MASK`])
 }
 
