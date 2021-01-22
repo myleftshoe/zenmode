@@ -3,9 +3,7 @@ const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
-const { stage } = Extension.imports.sizing
-const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor, colocate } = Extension.imports.metaWindow
-const { slideOutLeft, slideOutRight, slideInFromLeft, slideInFromRight } = Extension.imports.slide
+const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor } = Extension.imports.metaWindow
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const { Log } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
@@ -41,20 +39,8 @@ Object.defineProperty(this, 'visibleWindows', {
 })
 
 
-// Monkey patch Main.wm._switchWorkspaceDone
-function _switchWorkspaceDone(shellwm) {
-    this._finishWorkspaceSwitch(this._switchData);
-    shellwm.completed_switch_workspace();
-    // Added following lines:
-    getActiveWorkspaceTabList().filter(exclude(visibleWindows)).map(hide)
-    visibleWindows.map(show)
-    show(focusedWindow)
-}
-
 let margins
 function start() {
-
-    Main.wm._switchWorkspaceDone = _switchWorkspaceDone
 
     margins = addMargins(margin)
 
@@ -128,7 +114,6 @@ function handleChromeLeftClick(actor, event) {
         return
     }
     cycling = ''
-    slideLeft()
 }
 
 function handleChromeRightClick(actor, event) {
@@ -187,9 +172,6 @@ function handleChromeRightClick(actor, event) {
         return
     }
     cycleWindows()
-    return
-    cycling = ''
-    slideRight()
 }
 
 function handleChromeTopClick(actor, event) {
@@ -332,15 +314,6 @@ function handleFocusWindow(display) {
 
 // --------------------------------------------------------------------------------
 
-function loop(array = [], startIndex = 0, endIndex = array.length - 1) {
-    let index = startIndex
-    function next() {
-        if (index > endIndex)
-            index = 0
-        return array[index++]
-    }
-    return { next }
-}
 
 let windows
 let cycling = ''
@@ -532,39 +505,10 @@ function getTileSize(metaWindow) {
     return [x, y, (width - spacerWidth) / 2, height]
 }
 
-function easeInRight(metaWindow) {
-    let [ x, y, width, height ] = getTileSize(metaWindow)
-    x += width + spacerWidth + 250
-    metaWindow.move_resize_frame(true, x, y, width, height)
-    show(metaWindow)
-    moveBy(metaWindow, {x: -250}, defaultEasing)
-}
-
-function easeInLeft(metaWindow) {
-    let [ x, y, width, height ] = getTileSize(metaWindow)
-    x += -250
-    metaWindow.move_resize_frame(true, x, y, width, height)
-    show(metaWindow)
-    moveBy(metaWindow, {x: 250}, defaultEasing)
-}
-
 
 
 
 // --------------------------------------------------------------------------------
-
-function getNextMetaWindow() {
-    return getActiveWorkspaceTabList().find(exclude(visibleWindows))
-}
-
-function getPrevMetaWindow(ref) {
-    const tabList = getActiveWorkspaceTabList()
-    let ret = tabList[tabList.length - 1]
-    if (ret === ref)
-        ret = tabList[tabList.length - 2]
-    return ret
-}
-
 
 let reordering = false
 
@@ -585,11 +529,6 @@ function addWindow(display, metaWindow) {
 
     }
     maximize(metaWindow)
-    slideOutRight(getNextMetaWindow())
-}
-
-function removeWindow(metaWindow) {
-    slideInFromRight(nextMetaWindow)
 }
 
 function setTabListOrder(metaWindows = []) {
@@ -604,55 +543,5 @@ function setTabListOrder(metaWindows = []) {
     ).then(() => { reordering = false })
 }
 
-function slideLeft() {
-    const tabList = getActiveWorkspaceTabList()
-    if (tabList.length < 2) return
-    const visible = tabList[0]
-    const pos = tabList.length - 1
-    const prev = tabList[pos]
-    if (visible.is_fullscreen()) {
-        visible.unmake_fullscreen()
-        visible.was_fullscreen = true
-    }
-    slideOutRight(visible)
-    onIdle(() => {
-        if (prev.was_fullscreen) {
-            prev.make_fullscreen()
-            delete prev.was_fullscreen
-        }
-        slideInFromLeft(prev).then(() => {
-            visibleWindows = [prev]
-            maximize(visible)
-            maximize(prev)
-            const focusOrder = [...tabList.slice(0, pos).reverse(), ...tabList.slice(pos).reverse()]
-            setTabListOrder(focusOrder)
-            show(...focusOrder.slice(-1))
-        })
-    })
-}
 
-function slideRight() {
-    const tabList = getActiveWorkspaceTabList()
-    if (tabList.length < 2) return
-    const [visible, next] = tabList
-    if (visible.is_fullscreen()) {
-        visible.unmake_fullscreen()
-        visible.was_fullscreen = true
-    }
-    slideOutLeft(visible)
-    onIdle(() => {
-        if (next.was_fullscreen) {
-            next.make_fullscreen()
-            delete next.was_fullscreen
-        }
-        slideInFromRight(next).then(() => {
-            visibleWindows = [next]
-            maximize(visible)
-            maximize(next)
-            const focusOrder = [visible, ...tabList.slice(1).reverse()]
-            setTabListOrder(focusOrder)
-            show(...focusOrder.slice(-1))
-        })
-    })
-}
 
