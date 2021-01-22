@@ -268,11 +268,11 @@ function connectResizeListener(leftWindow, rightWindow) {
 function handleFocusWindow(display) {
 
 
-    const tabList = getActiveWorkspaceTabList()
-    tabList.forEach(mw => {
-        getActor(mw).set_scale(0, 0)
-    })
-    getActor(focusedWindow).set_scale(1, 1)
+    // const tabList = getActiveWorkspaceTabList()
+    // tabList.forEach(mw => {
+    //     getActor(mw).set_scale(0, 0)
+    // })
+    // getActor(focusedWindow).set_scale(1, 1)
 
 
 
@@ -421,7 +421,8 @@ function toggle2UpLeft() {
     twoUp = !twoUp
 }
 
-
+let sc0
+let sc
 
 function toggle2UpRight() {
     const tabList = getActiveWorkspaceTabList()
@@ -436,12 +437,46 @@ function toggle2UpRight() {
             // style: 'background-color: red;'
         })
 
-        // clutter_bind_constraint_new (layer_a, CLUTTER_BIND_X, 0.0));
-        const bc = new Clutter.BindConstraint()
-        bc.set_source(getActor(tabList[1]))
-        bc.set_coordinate(Clutter.BindCoordinate.X)
-        bc.set_offset(-40)
-        spine.add_constraint(bc)
+        // const bc = new Clutter.BindConstraint()
+        // bc.set_source(getActor(tabList[1]))
+        // bc.set_coordinate(Clutter.BindCoordinate.X)
+        // bc.set_offset(-40)
+
+        // const bc2 = new Clutter.BindConstraint()
+        // bc2.set_source(getActor(tabList[1]))
+        // bc2.set_coordinate(Clutter.BindCoordinate.WIDTH)
+        // bc2.set_offset(-40)
+ 
+        const lw = tabList[0]
+        const lbr = lw.get_buffer_rect()
+        const lfr = lw.get_frame_rect()
+
+        const rw = tabList[1]
+        const rbr = rw.get_buffer_rect()
+        const rfr = rw.get_frame_rect()
+
+        log(rw.title)
+        // log('buffer_rect:', br.x, br.y, br.width, br.height )
+        // log('frame_rect:', fr.x, fr.y, fr.width, fr.height )
+
+        const loffset = lfr.x - lbr.x
+        const roffset = rfr.x - rbr.x
+
+
+
+
+        sc0 = new Clutter.SnapConstraint()
+        sc0.set_source(getActor(tabList[0]))
+        sc0.set_edges(Clutter.SnapEdge.LEFT, Clutter.SnapEdge.RIGHT)
+        sc0.set_offset(-loffset)
+
+        sc = new Clutter.SnapConstraint()
+        sc.set_source(getActor(tabList[1]))
+        sc.set_edges(Clutter.SnapEdge.RIGHT, Clutter.SnapEdge.LEFT)
+        sc.set_offset(roffset)
+
+        spine.add_constraint(sc0)
+        spine.add_constraint(sc)
         
 
         tabList.forEach(metaWindow => {
@@ -452,6 +487,8 @@ function toggle2UpRight() {
         visibleWindows = [tabList[0], tabList[1]]
     }
     else {
+        spine.remove_constraint(sc)
+        spine.remove_constraint(sc0)
         Main.layoutManager.removeChrome(spine)
         tabList.forEach(metaWindow => metaWindow.move_resize_frame(false, 0, 0, width, height))
 
