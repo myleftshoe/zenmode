@@ -273,7 +273,7 @@ function handleGrabOpEnd(display, screen, metaWindow, op) {
     log('handleGrabOpEnd')
     if (grabbed) {
         grabbed = false
-        // return`
+        // return
     }
     signals.disconnectObject(metaWindow)
 }
@@ -461,6 +461,12 @@ function toggle2UpRight() {
             // style: 'background-color: red;'
         })
 
+        visibleWindows = [tabList[0], tabList[1]]
+
+        spine.connect('button-press-event', () => {
+            handleGrabOpBegin(_, _, tabList[1])
+        })
+
         // const bc = new Clutter.BindConstraint()
         // bc.set_source(getActor(tabList[1]))
         // bc.set_coordinate(Clutter.BindCoordinate.X)
@@ -508,7 +514,6 @@ function toggle2UpRight() {
             metaWindow.move_resize_frame(true, width / 2 + 1.5 * mx, y, width / 2 - mx / 2, height)
         })
         tabList[0].move_resize_frame(true, x, y, width / 2 - mx / 2, height)
-        visibleWindows = [tabList[0], tabList[1]]
     }
     else {
         spine.remove_constraint(sc)
