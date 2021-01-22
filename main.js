@@ -228,6 +228,7 @@ function showChrome() {
 
 // --------------------------------------------------------------------------------
 
+let grabbed = false;
 function handleGrabOpBegin(display, screen, metaWindow, op) {
     if (!metaWindow) return
     const [leftWindow, rightWindow] = visibleWindows
@@ -246,11 +247,34 @@ function handleGrabOpBegin(display, screen, metaWindow, op) {
             x, y
         ) 
         // rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
+        connectResizeListener(leftWindow, rightWindow)
     }
-    connectResizeListener(leftWindow, rightWindow)
+    if (rightWindow === metaWindow) {
+        if (grabbed) return
+        global.display.end_grab_op(global.get_current_time())
+        grabbed = true
+        const [x, y] = global.get_pointer()
+        global.display.begin_grab_op(
+            rightWindow,
+            Meta.GrabOp.RESIZING_W,
+            true, /* pointer grab */
+            true, /* frame action */
+            null,
+            null,
+            global.get_current_time(),
+            x, y
+        ) 
+        // rightWindow.begin_grab_op(Meta.GrabOp.RESIZING_W, true, global.get_current_time())
+        connectResizeListener(leftWindow, rightWindow)
+    }
 }
 
 function handleGrabOpEnd(display, screen, metaWindow, op) {
+    log('handleGrabOpEnd')
+    if (grabbed) {
+        grabbed = false
+        // return`
+    }
     signals.disconnectObject(metaWindow)
 }
 
