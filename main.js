@@ -229,8 +229,14 @@ function showChrome() {
 // --------------------------------------------------------------------------------
 
 let grabbed = false;
+let spinegrab = false
 function handleGrabOpBegin(display, screen, metaWindow, op) {
     if (!metaWindow) return
+    if (!spinegrab) {
+        global.display.end_grab_op(global.get_current_time())
+        global.sync_pointer()
+        return
+    }
     if (grabbed) return
     const [leftWindow, rightWindow] = visibleWindows
     if (!rightWindow) return
@@ -240,8 +246,8 @@ function handleGrabOpBegin(display, screen, metaWindow, op) {
     global.display.begin_grab_op(
         rightWindow,
         Meta.GrabOp.RESIZING_W,
-        true, /* pointer grab */
-        true, /* frame action */
+        false, /* pointer grab */
+        false, /* frame action */
         null,
         null,
         global.get_current_time(),
@@ -250,11 +256,14 @@ function handleGrabOpBegin(display, screen, metaWindow, op) {
     connectResizeListener(leftWindow, rightWindow)
 }
 
-function handleGrabOpEnd(display, screen, metaWindow, op) {
+let savedPointerPosition
+function handleGrabOpEnd(_display, _screen, metaWindow, op) {
     log('handleGrabOpEnd')
+    if (spinegrab) 
+        savedPointerPosition = global.get_pointer()
     if (grabbed) {
         grabbed = false
-        // return
+        spinegrab = false
     }
     signals.disconnectObject(metaWindow)
 }
@@ -445,7 +454,18 @@ function toggle2UpRight() {
         visibleWindows = [tabList[0], tabList[1]]
 
         spine.connect('button-press-event', () => {
+            spinegrab = true
             handleGrabOpBegin(_, _, tabList[1])
+        })
+        spine.connect('leave-event', () => {
+            if (!savedPointerPosition) return 
+            let display = Gdk.Display.get_default();
+            let deviceManager = display.get_device_manager();
+            let pointer = deviceManager.get_client_pointer();
+            let [screen, pointerX, pointerY] = pointer.get_position();
+            pointer.warp(screen, savedPointerPosition[0], savedPointerPosition[1]);            
+            savedPointerPosition = null
+            log('LEFT SPNE')
         })
 
         // const bc = new Clutter.BindConstraint()
