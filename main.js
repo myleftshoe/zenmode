@@ -66,6 +66,22 @@ function start() {
         visibleWindows = [nextWindow]
     })
 
+    Main.overview.connect('showing', () => {
+        margins.left.add_style_class_name('chrome-transparent')
+        margins.right.add_style_class_name('chrome-transparent')
+        margins.top.add_style_class_name('chrome-transparent')
+        margins.bottom.add_style_class_name('chrome-transparent')
+        spine && Main.layoutManager.removeChrome(spine)
+    })
+
+    Main.overview.connect('hiding', () => {
+        margins.left.remove_style_class_name('chrome-transparent')
+        margins.right.remove_style_class_name('chrome-transparent')
+        margins.top.remove_style_class_name('chrome-transparent')
+        margins.bottom.remove_style_class_name('chrome-transparent')
+        spine && Main.layoutManager.addChrome(spine)
+    })
+
     signals.connect(global.display, 'in-fullscreen-changed', (a, b) => {
         log('>>>>>>>>>>>>>>>>>>>>>>>>>>', a, b)
         if (focusedWindow.is_fullscreen()) {
