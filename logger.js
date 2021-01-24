@@ -1,3 +1,11 @@
+const Extension = imports.misc.extensionUtils.getCurrentExtension()
+const uuid = Extension.metadata.uuid
+
+function ll(...args) {
+    log(uuid, ...args)
+}
+
+
 
 var Log = class Log {
 

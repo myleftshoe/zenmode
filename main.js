@@ -1,11 +1,12 @@
-const { Clutter, Gdk, GdkX11, GdkPixbuf, Meta, Wnck } = imports.gi
+const { Clutter, Cogl, Gdk, GdkX11, GdkPixbuf, Meta, Wnck, cairo } = imports.gi
+// const Cairo = imports.cairo
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
 const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor } = Extension.imports.metaWindow
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
-const { Log } = Extension.imports.logger
+const { Log, ll } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
@@ -240,7 +241,8 @@ function handleGrabOpBegin(display, screen, metaWindow, op) {
 
 let savedPointerPosition
 function handleGrabOpEnd(_display, _screen, metaWindow, op) {
-    log('handleGrabOpEnd')
+    ll('handleGrabOpEnd', op)
+    if (op !== Meta.GrabOp.RESIZING_W) return
     if (spinegrab)
         savedPointerPosition = global.get_pointer()
     if (grabbed) {
@@ -321,6 +323,7 @@ let cycling = ''
 
 function cycleWindows() {
     const [window] = visibleWindows
+
     const windows = activeWorkspace().list_windows()
     let i = windows.indexOf(window) + 1
     if (i < 1 || (i > windows.length - 1))
@@ -330,6 +333,19 @@ function cycleWindows() {
     replaceWith(window, nextWindow)
     visibleWindows = [nextWindow]
     activate(nextWindow)
+    const colors = {
+        'Code': 'rgba(43, 45, 85, 1)',
+        'Gnome-terminal': 'rgba(48, 48, 48, 1)' 
+    }
+    const wmclass = nextWindow.get_wm_class()
+    const color = colors[wmclass] || ''
+    if (color) {
+        margins.top.style = `background-color: ${color};`
+        margins.bottom.style = `background-color: ${color};`
+        margins.left.style = `background-color: ${color};`
+        margins.right.style = `background-color: ${color};`
+    }
+
     return false
 }
 
@@ -362,6 +378,7 @@ function cycleRightWindows() {
     replaceWith(rightWindow, nextWindow)
     visibleWindows = [leftWindow, nextWindow]
     activate(nextWindow)
+    
     return false
 }
 
@@ -380,32 +397,123 @@ let spine
 
 
 function toggle2UpLeft() {
+
     const tabList = getActiveWorkspaceTabList()
-    const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
+    const left = tabList[0]
+    log('left window title', left.title, parseInt(left.get_description(), 16))
 
-    if (!twoUp) {
-        spine = createChrome({
-            x: (width + mx) / 2,
-            y: my,
-            width: mx,
-            height,
-            // style: 'background-color: red;'
-        })
 
-        tabList.forEach(metaWindow => {
-            metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
-            metaWindow.move_resize_frame(true, width / 2 + 1.5 * mx, y, width / 2 - mx / 2, height)
-        })
-        tabList[0].move_resize_frame(true, x, y, width / 2 - mx / 2, height)
-        visibleWindows = [tabList[0], tabList[1]]
+    let wins = screen.get_windows()
+    log(wins.length)
+    wins.forEach(w => {
+        log(w.get_xid(), w.get_name())
+    })
+
+    const wleft = wins.find(w => w.get_name() === left.title)
+    // Log.properties(left)
+    const la = getActor(left)
+    // Log.properties(la)
+    // log(la.get_image)
+    const rect = left.get_frame_rect()
+
+    // log(rect)
+    // log('ttttt', Object.keys(rect))
+    const imageSurface = la.get_image(new cairo.RectangleInt({x: rect.x  + 100, y: rect.y + 100, width: 20 , height: 20}))
+
+    Log.properties(imageSurface)
+    let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 20, 20);
+    Log.properties(pixbuf)
+//    log(image.get_data())
+
+    const xid = wleft.get_xid()
+    log('tttt', left.title, left.get_gtk_application_id (), xid, la.get_id(), left.get_sandboxed_app_id(), left.get_startup_id(), left.get_wm_class())
+    // !!! call to foreign_new_for_display causes the window to close!!!! 
+    // const t = GdkX11.X11Window.foreign_new_for_display(Gdk.Display.get_default(), xid)
+    // log("RRRRRR",t)
+    // const pixbuf = Gdk.pixbuf_get_from_window(t, 0, 0, 100, 100)
+    const pxs = pixbuf.get_pixels()
+    log('pixbuf length' , pxs.length)
+
+    const colors = new Map()
+    const step = pixbuf.get_has_alpha() ? 4 : 3
+    for (let i = 0; i < pxs.length; i += step) {
+        const rgba = `${pxs[i]},${pxs[i+1]},${pxs[i+2]}`
+        let count = colors.get(rgba) || 0
+        colors.set(rgba, ++count)
+
     }
-    else {
-        Main.layoutManager.removeChrome(spine)
-        tabList.forEach(metaWindow => metaWindow.move_resize_frame(false, 0, 0, width, height))
+    colors.forEach((v, k) => {
+        log(k,v)
+    })
 
-        visibleWindows = [tabList[0]]
+    const dominantColor = [...colors.entries()].reduce((a, e ) => e[1] > a[1] ? e : a)
+    log('dominantColor', dominantColor[0])
+
+
+    margins.top.style = `background-color: rgba(${dominantColor},1);`
+    margins.bottom.style = `background-color: rgba(${dominantColor},1);`
+    margins.left.style = `background-color: rgba(${dominantColor},1);`
+    margins.right.style = `background-color: rgba(${dominantColor},1);`
+    spine.style = `background-color: rgba(${dominantColor},1);`
+
+    const image = new Clutter.Image()
+    // Log.properties(image)
+
+    image.set_data(pixbuf.get_pixels(),
+               pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
+                                      : Cogl.PixelFormat.RGB_888,
+               pixbuf.get_width(),
+               pixbuf.get_height(),
+               pixbuf.get_rowstride());
+
+    const actor = new Clutter.Actor({height: 100, width: 100})
+    actor.set_content(image)
+    global.stage.add_child(actor)
+
+
+    return
+    
+    // pxs.forEach(p => log(p))
+    // log('gggggggggggg', pixbuf.get_pixels())
+    Log.properties(pixbuf)
+    if (reordering) return
+    if (focusedWindow && !visibleWindows.includes(focusedWindow)) {
+        maximize(focusedWindow)
+        visibleWindows.map(hide)
+        visibleWindows = [focusedWindow]
     }
-    twoUp = !twoUp
+    visibleWindows.map(show)
+    show(focusedWindow)
+
+
+
+
+    // const tabList = getActiveWorkspaceTabList()
+    // const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
+
+    // if (!twoUp) {
+    //     spine = createChrome({
+    //         x: (width + mx) / 2,
+    //         y: my,
+    //         width: mx,
+    //         height,
+    //         // style: 'background-color: red;'
+    //     })
+
+    //     tabList.forEach(metaWindow => {
+    //         metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
+    //         metaWindow.move_resize_frame(true, width / 2 + 1.5 * mx, y, width / 2 - mx / 2, height)
+    //     })
+    //     tabList[0].move_resize_frame(true, x, y, width / 2 - mx / 2, height)
+    //     visibleWindows = [tabList[0], tabList[1]]
+    // }
+    // else {
+    //     Main.layoutManager.removeChrome(spine)
+    //     tabList.forEach(metaWindow => metaWindow.move_resize_frame(false, 0, 0, width, height))
+
+    //     visibleWindows = [tabList[0]]
+    // }
+    // twoUp = !twoUp
 }
 
 let sc0
@@ -415,6 +523,9 @@ function toggle2UpRight() {
     const tabList = getActiveWorkspaceTabList()
     const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
 
+
+
+
     if (!twoUp) {
         spine = createChrome({
             x: (width + mx) / 2,
@@ -424,11 +535,13 @@ function toggle2UpRight() {
             // style: 'background-color: red;'
         })
 
-        visibleWindows = [tabList[0], tabList[1]]
+        const [left, right] = tabList
+
+        visibleWindows = [left, right]
 
         spine.connect('button-press-event', () => {
             spinegrab = true
-            handleGrabOpBegin(_, _, tabList[1])
+            handleGrabOpBegin(_, _, right)
         })
         spine.connect('leave-event', () => {
             if (!savedPointerPosition) return
@@ -451,31 +564,22 @@ function toggle2UpRight() {
         // bc2.set_coordinate(Clutter.BindCoordinate.WIDTH)
         // bc2.set_offset(-40)
 
-        const lw = tabList[0]
-        const lbr = lw.get_buffer_rect()
-        const lfr = lw.get_frame_rect()
-
-        const rw = tabList[1]
-        const rbr = rw.get_buffer_rect()
-        const rfr = rw.get_frame_rect()
-
-        log(rw.title)
-        // log('buffer_rect:', br.x, br.y, br.width, br.height )
-        // log('frame_rect:', fr.x, fr.y, fr.width, fr.height )
-
+        const lbr = left.get_buffer_rect()
+        const lfr = left.get_frame_rect()
         const loffset = lfr.x - lbr.x
+
+        const rbr = right.get_buffer_rect()
+        const rfr = right.get_frame_rect()
         const roffset = rfr.x - rbr.x
 
 
-
-
         sc0 = new Clutter.SnapConstraint()
-        sc0.set_source(getActor(tabList[0]))
+        sc0.set_source(getActor(left))
         sc0.set_edges(Clutter.SnapEdge.LEFT, Clutter.SnapEdge.RIGHT)
         sc0.set_offset(-loffset)
 
         sc = new Clutter.SnapConstraint()
-        sc.set_source(getActor(tabList[1]))
+        sc.set_source(getActor(right))
         sc.set_edges(Clutter.SnapEdge.RIGHT, Clutter.SnapEdge.LEFT)
         sc.set_offset(roffset)
 
@@ -485,9 +589,9 @@ function toggle2UpRight() {
 
         tabList.forEach(metaWindow => {
             metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
-            metaWindow.move_resize_frame(true, width / 2 + 1.5 * mx, y, width / 2 - mx / 2, height)
+            metaWindow.move_resize_frame(true, width / 2 + 1.5 * mx, 0, width / 2 - mx / 2, height)
         })
-        tabList[0].move_resize_frame(true, x, y, width / 2 - mx / 2, height)
+        left.move_resize_frame(true, x, 0, width / 2 - mx / 2, height)
     }
     else {
         spine.remove_constraint(sc)
