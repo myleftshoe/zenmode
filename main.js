@@ -333,19 +333,36 @@ function cycleWindows() {
     replaceWith(window, nextWindow)
     visibleWindows = [nextWindow]
     activate(nextWindow)
-    const colors = {
-        'Code': 'rgba(43, 45, 85, 1)',
-        'Gnome-terminal': 'rgba(48, 48, 48, 1)' 
-    }
-    const wmclass = nextWindow.get_wm_class()
-    const color = colors[wmclass] || ''
-    if (color) {
-        margins.top.style = `background-color: ${color};`
-        margins.bottom.style = `background-color: ${color};`
-        margins.left.style = `background-color: ${color};`
-        margins.right.style = `background-color: ${color};`
+
+    const tabList = getActiveWorkspaceTabList()
+    const left = tabList[0]
+
+    const rect = left.get_frame_rect()
+
+    const imageSurface = getActor(left).get_image(new cairo.RectangleInt({x: rect.x  + 100, y: rect.y + 100, width: 20 , height: 20}))
+
+    let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 20, 20);
+
+    const pxs = pixbuf.get_pixels()
+
+    const colors = new Map()
+    const step = pixbuf.get_has_alpha() ? 4 : 3
+    for (let i = 0; i < pxs.length; i += step) {
+        const rgba = `${pxs[i]},${pxs[i+1]},${pxs[i+2]}`
+        let count = colors.get(rgba) || 0
+        colors.set(rgba, ++count)
+
     }
 
+    const dominantColor = [...colors.entries()].reduce((a, e ) => e[1] > a[1] ? e : a)
+    log('dominantColor', dominantColor[0])
+
+
+    margins.top.style = `background-color: rgba(${dominantColor},1);`
+    margins.bottom.style = `background-color: rgba(${dominantColor},1);`
+    margins.left.style = `background-color: rgba(${dominantColor},1);`
+    margins.right.style = `background-color: rgba(${dominantColor},1);`
+    spine.style = `background-color: rgba(${dominantColor},1);`
     return false
 }
 
@@ -400,39 +417,14 @@ function toggle2UpLeft() {
 
     const tabList = getActiveWorkspaceTabList()
     const left = tabList[0]
-    log('left window title', left.title, parseInt(left.get_description(), 16))
 
-
-    let wins = screen.get_windows()
-    log(wins.length)
-    wins.forEach(w => {
-        log(w.get_xid(), w.get_name())
-    })
-
-    const wleft = wins.find(w => w.get_name() === left.title)
-    // Log.properties(left)
-    const la = getActor(left)
-    // Log.properties(la)
-    // log(la.get_image)
     const rect = left.get_frame_rect()
 
-    // log(rect)
-    // log('ttttt', Object.keys(rect))
-    const imageSurface = la.get_image(new cairo.RectangleInt({x: rect.x  + 100, y: rect.y + 100, width: 20 , height: 20}))
+    const imageSurface = getActor(left).get_image(new cairo.RectangleInt({x: rect.x  + 100, y: rect.y + 100, width: 20 , height: 20}))
 
-    Log.properties(imageSurface)
     let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 20, 20);
-    Log.properties(pixbuf)
-//    log(image.get_data())
 
-    const xid = wleft.get_xid()
-    log('tttt', left.title, left.get_gtk_application_id (), xid, la.get_id(), left.get_sandboxed_app_id(), left.get_startup_id(), left.get_wm_class())
-    // !!! call to foreign_new_for_display causes the window to close!!!! 
-    // const t = GdkX11.X11Window.foreign_new_for_display(Gdk.Display.get_default(), xid)
-    // log("RRRRRR",t)
-    // const pixbuf = Gdk.pixbuf_get_from_window(t, 0, 0, 100, 100)
     const pxs = pixbuf.get_pixels()
-    log('pixbuf length' , pxs.length)
 
     const colors = new Map()
     const step = pixbuf.get_has_alpha() ? 4 : 3
@@ -442,9 +434,6 @@ function toggle2UpLeft() {
         colors.set(rgba, ++count)
 
     }
-    colors.forEach((v, k) => {
-        log(k,v)
-    })
 
     const dominantColor = [...colors.entries()].reduce((a, e ) => e[1] > a[1] ? e : a)
     log('dominantColor', dominantColor[0])
@@ -456,19 +445,19 @@ function toggle2UpLeft() {
     margins.right.style = `background-color: rgba(${dominantColor},1);`
     spine.style = `background-color: rgba(${dominantColor},1);`
 
-    const image = new Clutter.Image()
-    // Log.properties(image)
+    // const image = new Clutter.Image()
+    // // Log.properties(image)
 
-    image.set_data(pixbuf.get_pixels(),
-               pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
-                                      : Cogl.PixelFormat.RGB_888,
-               pixbuf.get_width(),
-               pixbuf.get_height(),
-               pixbuf.get_rowstride());
+    // image.set_data(pixbuf.get_pixels(),
+    //            pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
+    //                                   : Cogl.PixelFormat.RGB_888,
+    //            pixbuf.get_width(),
+    //            pixbuf.get_height(),
+    //            pixbuf.get_rowstride());
 
-    const actor = new Clutter.Actor({height: 100, width: 100})
-    actor.set_content(image)
-    global.stage.add_child(actor)
+    // const actor = new Clutter.Actor({height: 100, width: 100})
+    // actor.set_content(image)
+    // global.stage.add_child(actor)
 
 
     return
