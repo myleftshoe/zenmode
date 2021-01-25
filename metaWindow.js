@@ -1,6 +1,8 @@
 const { Clutter, Meta } = imports.gi
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { Point } = Extension.imports.point
+const { logArguments } = Extension.imports.logger
+const { and } = Extension.imports.functional
 
 function show(metaWindow) {
     if (!metaWindow) return
@@ -111,5 +113,28 @@ function colocate(metaWindow, other) {
     return metaWindow
 }
 
+// --------------------------------------------------------------------------------
+
+var rectToBox = ({ x, y, width, height }) => ({ left: x, top: y, right: x + width, bottom: y + height })
+
+var getFrameBox = (metaWindow) => rectToBox(metaWindow.get_frame_rect())
+
+var getWorkAreaBox = (metaWindow) => rectToBox(metaWindow.get_work_area_current_monitor())
+
+var isLeftAligned = (metaWindow) => getFrameBox(metaWindow).left === getWorkAreaBox(metaWindow).left
+
+var isRightAligned = (metaWindow) => getFrameBox(metaWindow).right === getWorkAreaBox(metaWindow).right
+
+function isFullHeight(metaWindow) {
+    const workAreaBox = getWorkAreaBox(metaWindow)
+    const frameBox = getFrameBox(metaWindow)
+    return (
+        frameBox.top === workAreaBox.top && 
+        frameBox.bottom === workAreaBox.bottom
+    )
+}
+
+var isTiledRight = and(isRightAligned, isFullHeight)
+var isTiledLeft = and(isLeftAligned, isFullHeight)
 
 

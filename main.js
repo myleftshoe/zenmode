@@ -4,7 +4,7 @@ const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
-const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor } = Extension.imports.metaWindow
+const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor, isLeftAligned, isTiledLeft, isTiledRight } = Extension.imports.metaWindow
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const Log = Extension.imports.logger
 const { ll } = Extension.imports.logger
@@ -426,6 +426,10 @@ function cycleLeftWindows() {
     replaceWith(leftWindow, nextWindow)
     visibleWindows = [nextWindow, rightWindow]
     activate(nextWindow)
+    log(nextWindow.title, isTiledLeft(nextWindow), isTiledRight(nextWindow))
+    log(rightWindow.title, isTiledLeft(rightWindow), isTiledRight(rightWindow))
+
+    
     return false
 }
 

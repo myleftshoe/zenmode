@@ -18,7 +18,7 @@ function entries(object) {
     Object.entries(object).forEach(entry(pair))
 }
 
-function arguments(any) {
+function logArguments(any) {
     [...arguments].forEach(entries)
 }
 
