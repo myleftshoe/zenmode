@@ -33,13 +33,6 @@ Object.defineProperty(this, 'focusedWindow', {
     get() { return global.display.get_focus_window() }
 })
 
-const visibleWorkspaceWindows = new Map()
-
-Object.defineProperty(this, 'visibleWindows', {
-    get() { return visibleWorkspaceWindows.get(workspaces.activeWorkspace) || [] },
-    set(arr = []) { visibleWorkspaceWindows.set(workspaces.activeWorkspace, arr.filter(Boolean)) }
-})
-
 
 let margins
 function start() {
@@ -62,10 +55,8 @@ function start() {
     signals.connect(global.display, 'grab-op-begin', handleGrabOpBegin)
     signals.connect(global.display, 'grab-op-end', handleGrabOpEnd)
     signals.connect(workspaces.activeWorkspace, 'window-removed', () => {
-        log('gggggggggggggggggggggggggggggggggggggggggggggggggggggggggg')
         const nextWindow = getActiveWorkspaceTabList()[1]
         show(nextWindow)
-        visibleWindows = [nextWindow]
     })
 
     Main.overview.connect('showing', () => {
@@ -111,7 +102,6 @@ function start() {
 
     maximizeAndHideWindows()
     show(focusedWindow)
-    visibleWindows = [focusedWindow]
 }
 
 function stop() {
@@ -292,55 +282,7 @@ function connectResizeListener(leftWindow, rightWindow) {
 // --------------------------------------------------------------------------------
 
 function handleFocusWindow(display) {
-
     ll('handleFocusWindow')
-
-    // const tabList = getActiveWorkspaceTabList()
-    // tabList.forEach(mw => {
-    //     getActor(mw).set_scale(0, 0)
-    // })
-    // getActor(focusedWindow).set_scale(1, 1)
-
-
-
-
-    // let wins = screen.get_windows()
-    // log(wins.length)
-    // wins.forEach(w => {
-    //     log(w.get_xid(), w.get_name())
-    // })
-
-
-    // const t = GdkX11.X11Window.foreign_new_for_display(Gdk.Display.get_default(), wins[7].get_xid())
-    // log("RRRRRR",t)
-    // const pixbuf = Gdk.pixbuf_get_from_window(t, 100, 100, 5, 5)
-    // const pxs = pixbuf.get_pixels()
-    // log('pixbuf length' , pxs.length)
-
-    // const colors = new Map()
-    // for (let i = 0; i < pxs.length; i += 4) {
-    //     const rgba = `${pxs[i]},${pxs[i+1]},${pxs[i+2]},${pxs[i+3]}`
-    //     let count = colors.get(rgba) || 0
-    //     colors.set(rgba, ++count)
-
-    // }
-    // colors.forEach((v, k) => {
-    //     log(k,v)
-    // })
-
-
-
-    // pxs.forEach(p => log(p))
-    // log('gggggggggggg', pixbuf.get_pixels())
-    // Log.properties(pixbuf)
-    // if (reordering) return
-    // if (focusedWindow && !visibleWindows.includes(focusedWindow)) {
-    //     maximize(focusedWindow)
-    //     visibleWindows.map(hide)
-    //     visibleWindows = [focusedWindow]
-    // }
-    // visibleWindows.map(show)
-    // show(focusedWindow)
 }
 
 // --------------------------------------------------------------------------------
@@ -357,7 +299,6 @@ function getTiles() {
 }
 
 function cycleWindows() {
-    // const [window] = visibleWindows
     const window = focusedWindow
 
     const windows = activeWorkspace().list_windows()
@@ -368,7 +309,6 @@ function cycleWindows() {
     log(i, windows[i].title)
     const nextWindow = windows[i]
     replaceWith(window, nextWindow)
-    visibleWindows = [nextWindow]
     activate(nextWindow)
 
     const tabList = getActiveWorkspaceTabList()
@@ -430,7 +370,6 @@ function cycleLeftWindows() {
     log(i, windows[i].title)
     const nextWindow = windows[i]
     replaceWith(leftWindow, nextWindow)
-    visibleWindows = [nextWindow, rightWindow]
     activate(nextWindow)
     log(nextWindow.title, isTiledLeft(nextWindow), isTiledRight(nextWindow))
     log(rightWindow.title, isTiledLeft(rightWindow), isTiledRight(rightWindow))
@@ -449,7 +388,6 @@ function cycleRightWindows() {
     log(i, windows[i].title)
     const nextWindow = windows[i]
     replaceWith(rightWindow, nextWindow)
-    visibleWindows = [leftWindow, nextWindow]
     activate(nextWindow)
     
     return false
@@ -500,64 +438,8 @@ function toggle2UpLeft() {
     margins.right.style = `background-color: rgba(${dominantColor},1);`
     spine.style = `background-color: rgba(${dominantColor},1);`
 
-    // const image = new Clutter.Image()
-    // // Log.properties(image)
-
-    // image.set_data(pixbuf.get_pixels(),
-    //            pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
-    //                                   : Cogl.PixelFormat.RGB_888,
-    //            pixbuf.get_width(),
-    //            pixbuf.get_height(),
-    //            pixbuf.get_rowstride());
-
-    // const actor = new Clutter.Actor({height: 100, width: 100})
-    // actor.set_content(image)
-    // global.stage.add_child(actor)
-
-
     return
     
-    // pxs.forEach(p => log(p))
-    // log('gggggggggggg', pixbuf.get_pixels())
-    Log.properties(pixbuf)
-    if (reordering) return
-    if (focusedWindow && !visibleWindows.includes(focusedWindow)) {
-        maximize(focusedWindow)
-        visibleWindows.map(hide)
-        visibleWindows = [focusedWindow]
-    }
-    visibleWindows.map(show)
-    show(focusedWindow)
-
-
-
-
-    // const tabList = getActiveWorkspaceTabList()
-    // const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
-
-    // if (!twoUp) {
-    //     spine = createChrome({
-    //         x: (width + mx) / 2,
-    //         y: my,
-    //         width: mx,
-    //         height,
-    //         // style: 'background-color: red;'
-    //     })
-
-    //     tabList.forEach(metaWindow => {
-    //         metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
-    //         metaWindow.move_resize_frame(true, width / 2 + 1.5 * mx, y, width / 2 - mx / 2, height)
-    //     })
-    //     tabList[0].move_resize_frame(true, x, y, width / 2 - mx / 2, height)
-    //     visibleWindows = [tabList[0], tabList[1]]
-    // }
-    // else {
-    //     Main.layoutManager.removeChrome(spine)
-    //     tabList.forEach(metaWindow => metaWindow.move_resize_frame(false, 0, 0, width, height))
-
-    //     visibleWindows = [tabList[0]]
-    // }
-    // twoUp = !twoUp
 }
 
 let sc0
@@ -580,8 +462,6 @@ function toggle2UpRight() {
         })
 
         const [left, right] = tabList
-
-        visibleWindows = [left, right]
 
         spine.connect('button-press-event', () => {
             spinegrab = true
@@ -643,7 +523,6 @@ function toggle2UpRight() {
         Main.layoutManager.removeChrome(spine)
         tabList.forEach(metaWindow => metaWindow.move_resize_frame(false, 0, 0, width, height))
 
-        visibleWindows = [tabList[0]]
     }
     twoUp = !twoUp
 }
@@ -661,16 +540,15 @@ function getTileSize(metaWindow) {
 let reordering = false
 
 function addWindow(display, metaWindow) {
-    const tabList = getActiveWorkspaceTabList()
-    const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
-
+    const { width, height } = focusedWindow.get_work_area_current_monitor()
+    const [ left, right ] = getTiles()
     if (metaWindow.get_window_type() > 0) return;
     if (twoUp) {
-        if (visibleWindows[0].has_focus()) {
+        if (left.has_focus()) {
             metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
             metaWindow.move_resize_frame(false, 0, 0, width / 2, height)
         }
-        if (visibleWindows[1].has_focus()) {
+        if (right.has_focus()) {
             metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
             metaWindow.move_resize_frame(false, 0, 0, width / 2, height)
         }
