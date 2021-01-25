@@ -130,7 +130,8 @@ function handleChromeLeftClick(actor, event) {
         cycling = ''
         return
     }
-    if (visibleWindows.length === 2) {
+    const tiles = getTiles()
+    if (tiles.length === 2) {
         onIdle(cycleLeftWindows)
         return
     }
@@ -175,18 +176,15 @@ function handleChromeRightClick(actor, event) {
         cycling = ''
         return
     }
-    if (visibleWindows.length === 2) {
+    const tiles = getTiles()
+    if (tiles.length === 2) {
         if (SHIFT) {
-            // let [ x, y, width, height ] = getTileSize(visibleWindows[0])
-            // log('@@@@@@@@@@@@@@@@@@@@', x, y, width, height)
-            const mw0 = visibleWindows[0]
-            const mw1 = visibleWindows[1]
-            let fr0 = mw0.get_frame_rect()
-            let fr1 = mw1.get_frame_rect()
-            const { x, y, width, height } = mw0.get_work_area_current_monitor()
-            mw1.move_frame(false, 0, 0)
-            mw0.move_frame(false, width - fr0.width + margin, 0)
-            visibleWindows = visibleWindows.reverse()
+            const leftWindow = tiles[0]
+            const rightWindow = tiles[1]
+            let { width: leftWindowWidth } = leftWindow.get_frame_rect()
+            const { width: workAreaWidth } = leftWindow.get_work_area_current_monitor()
+            leftWindow.move_frame(false, workAreaWidth - leftWindowWidth + margin, 0)
+            rightWindow.move_frame(false, 0, 0)
             return
         }
         onIdle(cycleRightWindows)
