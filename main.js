@@ -6,15 +6,16 @@ const { addChrome, addMargins, createChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
 const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor } = Extension.imports.metaWindow
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
-const { Log, ll } = Extension.imports.logger
+const Log = Extension.imports.logger
+const { ll } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
 
 const signals = new Signals()
 
-let margin = 50
-const spacerWidth = 50
+let margin = 32
+const spacerWidth = 32
 
 let chrome
 let hideChromeSid
@@ -56,6 +57,7 @@ function start() {
 
     signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
     signals.connect(global.display, 'window-created', addWindow)
+    signals.connect(global.display, 'restacked', () => { ll('restacked')})
 
     signals.connect(global.display, 'grab-op-begin', handleGrabOpBegin)
     signals.connect(global.display, 'grab-op-end', handleGrabOpEnd)
@@ -67,6 +69,7 @@ function start() {
     })
 
     Main.overview.connect('showing', () => {
+        ll('overview showing')
         margins.left.add_style_class_name('chrome-transparent')
         margins.right.add_style_class_name('chrome-transparent')
         margins.top.add_style_class_name('chrome-transparent')
@@ -75,6 +78,7 @@ function start() {
     })
 
     Main.overview.connect('hiding', () => {
+        ll('overview hiding')
         margins.left.remove_style_class_name('chrome-transparent')
         margins.right.remove_style_class_name('chrome-transparent')
         margins.top.remove_style_class_name('chrome-transparent')
@@ -216,13 +220,23 @@ function handleChromeBottomClick(actor, event) {
 }
 
 function hideChrome() {
-    chrome.left.hide()
-    chrome.right.hide()
+    ll('overview hidden')
+    margins.top.show()
+    margins.bottom.show()
+    margins.left.show()
+    margins.right.show()
+    chrome.left.show()
+    chrome.right.show()
 }
 
 function showChrome() {
-    chrome.left.show()
-    chrome.right.show()
+    ll('overview shown')
+    margins.top.hide()
+    margins.bottom.hide()
+    margins.left.hide()
+    margins.right.hide()
+    chrome.left.hide()
+    chrome.right.hide()
 }
 
 // --------------------------------------------------------------------------------
@@ -281,6 +295,7 @@ function connectResizeListener(leftWindow, rightWindow) {
 
 function handleFocusWindow(display) {
 
+    ll('handleFocusWindow')
 
     // const tabList = getActiveWorkspaceTabList()
     // tabList.forEach(mw => {
@@ -355,9 +370,9 @@ function cycleWindows() {
 
     const rect = left.get_frame_rect()
 
-    const imageSurface = getActor(left).get_image(new cairo.RectangleInt({x: rect.x  + 100, y: rect.y + 100, width: 20 , height: 20}))
+    const imageSurface = getActor(left).get_image(new cairo.RectangleInt({x: rect.x + rect.width - 100, y: rect.y + 1, width: 5 , height: 1}))
 
-    let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 20, 20);
+    let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 5, 1);
 
     const pxs = pixbuf.get_pixels()
 
@@ -369,6 +384,21 @@ function cycleWindows() {
         colors.set(rgba, ++count)
 
     }
+
+    const image = new Clutter.Image()
+    // Log.properties(image)
+
+    image.set_data(pixbuf.get_pixels(),
+               pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
+                                      : Cogl.PixelFormat.RGB_888,
+               pixbuf.get_width(),
+               pixbuf.get_height(),
+               pixbuf.get_rowstride());
+
+    const actor = new Clutter.Actor({x: rect.x + rect.width - 100, y: rect.y, height: 1, width: 5, backgroundColor: new Clutter.Color({red: 255, alpha: 255})})
+    // actor.set_content(image)
+    global.stage.add_child(actor)
+
 
     const dominantColor = [...colors.entries()].reduce((a, e ) => e[1] > a[1] ? e : a)
     log('dominantColor', dominantColor[0])
@@ -425,7 +455,7 @@ function maximizeAndHideWindows({ exclude: excluded = [] } = {}) {
 let twoUp = false
 
 const mx = margin
-const my = mx / 1.6
+const my = mx / 1
 let spine
 
 
