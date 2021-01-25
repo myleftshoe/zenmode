@@ -4,7 +4,7 @@ const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
-const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor, isLeftAligned, isTiledLeft, isTiledRight } = Extension.imports.metaWindow
+const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor, isLeftAligned, isTiledLeft, isTiledRight, getFrameBox } = Extension.imports.metaWindow
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const Log = Extension.imports.logger
 const { ll } = Extension.imports.logger
@@ -251,7 +251,7 @@ function handleGrabOpBegin(display, screen, metaWindow, op) {
         return
     }
     if (grabbed) return
-    const [leftWindow, rightWindow] = visibleWindows
+    const [leftWindow, rightWindow] = getTiles()
     if (!rightWindow) return
     global.display.end_grab_op(global.get_current_time())
     grabbed = true
@@ -351,11 +351,19 @@ function handleFocusWindow(display) {
 let windows
 let cycling = ''
 
+function getTiles() {
+    const tabList = getActiveWorkspaceTabList()
+    const left = tabList.find(isTiledLeft)
+    const right = tabList.find(isTiledRight)
+    return [left, right]
+}
 
 function cycleWindows() {
-    const [window] = visibleWindows
+    // const [window] = visibleWindows
+    const window = focusedWindow
 
     const windows = activeWorkspace().list_windows()
+
     let i = windows.indexOf(window) + 1
     if (i < 1 || (i > windows.length - 1))
         i = 0
@@ -415,7 +423,7 @@ function cycleWindows() {
 
 
 function cycleLeftWindows() {
-    const [leftWindow, rightWindow] = visibleWindows
+    const [leftWindow, rightWindow] = getTiles()
     const windows = activeWorkspace().list_windows().filter(exclude(rightWindow))
     if (windows.length < 2) return
     let i = windows.indexOf(leftWindow) + 1
@@ -434,7 +442,7 @@ function cycleLeftWindows() {
 }
 
 function cycleRightWindows() {
-    const [leftWindow, rightWindow] = visibleWindows
+    const [leftWindow, rightWindow] = getTiles()
     const windows = activeWorkspace().list_windows().filter(exclude(leftWindow))
     if (windows.length < 2) return
     let i = windows.indexOf(rightWindow) + 1
@@ -465,8 +473,7 @@ let spine
 
 function toggle2UpLeft() {
 
-    const tabList = getActiveWorkspaceTabList()
-    const left = tabList[0]
+    const [ left ] = getTiles()
 
     const rect = left.get_frame_rect()
 
