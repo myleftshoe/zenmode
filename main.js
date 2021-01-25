@@ -50,7 +50,7 @@ function start() {
 
     signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
     signals.connect(global.display, 'window-created', addWindow)
-    signals.connect(global.display, 'restacked', () => { ll('restacked')})
+    signals.connect(global.display, 'restacked', () => { ll('restacked') })
 
     signals.connect(global.display, 'grab-op-begin', handleGrabOpBegin)
     signals.connect(global.display, 'grab-op-end', handleGrabOpEnd)
@@ -316,7 +316,7 @@ function cycleWindows() {
 
     const rect = left.get_frame_rect()
 
-    const imageSurface = getActor(left).get_image(new cairo.RectangleInt({x: rect.x + rect.width - 100, y: rect.y + 1, width: 5 , height: 1}))
+    const imageSurface = getActor(left).get_image(new cairo.RectangleInt({ x: rect.x + rect.width - 100, y: rect.y + 1, width: 5, height: 1 }))
 
     let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 5, 1);
 
@@ -325,7 +325,7 @@ function cycleWindows() {
     const colors = new Map()
     const step = pixbuf.get_has_alpha() ? 4 : 3
     for (let i = 0; i < pxs.length; i += step) {
-        const rgba = `${pxs[i]},${pxs[i+1]},${pxs[i+2]}`
+        const rgba = `${pxs[i]},${pxs[i + 1]},${pxs[i + 2]}`
         let count = colors.get(rgba) || 0
         colors.set(rgba, ++count)
 
@@ -335,18 +335,18 @@ function cycleWindows() {
     // Log.properties(image)
 
     image.set_data(pixbuf.get_pixels(),
-               pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
-                                      : Cogl.PixelFormat.RGB_888,
-               pixbuf.get_width(),
-               pixbuf.get_height(),
-               pixbuf.get_rowstride());
+        pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
+            : Cogl.PixelFormat.RGB_888,
+        pixbuf.get_width(),
+        pixbuf.get_height(),
+        pixbuf.get_rowstride());
 
-    const actor = new Clutter.Actor({x: rect.x + rect.width - 100, y: rect.y, height: 1, width: 5, backgroundColor: new Clutter.Color({red: 255, alpha: 255})})
+    const actor = new Clutter.Actor({ x: rect.x + rect.width - 100, y: rect.y, height: 1, width: 5, backgroundColor: new Clutter.Color({ red: 255, alpha: 255 }) })
     // actor.set_content(image)
     global.stage.add_child(actor)
 
 
-    const dominantColor = [...colors.entries()].reduce((a, e ) => e[1] > a[1] ? e : a)
+    const dominantColor = [...colors.entries()].reduce((a, e) => e[1] > a[1] ? e : a)
     log('dominantColor', dominantColor[0])
 
 
@@ -374,7 +374,6 @@ function cycleLeftWindows() {
     log(nextWindow.title, isTiledLeft(nextWindow), isTiledRight(nextWindow))
     log(rightWindow.title, isTiledLeft(rightWindow), isTiledRight(rightWindow))
 
-    
     return false
 }
 
@@ -389,7 +388,7 @@ function cycleRightWindows() {
     const nextWindow = windows[i]
     replaceWith(rightWindow, nextWindow)
     activate(nextWindow)
-    
+
     return false
 }
 
@@ -409,11 +408,11 @@ let spine
 
 function toggle2UpLeft() {
 
-    const [ left ] = getTiles()
+    const [left] = getTiles()
 
     const rect = left.get_frame_rect()
 
-    const imageSurface = getActor(left).get_image(new cairo.RectangleInt({x: rect.x  + 100, y: rect.y + 100, width: 20 , height: 20}))
+    const imageSurface = getActor(left).get_image(new cairo.RectangleInt({ x: rect.x + 100, y: rect.y + 100, width: 20, height: 20 }))
 
     let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 20, 20);
 
@@ -422,13 +421,13 @@ function toggle2UpLeft() {
     const colors = new Map()
     const step = pixbuf.get_has_alpha() ? 4 : 3
     for (let i = 0; i < pxs.length; i += step) {
-        const rgba = `${pxs[i]},${pxs[i+1]},${pxs[i+2]}`
+        const rgba = `${pxs[i]},${pxs[i + 1]},${pxs[i + 2]}`
         let count = colors.get(rgba) || 0
         colors.set(rgba, ++count)
 
     }
 
-    const dominantColor = [...colors.entries()].reduce((a, e ) => e[1] > a[1] ? e : a)
+    const dominantColor = [...colors.entries()].reduce((a, e) => e[1] > a[1] ? e : a)
     log('dominantColor', dominantColor[0])
 
 
@@ -439,7 +438,7 @@ function toggle2UpLeft() {
     spine.style = `background-color: rgba(${dominantColor},1);`
 
     return
-    
+
 }
 
 let sc0
@@ -541,7 +540,7 @@ let reordering = false
 
 function addWindow(display, metaWindow) {
     const { width, height } = focusedWindow.get_work_area_current_monitor()
-    const [ left, right ] = getTiles()
+    const [left, right] = getTiles()
     if (metaWindow.get_window_type() > 0) return;
     if (twoUp) {
         if (left.has_focus()) {
