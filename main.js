@@ -4,7 +4,7 @@ const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
-const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor, isLeftAligned, isTiledLeft, isTiledRight, getFrameBox } = Extension.imports.metaWindow
+const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor, isLeftAligned, isTiledLeft, isTiledRight, getFrameBox, isFullSize } = Extension.imports.metaWindow
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const Log = Extension.imports.logger
 const { ll } = Extension.imports.logger
@@ -92,9 +92,9 @@ function start() {
             margins.right.remove_style_class_name('chrome-transparent')
             margins.top.remove_style_class_name('chrome-transparent')
             margins.bottom.remove_style_class_name('chrome-transparent')
-            if (twoUp) {
-                const tabList = getActiveWorkspaceTabList()
-                const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
+            const [ left, right ] = getTiles()
+            if (right) {
+                const { x, y, width, height } = left.get_work_area_current_monitor()
                 spine = createChrome({ x: (width + mx) / 2, y: my, width: mx, height })
             }
         }
@@ -399,8 +399,6 @@ function maximizeAndHideWindows({ exclude: excluded = [] } = {}) {
 }
 
 
-let twoUp = false
-
 const mx = margin
 const my = mx / 1
 let spine
@@ -445,13 +443,12 @@ let sc0
 let sc
 
 function toggle2UpRight() {
+    let [left, right] = getTiles()
+    const { x, y, width, height } = left.get_work_area_current_monitor()
     const tabList = getActiveWorkspaceTabList()
-    const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
 
+    if (isFullSize(left)) {
 
-
-
-    if (!twoUp) {
         spine = createChrome({
             x: (width + mx) / 2,
             y: my,
@@ -460,7 +457,7 @@ function toggle2UpRight() {
             // style: 'background-color: red;'
         })
 
-        const [left, right] = tabList
+        
 
         spine.connect('button-press-event', () => {
             spinegrab = true
@@ -474,7 +471,7 @@ function toggle2UpRight() {
             let [screen, pointerX, pointerY] = pointer.get_position();
             pointer.warp(screen, savedPointerPosition[0], savedPointerPosition[1]);
             savedPointerPosition = null
-            log('LEFT SPNE')
+            log('LEFT SPINE')
         })
 
         // const bc = new Clutter.BindConstraint()
@@ -523,7 +520,6 @@ function toggle2UpRight() {
         tabList.forEach(metaWindow => metaWindow.move_resize_frame(false, 0, 0, width, height))
 
     }
-    twoUp = !twoUp
 }
 
 function getTileSize(metaWindow) {
@@ -542,7 +538,7 @@ function addWindow(display, metaWindow) {
     const { width, height } = focusedWindow.get_work_area_current_monitor()
     const [left, right] = getTiles()
     if (metaWindow.get_window_type() > 0) return;
-    if (twoUp) {
+    if (right) {
         if (left.has_focus()) {
             metaWindow.maximize(Meta.MaximizeFlags.VERTICAL)
             metaWindow.move_resize_frame(false, 0, 0, width / 2, height)

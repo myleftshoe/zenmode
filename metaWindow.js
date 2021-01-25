@@ -134,6 +134,18 @@ function isFullHeight(metaWindow) {
     )
 }
 
+function isFullSize(metaWindow) {
+    const workAreaBox = getWorkAreaBox(metaWindow)
+    const frameBox = getFrameBox(metaWindow)
+    logArguments(workAreaBox, frameBox)
+    return (
+        frameBox.top === workAreaBox.top && 
+        frameBox.bottom === workAreaBox.bottom && 
+        frameBox.right === workAreaBox.right && 
+        frameBox.left === workAreaBox.left
+    )
+}
+
 var isTiledRight = and(isRightAligned, isFullHeight)
 var isTiledLeft = and(isLeftAligned, isFullHeight)
 
