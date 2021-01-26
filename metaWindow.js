@@ -146,6 +146,13 @@ function isFullSize(metaWindow) {
     )
 }
 
+
+function overlap(a, b) {
+    const boxA = getFrameBox(a)
+    const boxB = getFrameBox(a)
+    return !(boxA.top < boxB.bottom || boxB.top < boxA.bottom || boxA.right < boxB.left || boxB.right < boxA.left)
+}
+
 var isTiledRight = and(isRightAligned, isFullHeight)
 var isTiledLeft = and(isLeftAligned, isFullHeight)
 

@@ -471,7 +471,7 @@ function toggle2UpRight() {
             let [screen, pointerX, pointerY] = pointer.get_position();
             pointer.warp(screen, savedPointerPosition[0], savedPointerPosition[1]);
             savedPointerPosition = null
-            log('LEFT SPINE')
+            log('LEFT SPNE')
         })
 
         // const bc = new Clutter.BindConstraint()
