@@ -3,6 +3,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { Point } = Extension.imports.point
 const { logArguments } = Extension.imports.logger
 const { and } = Extension.imports.functional
+const { augmentObject } = Extension.imports.functional
 
 function show(metaWindow) {
     if (!metaWindow) return
@@ -147,13 +148,85 @@ function isFullSize(metaWindow) {
 }
 
 
-function overlap(a, b) {
-    const boxA = getFrameBox(a)
-    const boxB = getFrameBox(a)
-    return !(boxA.top < boxB.bottom || boxB.top < boxA.bottom || boxA.right < boxB.left || boxB.right < boxA.left)
+function intersects(metaWindow, other) {
+    const a = getFrameBox(metaWindow)
+    const b = getFrameBox(other)
+    return (
+        Math.max(a.left, b.left) < Math.min(a.right, b.right) &&
+        Math.max(a.top, b.top) < Math.min(a.bottom, b.bottom)
+    )
 }
 
 var isTiledRight = and(isRightAligned, isFullHeight)
 var isTiledLeft = and(isLeftAligned, isFullHeight)
+
+
+function alignLeft(metaWindow) {
+    const {x} = metaWindow.get_work_area_current_monitor()
+    const {y} = metaWindow.get_frame_rect()
+    metaWindow.move_frame(true, x, y)
+    return metaWindow
+}
+
+function alignTop(metaWindow) {
+    const {x} = metaWindow.get_frame_rect()
+    const {y} = metaWindow.get_work_area_current_monitor()
+    metaWindow.move_frame(true, x, y)
+}
+
+function alignRight(metaWindow) {
+    const {right} = getFrameBox(metaWindow)
+    const {y, width} = metaWindow.get_frame_rect()
+    metaWindow.move_frame(true, right - width, y)
+    return metaWindow
+}
+
+function alignBottom(metaWindow) {
+    const {x, height} = metaWindow.get_frame_rect()
+    const {bottom} = getWorkAreaBox(metaWindow)
+    metaWindow.move_frame(true, x, bottom - height)
+}
+
+
+
+const functions = {
+    show,
+    hide,
+    activate,
+    maximize,
+    getActor,
+    createClone,
+    isFullSize,
+    isFullHeight,
+    intersects,
+    isLeftAligned,
+    isRightAligned,
+    isTiledLeft,
+    isTiledRight,
+    getWorkAreaBox,
+    getFrameBox,
+    alignLeft,
+    alignTop,
+    alignRight,
+    alignBottom,
+}
+
+
+// class AugmentedMetaWindow {
+//     constructor(metaWindow) { 
+//         this.metaWindow = metaWindow
+//         Object.entries(functions).forEach(([name, func]) => {
+//             this[name] = (params) => func(metaWindow, params) 
+//         })
+        
+//     }
+// }
+
+// var augment = (metaWindow) => new AugmentedMetaWindow(metaWindow)
+
+
+
+const augment = (metaWindow) => augmentObject(metaWindow, functions)
+
 
 

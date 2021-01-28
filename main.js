@@ -4,10 +4,29 @@ const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
-const { show, hide, activate, maximize, replaceWith, moveBy, moveTo, defaultEasing, getActor, isLeftAligned, isTiledLeft, isTiledRight, getFrameBox, isFullSize } = Extension.imports.metaWindow
+const { 
+    show, 
+    hide, 
+    activate, 
+    maximize, 
+    replaceWith, 
+    moveBy, 
+    moveTo, 
+    defaultEasing, 
+    getActor, 
+    isLeftAligned, 
+    isTiledLeft, 
+    isTiledRight, 
+    getFrameBox, 
+    isFullSize ,
+    intersects,
+    rectToBox,
+    augment,
+    alignLeft,
+} = Extension.imports.metaWindow
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const Log = Extension.imports.logger
-const { ll } = Extension.imports.logger
+const { ll, logArguments } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
@@ -27,6 +46,19 @@ let lastFocusedWindow
 const screen = Wnck.Screen.get_default()
 Log.properties(screen)
 
+
+function getTileMatch(metaWindow) {
+    let match = null
+    if (isTiledLeft(metaWindow)) {
+        const tabList = getActiveWorkspaceTabList()
+        match = tabList.find(mw => isTiledRight(mw) && !intersects(mw, metaWindow))
+    }
+    if (isTiledRight(metaWindow)) {
+        const tabList = getActiveWorkspaceTabList()
+        match = tabList.find(mw => isTiledLeft(mw) && !intersects(mw, metaWindow))     
+    }       
+    return match
+}
 
 
 Object.defineProperty(this, 'focusedWindow', {
@@ -77,25 +109,32 @@ function start() {
         spine && Main.layoutManager.addChrome(spine)
     })
 
-    signals.connect(global.display, 'in-fullscreen-changed', (a, b) => {
-        log('>>>>>>>>>>>>>>>>>>>>>>>>>>', a, b)
+    signals.connect(global.display, 'in-fullscreen-changed', (display) => {
+        ll('in-fullscreen-changed', `${focusedWindow.title} is fullscreen: ${focusedWindow.is_fullscreen()}`)  
         if (focusedWindow.is_fullscreen()) {
             // margins.left.width = 0
             margins.left.add_style_class_name('chrome-transparent')
             margins.right.add_style_class_name('chrome-transparent')
             margins.top.add_style_class_name('chrome-transparent')
             margins.bottom.add_style_class_name('chrome-transparent')
-            Main.layoutManager.removeChrome(spine)
+            spine && Main.layoutManager.removeChrome(spine)
         }
         else {
             margins.left.remove_style_class_name('chrome-transparent')
             margins.right.remove_style_class_name('chrome-transparent')
             margins.top.remove_style_class_name('chrome-transparent')
             margins.bottom.remove_style_class_name('chrome-transparent')
-            const [ left, right ] = getTiles()
-            if (right) {
-                const { x, y, width, height } = left.get_work_area_current_monitor()
-                spine = createChrome({ x: (width + mx) / 2, y: my, width: mx, height })
+            if (!isFullSize(focusedWindow)) {
+                const [ left, right ] = getTiles()
+                if (right) {
+                    const { x, y, width, height } = left.get_work_area_current_monitor()
+                    spine = createChrome({
+                        x: (width + mx) / 2, 
+                        y: my, 
+                        width: mx, 
+                        height 
+                    })
+                }
             }
         }
     })
@@ -167,18 +206,27 @@ function handleChromeRightClick(actor, event) {
         return
     }
     const tiles = getTiles()
+    let t0 = augment(tiles[0])
+    log(t0.root.get_frame_rect())
+    t0.alignRight()
     if (tiles.length === 2) {
-        if (SHIFT) {
-            const leftWindow = tiles[0]
-            const rightWindow = tiles[1]
-            let { width: leftWindowWidth } = leftWindow.get_frame_rect()
-            const { width: workAreaWidth } = leftWindow.get_work_area_current_monitor()
-            leftWindow.move_frame(false, workAreaWidth - leftWindowWidth + margin, 0)
-            rightWindow.move_frame(false, 0, 0)
+        // alignLeft(tiles[1])
+        // return
+        const tilesIntersect = t0.intersects(tiles[1])
+        log('YYYYYYYYYYYYYYYYYYYYYYYYYY', tilesIntersect, tiles[0].title, tiles[1].title)
+        if (!tilesIntersect) {
+            if (SHIFT) {
+                const leftWindow = tiles[0]
+                const rightWindow = tiles[1]
+                let { width: leftWindowWidth } = leftWindow.get_frame_rect()
+                const { width: workAreaWidth } = leftWindow.get_work_area_current_monitor()
+                leftWindow.move_frame(false, workAreaWidth - leftWindowWidth + margin, 0)
+                rightWindow.move_frame(false, 0, 0)
+                return
+            }
+            onIdle(cycleRightWindows)
             return
         }
-        onIdle(cycleRightWindows)
-        return
     }
     cycleWindows()
 }
@@ -300,13 +348,15 @@ function getTiles() {
 
 function cycleWindows() {
     const window = focusedWindow
+    const al = augment(window)
+    log('^^^^^^^^^^^^^^^^^^^^^^^^', al.isFullSize())
 
     const windows = activeWorkspace().list_windows()
 
     let i = windows.indexOf(window) + 1
     if (i < 1 || (i > windows.length - 1))
         i = 0
-    log(i, windows[i].title)
+    log('#####',i, windows[i].title)
     const nextWindow = windows[i]
     replaceWith(window, nextWindow)
     activate(nextWindow)
@@ -315,6 +365,8 @@ function cycleWindows() {
     const left = tabList[0]
 
     const rect = left.get_frame_rect()
+    log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+    logArguments(rect)
 
     const imageSurface = getActor(left).get_image(new cairo.RectangleInt({ x: rect.x + rect.width - 100, y: rect.y + 1, width: 5, height: 1 }))
 
@@ -406,13 +458,14 @@ let spine
 
 function toggle2UpLeft() {
 
-    const [left] = getTiles()
+    const [leftWindow] = getTiles()
 
-    const rect = left.get_frame_rect()
+    const rect = leftWindow.get_frame_rect()
+    const {right} = rectToBox(rect)
 
-    const imageSurface = getActor(left).get_image(new cairo.RectangleInt({ x: rect.x + 100, y: rect.y + 100, width: 20, height: 20 }))
-
-    let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 20, 20);
+    const imageSurface = getActor(leftWindow).get_image(new cairo.RectangleInt({ x: right - 20, y: 5, width: 10, height: 2 }))
+    logArguments({right})
+    let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 10, 2);
 
     const pxs = pixbuf.get_pixels()
 
@@ -512,6 +565,7 @@ function toggle2UpRight() {
             metaWindow.move_resize_frame(true, width / 2 + 1.5 * mx, 0, width / 2 - mx / 2, height)
         })
         left.move_resize_frame(true, x, 0, width / 2 - mx / 2, height)
+        ll('((((((((((((((((((((((((((((((', getTileMatch(left).title)
     }
     else {
         spine.remove_constraint(sc)
