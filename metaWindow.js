@@ -209,17 +209,6 @@ var discrete = {
 const augment = (metaWindow) => augmentObject(metaWindow, discrete)
 
 
-// class AugmentedMetaWindow {
-//     constructor(metaWindow) { 
-//         this.metaWindow = metaWindow
-//         Object.entries(functions).forEach(([name, func]) => {
-//             this[name] = (params) => func(metaWindow, params) 
-//         })
-        
-//     }
-// }
-
-// var augment = (metaWindow) => new AugmentedMetaWindow(metaWindow)
 
 
 

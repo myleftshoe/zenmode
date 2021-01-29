@@ -1,4 +1,4 @@
-const { Clutter, Cogl, Gdk, GdkX11, GdkPixbuf, Meta, Wnck, cairo } = imports.gi
+const { Clutter, Cogl, Gdk, Meta, cairo } = imports.gi
 // const Cairo = imports.cairo
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
@@ -38,11 +38,6 @@ let chrome
 let hideChromeSid
 let showChromeSid
 let lastFocusedWindow
-
-
-
-const screen = Wnck.Screen.get_default()
-Log.properties(screen)
 
 
 function getTileMatch(metaWindow) {
