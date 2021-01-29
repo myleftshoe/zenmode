@@ -1,8 +1,8 @@
 {
-    "name": "2up",
-    "description": "Windows grouped in twos",
-    "uuid": "2up@myleftshoe",
+    "name": "Zen Mode",
+    "description": "Distraction free workspaces",
+    "uuid": "zenmode@myleftshoe",
     "shell-version": [
-        "3.36.2"
+        "3.38"
     ]
 }
