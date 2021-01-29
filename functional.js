@@ -15,7 +15,10 @@ class AugmentedObject {
         this.root = object
     }
     addMethod([name, func]) {
-        this[name] = (params) => func(this.root, params)
+        this[name] = function(params) {
+            const result = func(this.root, params)
+            return result === this.root ? this : result
+        }
     }
 }
 
@@ -32,6 +35,12 @@ function augmentObject(object, functions) {
 // console.log(arr.filter(exclude('a', 'b', 'e')))
 // console.log(arr.filter(exclude('c')))
 // console.log(arr.filter(not('c')))
+
+
+/****************************************************************
+ * EXPERIMENTAL (NOT USED)
+ */
+
 
 
 // http://intelligiblebabble.com/clever-way-to-demethodize-native-js-methods/

@@ -2,25 +2,23 @@ const { Clutter, Meta } = imports.gi
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { Point } = Extension.imports.point
 const { logArguments } = Extension.imports.logger
+const Log = Extension.imports.logger
 const { and } = Extension.imports.functional
 const { augmentObject } = Extension.imports.functional
 
 function show(metaWindow) {
-    if (!metaWindow) return
     log('show', metaWindow.title)
     getActor(metaWindow).set_scale(1, 1)
     return metaWindow
 }
 
 function hide(metaWindow) {
-    if (!metaWindow) return
     log('hide', metaWindow.title)
     getActor(metaWindow).set_scale(1, 1);
     return metaWindow
 }
 
 function activate(metaWindow) {
-    if (!metaWindow) return
     log('activate', metaWindow.title)
     metaWindow.activate(global.get_current_time())
     return metaWindow
@@ -30,7 +28,6 @@ const mx = 100
 const my = mx / 1.6
 
 function maximize(metaWindow) {
-    if (!metaWindow) return
     log('maximize', metaWindow.title)
     // metaWindow.maximize(Meta.MaximizeFlags.BOTH)
 
@@ -41,12 +38,10 @@ function maximize(metaWindow) {
 }
 
 function getActor(metaWindow) {
-    if (!metaWindow) return
     return metaWindow.get_compositor_private()
 }
 
 function createClone(metaWindow) {
-    if (!metaWindow) return
     return new Clutter.Clone({ source: getActor(metaWindow) })
 }
 
