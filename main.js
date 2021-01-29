@@ -20,6 +20,7 @@ const {
     intersects,
     rectToBox,
     alignLeft,
+    getFrameBox,
 } = Extension.imports.metaWindow
 
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
@@ -28,6 +29,7 @@ const { ll, logArguments } = Extension.imports.logger
 const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
+const { getDominantColor } = Extension.imports.pixbuf
 
 const signals = new Signals()
 
@@ -340,40 +342,24 @@ function getTiles() {
 
 function cycleWindows() {
     const window = focusedWindow
-    const al = augment(window)
-    log('^^^^^^^^^^^^^^^^^^^^^^^^', al.isFullSize())
 
     const windows = activeWorkspace().list_windows()
 
     let i = windows.indexOf(window) + 1
     if (i < 1 || (i > windows.length - 1))
         i = 0
-    log('#####', i, windows[i].title)
+
     const nextWindow = windows[i]
     replaceWith(window, nextWindow)
     activate(nextWindow)
 
-    const tabList = getActiveWorkspaceTabList()
-    const left = tabList[0]
+    const leftWindow = getActiveWorkspaceTabList()[0]
 
-    const rect = left.get_frame_rect()
-    log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    logArguments(rect)
+    const { top, right } = getFrameBox(leftWindow)
 
-    const imageSurface = getActor(left).get_image(new cairo.RectangleInt({ x: rect.x + rect.width - 100, y: rect.y + 1, width: 5, height: 1 }))
+    const imageSurface = getActor(leftWindow).get_image(new cairo.RectangleInt({ x: right - 100, y: top + 1, width: 5, height: 50 }))
 
-    let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 5, 1);
-
-    const pxs = pixbuf.get_pixels()
-
-    const colors = new Map()
-    const step = pixbuf.get_has_alpha() ? 4 : 3
-    for (let i = 0; i < pxs.length; i += step) {
-        const rgba = `${pxs[i]},${pxs[i + 1]},${pxs[i + 2]}`
-        let count = colors.get(rgba) || 0
-        colors.set(rgba, ++count)
-
-    }
+    let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 5, 50);
 
     const image = new Clutter.Image()
     // Log.properties(image)
@@ -385,14 +371,13 @@ function cycleWindows() {
         pixbuf.get_height(),
         pixbuf.get_rowstride());
 
-    const actor = new Clutter.Actor({ x: rect.x + rect.width - 100, y: rect.y, height: 1, width: 5, backgroundColor: new Clutter.Color({ red: 255, alpha: 255 }) })
+    const actor = new Clutter.Actor({ x: right - 100, y: top + 1, height: 1, width: 5, backgroundColor: new Clutter.Color({ red: 255, alpha: 255 }) })
     // actor.set_content(image)
     global.stage.add_child(actor)
 
+    const dominantColor = getDominantColor(pixbuf)
 
-    const dominantColor = [...colors.entries()].reduce((a, e) => e[1] > a[1] ? e : a)
-    log('dominantColor', dominantColor[0])
-
+    log('dominantColor', dominantColor)
 
     margins.top.style = `background-color: rgba(${dominantColor},1);`
     margins.bottom.style = `background-color: rgba(${dominantColor},1);`
