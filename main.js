@@ -1,5 +1,4 @@
-const { Clutter, Cogl, Gdk, Meta, cairo } = imports.gi
-// const Cairo = imports.cairo
+const { Clutter, Cogl, Gdk, Meta } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
@@ -14,6 +13,8 @@ const {
     moveBy,
     moveTo,
     getActor,
+    getImage,
+    getPixels,
     isTiledLeft,
     isTiledRight,
     isFullSize,
@@ -357,13 +358,12 @@ function cycleWindows() {
 
     const { top, right } = getFrameBox(leftWindow)
 
-    const imageSurface = getActor(leftWindow).get_image(new cairo.RectangleInt({ x: right - 100, y: top + 1, width: 5, height: 50 }))
-
-    let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 5, 50);
-
+    const pixbuf = getPixels(getActor(leftWindow), { x: right - 100, y: top + 1, width: 5, height: 1 })
+    
     const image = new Clutter.Image()
     // Log.properties(image)
 
+    // START: Sampled pixels location for debugging
     image.set_data(pixbuf.get_pixels(),
         pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
             : Cogl.PixelFormat.RGB_888,
@@ -374,6 +374,8 @@ function cycleWindows() {
     const actor = new Clutter.Actor({ x: right - 100, y: top + 1, height: 1, width: 5, backgroundColor: new Clutter.Color({ red: 255, alpha: 255 }) })
     // actor.set_content(image)
     global.stage.add_child(actor)
+    // END: Sampled pixels location for debugging
+
 
     const dominantColor = getDominantColor(pixbuf)
 
@@ -437,27 +439,9 @@ function toggle2UpLeft() {
 
     const [leftWindow] = getTiles()
 
-    const rect = leftWindow.get_frame_rect()
-    const { right } = rectToBox(rect)
-
-    const imageSurface = getActor(leftWindow).get_image(new cairo.RectangleInt({ x: right - 20, y: 5, width: 10, height: 2 }))
-    logArguments({ right })
-    let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 10, 2);
-
-    const pxs = pixbuf.get_pixels()
-
-    const colors = new Map()
-    const step = pixbuf.get_has_alpha() ? 4 : 3
-    for (let i = 0; i < pxs.length; i += step) {
-        const rgba = `${pxs[i]},${pxs[i + 1]},${pxs[i + 2]}`
-        let count = colors.get(rgba) || 0
-        colors.set(rgba, ++count)
-
-    }
-
-    const dominantColor = [...colors.entries()].reduce((a, e) => e[1] > a[1] ? e : a)
-    log('dominantColor', dominantColor[0])
-
+    const { top, right } = getFrameBox(leftWindow)
+    const pixbuf = getPixels(getActor(leftWindow), { x: right - 100, y: top + 1, width: 5, height: 1 })
+    const dominantColor = getDominantColor(pixbuf)
 
     margins.top.style = `background-color: rgba(${dominantColor},1);`
     margins.bottom.style = `background-color: rgba(${dominantColor},1);`

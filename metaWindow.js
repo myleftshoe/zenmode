@@ -1,4 +1,4 @@
-const { Clutter, Meta } = imports.gi
+const { Clutter, Gdk, Meta, cairo } = imports.gi
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { Point } = Extension.imports.point
 const { logArguments } = Extension.imports.logger
@@ -50,6 +50,24 @@ function cloneActor(actor) {
     return new Clutter.Clone({ source: actor })
 }
 
+function getImage(actor, { x, y, width, height } = {}) {
+    const rect = getRect(actor)
+    rect.x = x || rect.x
+    rect.y = y || rect.y
+    rect.width = width || rect.width
+    rect.height = height || rect.height
+    return actor.get_image(new cairo.RectangleInt({...rect}))
+}
+
+function getPixels(actor,  { x, y, width, height } = {}) {
+    const rect = getRect(actor)
+    rect.x = x || rect.x
+    rect.y = y || rect.y
+    rect.width = width || rect.width
+    rect.height = height || rect.height
+    const image = getImage(actor, {...rect})
+    return Gdk.pixbuf_get_from_surface(image, 0, 0, rect.width, rect.height);
+}
 
 // --------------------------------------------------------------------------------
 
@@ -95,7 +113,7 @@ function ease(actor, props = defaultEasing) {
 function getRect(actor) {
     const [x, y] = actor.get_position()
     const [width, height] = actor.get_size()
-    return [x, y, width, height]
+    return {x, y, width, height}
 }
 
 function replaceWith(metaWindow, other) {
@@ -190,6 +208,8 @@ var discrete = {
     maximize,
     getActor,
     createClone,
+    getImage,
+    getPixels,
     isFullSize,
     isFullHeight,
     intersects,
