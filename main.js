@@ -4,19 +4,19 @@ const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
-const { 
+const {
     augment,
-    show, 
-    hide, 
-    activate, 
-    maximize, 
-    replaceWith, 
-    moveBy, 
-    moveTo, 
-    getActor, 
-    isTiledLeft, 
-    isTiledRight, 
-    isFullSize ,
+    show,
+    hide,
+    activate,
+    maximize,
+    replaceWith,
+    moveBy,
+    moveTo,
+    getActor,
+    isTiledLeft,
+    isTiledRight,
+    isFullSize,
     intersects,
     rectToBox,
     alignLeft,
@@ -48,8 +48,8 @@ function getTileMatch(metaWindow) {
     }
     if (isTiledRight(metaWindow)) {
         const tabList = getActiveWorkspaceTabList()
-        match = tabList.find(mw => isTiledLeft(mw) && !intersects(mw, metaWindow))     
-    }       
+        match = tabList.find(mw => isTiledLeft(mw) && !intersects(mw, metaWindow))
+    }
     return match
 }
 
@@ -103,7 +103,7 @@ function start() {
     })
 
     signals.connect(global.display, 'in-fullscreen-changed', (display) => {
-        ll('in-fullscreen-changed', `${focusedWindow.title} is fullscreen: ${focusedWindow.is_fullscreen()}`)  
+        ll('in-fullscreen-changed', `${focusedWindow.title} is fullscreen: ${focusedWindow.is_fullscreen()}`)
         if (focusedWindow.is_fullscreen()) {
             // margins.left.width = 0
             margins.left.add_style_class_name('chrome-transparent')
@@ -118,14 +118,14 @@ function start() {
             margins.top.remove_style_class_name('chrome-transparent')
             margins.bottom.remove_style_class_name('chrome-transparent')
             if (!isFullSize(focusedWindow)) {
-                const [ left, right ] = getTiles()
+                const [left, right] = getTiles()
                 if (right) {
                     const { x, y, width, height } = left.get_work_area_current_monitor()
                     spine = createChrome({
-                        x: (width + mx) / 2, 
-                        y: my, 
-                        width: mx, 
-                        height 
+                        x: (width + mx) / 2,
+                        y: my,
+                        width: mx,
+                        height
                     })
                 }
             }
@@ -348,7 +348,7 @@ function cycleWindows() {
     let i = windows.indexOf(window) + 1
     if (i < 1 || (i > windows.length - 1))
         i = 0
-    log('#####',i, windows[i].title)
+    log('#####', i, windows[i].title)
     const nextWindow = windows[i]
     replaceWith(window, nextWindow)
     activate(nextWindow)
@@ -398,7 +398,7 @@ function cycleWindows() {
     margins.bottom.style = `background-color: rgba(${dominantColor},1);`
     margins.left.style = `background-color: rgba(${dominantColor},1);`
     margins.right.style = `background-color: rgba(${dominantColor},1);`
-    spine.style = `background-color: rgba(${dominantColor},1);`
+    spine && (spine.style = `background-color: rgba(${dominantColor},1);`)
     return false
 }
 
@@ -453,10 +453,10 @@ function toggle2UpLeft() {
     const [leftWindow] = getTiles()
 
     const rect = leftWindow.get_frame_rect()
-    const {right} = rectToBox(rect)
+    const { right } = rectToBox(rect)
 
     const imageSurface = getActor(leftWindow).get_image(new cairo.RectangleInt({ x: right - 20, y: 5, width: 10, height: 2 }))
-    logArguments({right})
+    logArguments({ right })
     let pixbuf = Gdk.pixbuf_get_from_surface(imageSurface, 0, 0, 10, 2);
 
     const pxs = pixbuf.get_pixels()
@@ -502,7 +502,7 @@ function toggle2UpRight() {
             // style: 'background-color: red;'
         })
 
-        
+
 
         spine.connect('button-press-event', () => {
             spinegrab = true
