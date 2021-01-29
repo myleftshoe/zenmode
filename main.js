@@ -3,6 +3,19 @@ const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
+const Log = Extension.imports.logger
+const { ll, logArguments } = Extension.imports.logger
+const { getEventModifiers } = Extension.imports.events
+const { onIdle } = Extension.imports.async
+const { exclude } = Extension.imports.functional
+const { getDominantColor } = Extension.imports.pixbuf
+const { 
+    activeWorkspace, 
+    activateWorkspace, 
+    moveWindowToWorkspace, 
+    workspaces, 
+    getActiveWorkspaceTabList 
+} = Extension.imports.workspaces
 const {
     augment,
     show,
@@ -23,14 +36,6 @@ const {
     alignLeft,
     getFrameBox,
 } = Extension.imports.metaWindow
-
-const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
-const Log = Extension.imports.logger
-const { ll, logArguments } = Extension.imports.logger
-const { getEventModifiers } = Extension.imports.events
-const { onIdle } = Extension.imports.async
-const { exclude } = Extension.imports.functional
-const { getDominantColor } = Extension.imports.pixbuf
 
 const signals = new Signals()
 
