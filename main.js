@@ -5,6 +5,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
 const { 
+    augment,
     show, 
     hide, 
     activate, 
@@ -12,18 +13,15 @@ const {
     replaceWith, 
     moveBy, 
     moveTo, 
-    defaultEasing, 
     getActor, 
-    isLeftAligned, 
     isTiledLeft, 
     isTiledRight, 
-    getFrameBox, 
     isFullSize ,
     intersects,
     rectToBox,
-    augment,
     alignLeft,
 } = Extension.imports.metaWindow
+
 const { activeWorkspace, activateWorkspace, moveWindowToWorkspace, workspaces, getActiveWorkspaceTabList } = Extension.imports.workspaces
 const Log = Extension.imports.logger
 const { ll, logArguments } = Extension.imports.logger

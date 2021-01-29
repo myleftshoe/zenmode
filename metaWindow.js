@@ -6,6 +6,7 @@ const Log = Extension.imports.logger
 const { and } = Extension.imports.functional
 const { augmentObject } = Extension.imports.functional
 
+
 function show(metaWindow) {
     log('show', metaWindow.title)
     getActor(metaWindow).set_scale(1, 1)
@@ -142,7 +143,6 @@ function isFullSize(metaWindow) {
     )
 }
 
-
 function intersects(metaWindow, other) {
     const a = getFrameBox(metaWindow)
     const b = getFrameBox(other)
@@ -183,8 +183,7 @@ function alignBottom(metaWindow) {
 }
 
 
-
-const functions = {
+var discrete = {
     show,
     hide,
     activate,
@@ -204,7 +203,10 @@ const functions = {
     alignTop,
     alignRight,
     alignBottom,
+    replaceWith
 }
+
+const augment = (metaWindow) => augmentObject(metaWindow, discrete)
 
 
 // class AugmentedMetaWindow {
@@ -221,7 +223,7 @@ const functions = {
 
 
 
-const augment = (metaWindow) => augmentObject(metaWindow, functions)
+
 
 
 
