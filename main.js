@@ -207,12 +207,7 @@ function handleChromeRightClick(actor, event) {
     }
     const tiles = getTiles()
     let t0 = augment(tiles[0])
-    log('RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRrrrr', t0.show().hide().getFrameBox())
-    log('SSSSSRRRRRRRRRRRRRRRRRRRRRRRRRRRRrrrr', show(tiles[0]).get_frame_rect().x)
 
-    t0.show()
-    log(t0.root.get_frame_rect())
-    t0.alignRight()
     if (tiles.length === 2) {
         // alignLeft(tiles[1])
         // return
