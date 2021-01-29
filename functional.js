@@ -4,10 +4,8 @@ const and = (...fns) => x => fns.every(f => f(x))
 const or = (...fns) => x => fns.some(f => f(x))
 const not = x => y => x !== y
 const include = a => v => a.includes(v)
-const _exclude = a => v => !a.includes(v)
-function exclude(any) {
-    return _exclude([...Array.isArray(arguments[0]) ? arguments[0] : arguments])
-}
+const excludeUnary = a => v => !a.includes(v)
+const exclude = (...any) => excludeUnary(Array.isArray(any[0]) ? any[0] : any)
 
 
 class AugmentedObject {
