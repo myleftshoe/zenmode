@@ -11,12 +11,13 @@ var Panel = GObject.registerClass(
                 x_expand: true,
                 y_expand: true,
                 style_class: 'panel',
+                // margin_top: 100,
             })
             this.margin = margin
         }
-        set margin(v) {
-            this.style = `padding: ${v}px solid green;`
-            this._margin = v
+        set margin(value) {
+            this.style = `padding: ${value}px solid green;`
+            this._margin = value
         }
         get margin() { return this._margin }
         getSize() { 
@@ -56,6 +57,20 @@ var LayoutManager = GObject.registerClass(
         this.add_child(panel)
         return panel
     }
+    getPanels() {
+        const panels = []
+        const children = this.get_children()
+        children.forEach(child => {
+            const n = child.get_n_children()
+            if (n) {
+                child.get_children().forEach(c => panels.push(c))
+            }
+            else {
+                panels.push(child)
+            }
+        })
+        return panels
+    }
     get layout() { return this._layout }
     setLayout(layout = single) {
         this.remove_all_children()
@@ -77,8 +92,13 @@ function single() {
 
 function split() {
     const left = this.addPanel()
+    left.vertical = true
+    left.add_child(new Panel())
+    left.add_child(new Panel())
     const middle = this.addPanel()
     const right = this.addPanel()
+    log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    log(this.getPanels())
     return [left, middle, right]
 }
 

@@ -74,10 +74,13 @@ let layout
 
 function positionWindows() {
     const tabList = getActiveWorkspaceTabList()
-    layout.get_children().forEach((actor, i) => {
+    layout.getPanels().forEach((actor, i) => {
         const metaWindow = tabList[i]
+        log(actor)
         log(i, metaWindow.title, ...Object.values(actor.getSize()))
         metaWindow.move_resize_frame(false, ...Object.values(actor.getSize()))
+        // Log.properties(actor)
+
     })
 }
 
