@@ -192,6 +192,34 @@ function alignBottom(metaWindow) {
     metaWindow.move_frame(true, x, bottom - height)
 }
 
+function moveResizeFrame(metaWindow, {x, y, width, height }) {
+    metaWindow.move_resize_frame(true, x, y, width, height)
+}
+
+function allocationBoxToRect(actor) {
+    const box = actor.get_allocation_box()
+    return {
+        x: box.get_x(),
+        y: box.get_y(), 
+        width: box.get_width(), 
+        height: box.get_height(),
+    }
+}
+
+
+function alignToActor(metaWindow) {
+    return function(actor) {
+        const { x, y, width, height } = allocationBoxToRect(actor)
+        log(metaWindow.title, x + 20, y + 20, width - 40, height - 40)
+        // const a = getActor(metaWindow)
+        // a.x = x
+        // a.y = y
+        // a.width = width
+        // a.height = height
+        metaWindow.move_resize_frame(false, x + actor.margin, y + actor.margin, width - 2 * actor.margin, height - 2 * actor.margin)
+    }
+}
+
 
 var discrete = {
     show,

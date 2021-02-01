@@ -8,9 +8,23 @@
     background-color: rgba(255, 255, 255, 1);
     background-color: rgba(48, 48, 48, 1);
     background-color: darkgoldenrod;
-    background-color: rgba(45, 43, 85, 1);
+    background-color: rgba(45, 43, 85, 0);
 }
 
 .chrome-transparent {
     background-color: transparent;
+}
+
+.stage {
+    border: 20px solid rgba(45, 43, 85, 1);;
+}
+
+.panel {
+    border: 20px solid rgba(45, 43, 85, 1);;
+}
+
+.stage-centered {
+    border-left: 300px solid red;
+    border-right: 300px solid red;
+
 }

@@ -1,4 +1,4 @@
-const { Clutter, Cogl, Gdk, Meta } = imports.gi
+const { Clutter, Cogl, Gdk, Meta, St } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
@@ -9,6 +9,7 @@ const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
 const { getDominantColor } = Extension.imports.pixbuf
+const { LayoutManager, single, split, centered } = Extension.imports.layoutManager
 const { 
     activeWorkspace, 
     activateWorkspace, 
@@ -35,12 +36,13 @@ const {
     rectToBox,
     alignLeft,
     getFrameBox,
+    alignToActor,
 } = Extension.imports.metaWindow
 
 const signals = new Signals()
 
-let margin = 32
-const spacerWidth = 32
+let margin = 40
+const spacerWidth = 40
 
 let chrome
 let hideChromeSid
@@ -68,9 +70,26 @@ Object.defineProperty(this, 'focusedWindow', {
 
 
 let margins
-function start() {
+let layout
 
+function positionWindows() {
+    const tabList = getActiveWorkspaceTabList()
+    layout.get_children().forEach((actor, i) => {
+        const metaWindow = tabList[i]
+        log(i, metaWindow.title, ...Object.values(actor.getSize()))
+        metaWindow.move_resize_frame(false, ...Object.values(actor.getSize()))
+    })
+}
+
+
+
+function start() {
+    layout = new LayoutManager()
+    layout.connect('layout-changed', positionWindows)
+    layout.setLayout(single)
+    global.stage.add_child(layout)
     margins = addMargins(margin)
+    margins.top.onButtonPress = () => layout.toggleSplitLayout()
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
@@ -89,7 +108,7 @@ function start() {
     signals.connect(global.display, 'grab-op-end', handleGrabOpEnd)
     signals.connect(workspaces.activeWorkspace, 'window-removed', () => {
         const nextWindow = getActiveWorkspaceTabList()[1]
-        show(nextWindow)
+        nextWindow && show(nextWindow)
     })
 
     Main.overview.connect('showing', () => {
@@ -160,8 +179,8 @@ function handleChromeLeftClick(actor, event) {
         cycling = ''
         return
     }
-    const tiles = getTiles()
-    if (tiles.length === 2) {
+    const [left, right] = getTiles()
+    if (left && right) {
         onIdle(cycleLeftWindows)
         return
     }
@@ -170,24 +189,9 @@ function handleChromeLeftClick(actor, event) {
 
 function handleChromeRightClick(actor, event) {
 
-
-
-
     const { ALT, SHIFT, RIGHT_BUTTON } = getEventModifiers(event)
     if (ALT) {
-        // margin = 200
-        // margins.left.save_easing_state()
-        // margins.left.set_easing_duration(1000)
-        // margins.right.set_easing_duration(1000)
-        // margins.right.save_easing_state()
-        // margins.left.width = margin
-        // margins.left.restore_easing_state()
-        // margins.right.restore_easing_state()
-        // margins.right.width = margin
-        // margins.right.x = 1920 - margin
         const tabList = getActiveWorkspaceTabList()
-        // const { x, y, width, height } = tabList[0].get_work_area_current_monitor()
-
         tabList.forEach(metaWindow => {
             metaWindow.move_resize_frame(false, 460, 0, 1000, 1000)
             if (metaWindow.maximized_horizontally) {
@@ -198,7 +202,6 @@ function handleChromeRightClick(actor, event) {
                 metaWindow.maximize(Meta.MaximizeFlags.BOTH)
             }
         })
-
         return
     }
     if (RIGHT_BUTTON) {
@@ -206,21 +209,18 @@ function handleChromeRightClick(actor, event) {
         cycling = ''
         return
     }
-    const tiles = getTiles()
-    let t0 = augment(tiles[0])
 
-    if (tiles.length === 2) {
-        // alignLeft(tiles[1])
-        // return
-        const tilesIntersect = t0.intersects(tiles[1])
-        log('YYYYYYYYYYYYYYYYYYYYYYYYYY', tilesIntersect, tiles[0].title, tiles[1].title)
+    const [left, right] = getTiles()
+    const t0 = augment(left)
+    
+    if (left && right) {
+        const tilesIntersect = right.intersects(left)
+        log('YYYYYYYYYYYYYYYYYYYYYYYYYY', `${left.title} and ${right.title} ${tilesIntersect && "DO NOT "}intersect`)
         if (!tilesIntersect) {
             if (SHIFT) {
-                const leftWindow = tiles[0]
-                const rightWindow = tiles[1]
-                let { width: leftWindowWidth } = leftWindow.get_frame_rect()
-                const { width: workAreaWidth } = leftWindow.get_work_area_current_monitor()
-                leftWindow.move_frame(false, workAreaWidth - leftWindowWidth + margin, 0)
+                let { width: leftWidth } = left.get_frame_rect()
+                const { width: workAreaWidth } = left.get_work_area_current_monitor()
+                leftWindow.move_frame(false, workAreaWidth - leftWidth + margin, 0)
                 rightWindow.move_frame(false, 0, 0)
                 return
             }
