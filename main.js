@@ -128,9 +128,11 @@ function start() {
         //     global.stage.add_child(c)
         // })
         const tabList = getActiveWorkspaceTabList()
-        const leaves = layout.getLeaves()
-        log("leaves", leaves.map(leaf => leaf))
-        leaves.forEach((actor, i) => {
+        const panes = layout.getPanes()
+        log("panes", panes)
+        const _panes = layout._getPanes()
+        log("_panes", _panes)
+        panes.forEach((actor, i) => {
             const metaWindow = tabList[i]
             metaWindow.move_resize_frame(false, ...actor.getRect())
         })

@@ -55,19 +55,22 @@ var LayoutManager = GObject.registerClass(
                 // vertical: true,
             })
             global.stage.add_child(this)
-            this.setLayout(split)
+            this.setLayout(complex)
         }
         setLayout(layout) {
             this.remove_all_children()
             layout.call(this)
         }
-        getLeaves(actor = this) {
+        getPanes() {
+            return get_childless_descendants(this)
+        }
+        _getPanes() {
             const leaves = []
-            _getLeaves(actor)
+            recurse(this)
             return leaves
-            function _getLeaves(actor) {
+            function recurse(actor) {
                 if (actor.get_n_children()) {
-                    actor.get_children().forEach(_getLeaves)
+                    actor.get_children().forEach(recurse)
                     return
                 }
                 leaves.push(actor)
@@ -75,6 +78,13 @@ var LayoutManager = GObject.registerClass(
         }
     }
 )        
+
+function get_childless_descendants(actor) {
+    const reducer = (acc, cur) => cur.get_n_children() ? reduce(cur, acc) : [...acc, cur]
+    const reduce = (actor, init) => actor.get_children().reduce(reducer, init)
+    return reduce(actor, [])
+}
+
 
 function single() {
     const panel = new Panel()
