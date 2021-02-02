@@ -129,9 +129,6 @@ function start() {
         // })
         const tabList = getActiveWorkspaceTabList()
         const panes = layout.getPanes()
-        log("panes", panes)
-        const _panes = layout._getPanes()
-        log("_panes", _panes)
         panes.forEach((actor, i) => {
             const metaWindow = tabList[i]
             metaWindow.move_resize_frame(false, ...actor.getRect())

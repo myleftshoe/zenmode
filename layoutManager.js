@@ -64,25 +64,12 @@ var LayoutManager = GObject.registerClass(
         getPanes() {
             return get_childless_descendants(this)
         }
-        _getPanes() {
-            const leaves = []
-            recurse(this)
-            return leaves
-            function recurse(actor) {
-                if (actor.get_n_children()) {
-                    actor.get_children().forEach(recurse)
-                    return
-                }
-                leaves.push(actor)
-            }
-        }
     }
 )        
 
 function get_childless_descendants(actor) {
-    const reducer = (acc, cur) => cur.get_n_children() ? reduce(cur, acc) : [...acc, cur]
-    const reduce = (actor, init) => actor.get_children().reduce(reducer, init)
-    return reduce(actor, [])
+    const recurse = (acc, cur) => cur.get_n_children() ? cur.get_children().reduce(recurse, acc) : [...acc, cur]
+    return recurse([], actor)
 }
 
 
