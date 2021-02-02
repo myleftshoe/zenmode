@@ -5,6 +5,7 @@ const { logArguments } = Extension.imports.logger
 const Log = Extension.imports.logger
 const { and } = Extension.imports.functional
 const { augmentObject } = Extension.imports.functional
+const { merge } = Extension.imports.object
 
 function show(metaWindow) {
     log('show', metaWindow.title)
@@ -50,12 +51,12 @@ function cloneActor(actor) {
 }
 
 function getImage(actor, { x, y, width, height } = {}) {
-    const rect = Object.Assign({x, y, width, height}, getRect(actor))
+    const rect = merge({x, y, width, height}, getRect(actor))
     return actor.get_image(new cairo.RectangleInt({...rect}))
 }
 
 function getPixels(actor,  { x, y, width, height } = {}) {
-    const rect = Object.Assign({x, y, width, height}, getRect(actor))
+    const rect = merge({x, y, width, height}, getRect(actor))
     const image = getImage(actor, {...rect})
     return Gdk.pixbuf_get_from_surface(image, 0, 0, rect.width, rect.height);
 }

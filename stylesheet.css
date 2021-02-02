@@ -16,15 +16,22 @@
 }
 
 .stage {
-    border: 20px solid rgba(45, 255, 85, .5);
+    border-color: rgba(255, 255, 85, .5);
+    border-style: solid;
+    border-width: 20px;
+    /* border: 20px solid rgba(255, 43, 85, .5); */
+    /* padding: 20px; */
 }
 
 .panel {
-    border: 20px solid rgba(255, 43, 85, .5);
+    border-color: rgba(0, 255, 85, .5);
+    border-style: solid;
+    border-width: 20px;
+    /* border: 20px solid rgba(255, 43, 85, .5); */
+    /* padding: 20px; */
 }
 
 .stage-centered {
     border-left: 300px solid red;
     border-right: 300px solid red;
-
 }

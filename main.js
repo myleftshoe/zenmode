@@ -76,9 +76,30 @@ function positionWindows() {
     const tabList = getActiveWorkspaceTabList()
     layout.getPanels().forEach((actor, i) => {
         const metaWindow = tabList[i]
-        log(actor)
-        log(i, metaWindow.title, ...Object.values(actor.getSize()))
-        metaWindow.move_resize_frame(false, ...Object.values(actor.getSize()))
+        log('positionWiondows', metaWindow.title, actor)
+    
+        // log(i, metaWindow.title, ...Object.values(actor.getRect()))
+        log('actor', actor)
+        // log(actor.x, actor.y, actor.width, actor.height)
+        log(actor.get_transformed_position(), actor.get_transformed_size())
+        const parent = actor.get_parent()
+        log('parent', parent)
+        // log(parent.x, parent.y, parent.width, parent.height)
+        log(parent.get_transformed_position(), parent.get_transformed_size())
+        metaWindow.move_resize_frame(true, ...actor.get_transformed_position(), ...actor.get_transformed_size())
+        // const c = new St.Bin({
+        //     style: 'background-color: rgba(0, 255, 0, .5);'
+        // })
+        // c.set_position(...actor.get_transformed_position())
+        // c.set_size(...actor.get_transformed_size())
+        // global.stage.add_child(c)
+        // const mwa = getActor(metaWindow)
+        // mwa.set_position(...actor.get_transformed_position())
+        // mwa.set_size(...actor.get_transformed_size())
+        // const child = actor.get_children()[0]
+//         log('child', child)
+//         log(child.x, child.y, child.width, child.height)
+// \       metaWindow.move_resize_frame(false, ...Object.values(actor.get_parent().getRect()))
         // Log.properties(actor)
 
     })
@@ -89,10 +110,35 @@ function positionWindows() {
 function start() {
     layout = new LayoutManager()
     layout.connect('layout-changed', positionWindows)
-    layout.setLayout(single)
-    global.stage.add_child(layout)
+    // layout.setLayout(single)
+    // global.stage.add_child(layout)
     margins = addMargins(margin)
-    margins.top.onButtonPress = () => layout.toggleSplitLayout()
+    margins.top.onButtonPress = () => {
+        // ['leftBottomLeft', 'leftBottomRight'].forEach(actor => {
+        //     log(actor, 'allocation_box', layout[actor].get_allocation_box().get_origin(), layout[actor].get_allocation_box().get_size())
+        //     log(actor, 'position_size', layout[actor].get_position(), layout[actor].get_size())
+        //     log(actor, 'transformed', layout[actor].get_transformed_position(), layout[actor].get_transformed_size())
+        //     log(actor, 'actor.getRect', layout[actor].getRect())
+
+        //     const c = new St.Bin({
+        //         style: 'background-color: rgba(255, 255, 0, .3);'
+        //     })
+        //     c.set_position(...layout[actor].getRect().slice(0,2))
+        //     c.set_size(...layout[actor].getRect().slice(2,4))
+        //     global.stage.add_child(c)
+        // })
+
+        const tabList = getActiveWorkspaceTabList()
+        const leaves = layout.getLeaves()
+        log("leaves", leaves.map(leaf => leaf.name))
+        leaves.forEach((actor, i) => {
+            const metaWindow = tabList[i]
+            metaWindow.move_resize_frame(false, ...actor.getRect())
+        })
+
+        return
+        layout.toggleSplitLayout()
+    }
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
