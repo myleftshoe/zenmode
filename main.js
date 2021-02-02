@@ -127,17 +127,13 @@ function start() {
         //     c.set_size(...layout[actor].getRect().slice(2,4))
         //     global.stage.add_child(c)
         // })
-
         const tabList = getActiveWorkspaceTabList()
         const leaves = layout.getLeaves()
-        log("leaves", leaves.map(leaf => leaf.name))
+        log("leaves", leaves.map(leaf => leaf))
         leaves.forEach((actor, i) => {
             const metaWindow = tabList[i]
             metaWindow.move_resize_frame(false, ...actor.getRect())
         })
-
-        return
-        layout.toggleSplitLayout()
     }
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
