@@ -135,7 +135,8 @@ function start() {
             const metaWindow = tabList[i]
             metaWindow.move_resize_frame(false, ...actor.getRect())
         })
-
+        const children = layout.getAllChildren()
+        children.forEach(child => log(child.name))
         return
         layout.toggleSplitLayout()
     }

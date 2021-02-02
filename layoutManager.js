@@ -5,6 +5,9 @@ const Log = Extension.imports.logger
 const { values } = Extension.imports.object
 const ll = Log.ll
 
+
+const spacing = 20
+
 var Panel = GObject.registerClass(
     {}, 
     class Panel extends St.BoxLayout {
@@ -70,6 +73,7 @@ var LayoutManager = GObject.registerClass(
             const rightRight = new Panel({name: 'rightRight'})
             right.add_child(rightLeft)
             right.add_child(rightRight)
+            this.setSpacing(spacing)
             // log('leftBottomLeft', leftBottomLeft.get_allocation_box().get_origin(), leftBottomLeft.get_allocation_box().get_size())
             // this.leftBottomLeft = leftBottomLeft
             // this.leftBottomRight = leftBottomRight
@@ -80,9 +84,27 @@ var LayoutManager = GObject.registerClass(
             // leftBottomLeft.add_child(this.leftBottomLeftInner)
             // leftBottomRight.add_child(this.leftBottomRightInner)
         }
-        getLeaves(actor = this) {
+        setSpacing(value) {
+            const style = `border-width: ${value}px;` 
+            this.style = style
+            this.getAllChildren().forEach(child => {
+                child.style = style
+            })
+        }
+        getAllChildren() {
+            const children = []
+            recurseChildren(this)
+            function recurseChildren(actor) {
+                for (const child of actor.get_children()) {
+                    children.push(child)
+                    recurseChildren(child);
+                }
+            }            
+            return children
+        }
+        getLeaves() {
             const leaves = []
-            _getLeaves(actor)
+            _getLeaves(this)
             return leaves
             function _getLeaves(actor) {
                 if (actor.get_n_children()) {
