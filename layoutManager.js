@@ -55,7 +55,7 @@ var LayoutManager = GObject.registerClass(
                 // vertical: true,
             })
             global.stage.add_child(this)
-            this.setLayout(complex)
+            this.setLayout(single)
         }
         setLayout(layout) {
             this.remove_all_children()
