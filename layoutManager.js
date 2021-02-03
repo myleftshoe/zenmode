@@ -68,13 +68,10 @@ var LayoutManager = GObject.registerClass(
 )        
 
 function get_childless_descendants(actor) {
-    const recurse = (actor) => actor.get_n_children() ? actor.get_children().flatMap(recurse) : [ actor ]
-    return recurse(actor)
-}
-
-function get_childless_descendants_using_reduce(actor) {
-    const recurse = (acc, cur) => cur.get_n_children() ? cur.get_children().reduce(recurse, acc) : [...acc, cur]
-    return recurse([], actor)
+    const leafs = (actor) => actor.get_n_children() 
+        ? actor.get_children().flatMap(leafs) 
+        : [ actor ]
+    return leafs(actor)
 }
 
 

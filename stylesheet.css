@@ -24,7 +24,7 @@
 }
 
 .panel {
-    border-color: rgba(255, 255, 255, .05);
+    border-color: rgba(255, 0, 0, .16);
     border-style: solid;
     border-width: 20px;
     /* border: 20px solid rgba(255, 43, 85, .5); */
