@@ -63,9 +63,13 @@ var Stage = GObject.registerClass(
             global.stage.add_child(this)
             this.setLayout(layout)
         }
+        get layout() { 
+            return this._layout 
+        }
         async setLayout(layout) {
             this.remove_all_children()
             layout.call(this)
+            this._layout = layout
             await this.layoutComplete()
             this.emit('layout-changed')
         }

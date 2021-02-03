@@ -9,7 +9,7 @@ const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
 const { getDominantColor } = Extension.imports.pixbuf
-const { createStage, layouts } = Extension.imports.stage
+const { createStage, single, split } = Extension.imports.stage
 const { merge, values } = Extension.imports.object
 
 const { 
@@ -81,10 +81,10 @@ function start() {
     margins = addMargins(margin)
     margins.top.onButtonPress = async () => {
         const nwindows = getActiveWorkspaceTabList().length
-        const layout = values(layouts).find(layout => layout.panes === nwindows)
-        stage.setLayout(layout)
-    }
-    stage.connect('layout-changed', () => {
+        // const layout = values(layouts).find(layout => layout.panes === nwindows)
+        // stage.setLayout(layout)
+        const layout = stage.layout === single ? split : single
+        await stage.setLayout(layout)
         const tabList = getActiveWorkspaceTabList()
         const panes = stage.getPanes()
         panes.forEach((actor, i) => {
@@ -92,7 +92,8 @@ function start() {
             const metaWindow = tabList[i]
             metaWindow.move_resize_frame(false, ...actor.getRect())
         })
-    })
+    }
+    stage.connect('layout-changed', () => {})
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
@@ -107,8 +108,8 @@ function start() {
     signals.connect(global.display, 'window-created', addWindow)
     signals.connect(global.display, 'restacked', () => { ll('restacked') })
 
-    signals.connect(global.display, 'grab-op-begin', handleGrabOpBegin)
-    signals.connect(global.display, 'grab-op-end', handleGrabOpEnd)
+    // signals.connect(global.display, 'grab-op-begin', handleGrabOpBegin)
+    // signals.connect(global.display, 'grab-op-end', handleGrabOpEnd)
     signals.connect(workspaces.activeWorkspace, 'window-removed', () => {
         const nextWindow = getActiveWorkspaceTabList()[1]
         nextWindow && show(nextWindow)
