@@ -1,8 +1,10 @@
-const { GObject, Clutter, Meta, St } = imports.gi
+const { GObject, Clutter, GLib, Meta, St } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const Log = Extension.imports.logger
 const { merge, values } = Extension.imports.object
+const { onIdle } = Extension.imports.async
+
 const ll = Log.ll
 
 var Panel = GObject.registerClass(
@@ -61,15 +63,29 @@ var Stage = GObject.registerClass(
             global.stage.add_child(this)
             this.setLayout(layout)
         }
-        setLayout(layout) {
+        async setLayout(layout) {
             this.remove_all_children()
             layout.call(this)
+            await this.layoutComplete()
+            this.emit('layout-changed')
+        }
+        layoutComplete() {
+            return Promise.all(this.getPanes().map(allocated))
         }
         getPanes() {
             return get_childless_descendants(this)
         }
     }
 )        
+
+function allocated(pane) {
+    return new Promise(resolve => {
+        const sid = pane.connect('notify::allocation', () => {
+            pane.disconnect(sid)
+            resolve('allocated')
+        })
+    })
+}
 
 function get_childless_descendants(actor) {
     const leafs = (actor) => actor.get_n_children() 

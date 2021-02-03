@@ -10,7 +10,7 @@ const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
 const { getDominantColor } = Extension.imports.pixbuf
 const { createStage } = Extension.imports.stage
-const { single, split, complex } = Extension.imports.stage.layouts
+const { single, split, complex, layout1 } = Extension.imports.stage.layouts
 const { 
     activeWorkspace, 
     activateWorkspace, 
@@ -110,9 +110,12 @@ function positionWindows() {
 
 function start() {
     stage = createStage()
-    stage.connect('layout-changed', positionWindows)
+    // stage.connect('layout-changed', positionWindows)
     margins = addMargins(margin)
     margins.top.onButtonPress = () => {
+        stage.setLayout(layout1)
+    }
+    stage.connect('layout-changed', () => {
         const tabList = getActiveWorkspaceTabList()
         const panes = stage.getPanes()
         panes.forEach((actor, i) => {
@@ -120,7 +123,7 @@ function start() {
             const metaWindow = tabList[i]
             metaWindow.move_resize_frame(false, ...actor.getRect())
         })
-    }
+    })
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
