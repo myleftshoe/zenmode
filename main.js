@@ -9,8 +9,9 @@ const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
 const { getDominantColor } = Extension.imports.pixbuf
-const { createStage } = Extension.imports.stage
-const { single, split, complex, layout1 } = Extension.imports.stage.layouts
+const { createStage, layouts } = Extension.imports.stage
+const { merge, values } = Extension.imports.object
+
 const { 
     activeWorkspace, 
     activateWorkspace, 
@@ -73,47 +74,15 @@ Object.defineProperty(this, 'focusedWindow', {
 let margins
 let stage
 
-function positionWindows() {
-    const tabList = getActiveWorkspaceTabList()
-    stage.getPanels().forEach((actor, i) => {
-        const metaWindow = tabList[i]
-        log('positionWiondows', metaWindow.title, actor)
-    
-        // log(i, metaWindow.title, ...Object.values(actor.getRect()))
-        log('actor', actor)
-        // log(actor.x, actor.y, actor.width, actor.height)
-        log(actor.get_transformed_position(), actor.get_transformed_size())
-        const parent = actor.get_parent()
-        log('parent', parent)
-        // log(parent.x, parent.y, parent.width, parent.height)
-        log(parent.get_transformed_position(), parent.get_transformed_size())
-        metaWindow.move_resize_frame(true, ...actor.get_transformed_position(), ...actor.get_transformed_size())
-        // const c = new St.Bin({
-        //     style: 'background-color: rgba(0, 255, 0, .5);'
-        // })
-        // c.set_position(...actor.get_transformed_position())
-        // c.set_size(...actor.get_transformed_size())
-        // global.stage.add_child(c)
-        // const mwa = getActor(metaWindow)
-        // mwa.set_position(...actor.get_transformed_position())
-        // mwa.set_size(...actor.get_transformed_size())
-        // const child = actor.get_children()[0]
-//         log('child', child)
-//         log(child.x, child.y, child.width, child.height)
-// \       metaWindow.move_resize_frame(false, ...Object.values(actor.get_parent().getRect()))
-        // Log.properties(actor)
-
-    })
-}
-
 
 
 function start() {
     stage = createStage()
-    // stage.connect('layout-changed', positionWindows)
     margins = addMargins(margin)
-    margins.top.onButtonPress = () => {
-        stage.setLayout(layout1)
+    margins.top.onButtonPress = async () => {
+        const nwindows = getActiveWorkspaceTabList().length
+        const layout = values(layouts).find(layout => layout.panes === nwindows)
+        stage.setLayout(layout)
     }
     stage.connect('layout-changed', () => {
         const tabList = getActiveWorkspaceTabList()

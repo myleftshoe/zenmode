@@ -103,6 +103,7 @@ function single() {
     const panel = new Panel()
     this.add_child(panel)
 }
+single.panes = 1
 
 function split() {
     const left = new Panel()
@@ -110,6 +111,7 @@ function split() {
     this.add_child(left)
     this.add_child(right)
 }
+split.panes = 2
 
 function layout1() {
     const left = new Panel({name: 'left', vertical:true})
@@ -121,6 +123,7 @@ function layout1() {
     left.add_child(leftTop)
     left.add_child(leftBottom)
 }
+layout1.panes = 3
 
 function complex() {
     const left = new Panel({name: 'left', vertical:true})
@@ -152,3 +155,4 @@ function complex() {
     // leftBottomLeft.add_child(this.leftBottomLeftInner)
     // leftBottomRight.add_child(this.leftBottomRightInner)
 }
+complex.panes = 5
