@@ -2,7 +2,7 @@ const { GObject, Clutter, Meta, St } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const Log = Extension.imports.logger
-const { values } = Extension.imports.object
+const { merge, values } = Extension.imports.object
 const ll = Log.ll
 
 var Panel = GObject.registerClass(
@@ -37,25 +37,29 @@ var Panel = GObject.registerClass(
     }
 )
 
+var createStage = (props) => new Stage(props)
 
-var LayoutManager = GObject.registerClass(
+const defaultProps = (props = {}) => merge({layout: layouts.single, width: global.stage.width, height: global.stage.height}, props)
+
+var Stage = GObject.registerClass(
     {
-        GTypeName: 'zmLayoutManager',
+        GTypeName: 'zmStage',
         Signals: {
             'layout-changed': {}
         }
     },
-    class LayoutManager extends Panel {
-        _init() {
+    class Stage extends Panel {
+        _init(props) {
+            const { width, height, layout} = defaultProps(props)
             super._init({
-                width: global.stage.width,
-                height: global.stage.height,
+                width,
+                height,
                 style_class: 'stage',
                 reactive: false,
                 // vertical: true,
             })
             global.stage.add_child(this)
-            this.setLayout(complex  )
+            this.setLayout(layout)
         }
         setLayout(layout) {
             this.remove_all_children()
@@ -72,6 +76,10 @@ function get_childless_descendants(actor) {
         ? actor.get_children().flatMap(leafs) 
         : [ actor ]
     return leafs(actor)
+}
+
+const layouts = {
+    single, split, layout1, complex
 }
 
 

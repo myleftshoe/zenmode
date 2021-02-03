@@ -9,7 +9,8 @@ const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
 const { getDominantColor } = Extension.imports.pixbuf
-const { LayoutManager, single, split, centered } = Extension.imports.layoutManager
+const { createStage } = Extension.imports.stage
+const { single, split, complex } = Extension.imports.stage.layouts
 const { 
     activeWorkspace, 
     activateWorkspace, 
@@ -70,11 +71,11 @@ Object.defineProperty(this, 'focusedWindow', {
 
 
 let margins
-let layout
+let stage
 
 function positionWindows() {
     const tabList = getActiveWorkspaceTabList()
-    layout.getPanels().forEach((actor, i) => {
+    stage.getPanels().forEach((actor, i) => {
         const metaWindow = tabList[i]
         log('positionWiondows', metaWindow.title, actor)
     
@@ -108,27 +109,12 @@ function positionWindows() {
 
 
 function start() {
-    layout = new LayoutManager()
-    layout.connect('layout-changed', positionWindows)
-    // layout.setLayout(single)
-    // global.stage.add_child(layout)
+    stage = createStage()
+    stage.connect('layout-changed', positionWindows)
     margins = addMargins(margin)
     margins.top.onButtonPress = () => {
-        // ['leftBottomLeft', 'leftBottomRight'].forEach(actor => {
-        //     log(actor, 'allocation_box', layout[actor].get_allocation_box().get_origin(), layout[actor].get_allocation_box().get_size())
-        //     log(actor, 'position_size', layout[actor].get_position(), layout[actor].get_size())
-        //     log(actor, 'transformed', layout[actor].get_transformed_position(), layout[actor].get_transformed_size())
-        //     log(actor, 'actor.getRect', layout[actor].getRect())
-
-        //     const c = new St.Bin({
-        //         style: 'background-color: rgba(255, 255, 0, .3);'
-        //     })
-        //     c.set_position(...layout[actor].getRect().slice(0,2))
-        //     c.set_size(...layout[actor].getRect().slice(2,4))
-        //     global.stage.add_child(c)
-        // })
         const tabList = getActiveWorkspaceTabList()
-        const panes = layout.getPanes()
+        const panes = stage.getPanes()
         panes.forEach((actor, i) => {
             log(i, actor)
             const metaWindow = tabList[i]
