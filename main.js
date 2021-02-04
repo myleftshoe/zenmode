@@ -9,7 +9,7 @@ const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
 const { getDominantColor } = Extension.imports.pixbuf
-const { createStage, single, split } = Extension.imports.stage
+const { createStage, layouts, single, split } = Extension.imports.stage
 const { merge, values } = Extension.imports.object
 
 const { 
@@ -70,6 +70,33 @@ Object.defineProperty(this, 'focusedWindow', {
     get() { return global.display.get_focus_window() }
 })
 
+async function setLayout() {
+    let layout = stage.layout
+    if (layout === single) {
+        const nwindows = getActiveWorkspaceTabList().length
+        layout = values(layouts).find(layout => layout.panes === nwindows)
+    }
+    else {
+        layout = single
+    }
+    return stage.setLayout(layout)
+}
+
+function positionWindows () {
+    const tabList = getActiveWorkspaceTabList()
+    const panes = stage.getPanes()
+    panes.forEach((actor, i) => {
+        log(i, actor)
+        const metaWindow = tabList[i]
+        metaWindow.move_resize_frame(false, ...actor.getRect())
+    })
+}
+
+async function doLayout () {
+    await setLayout()
+    positionWindows()
+}
+
 
 let margins
 let stage
@@ -79,20 +106,7 @@ let stage
 function start() {
     stage = createStage()
     margins = addMargins(margin)
-    margins.top.onButtonPress = async () => {
-        const nwindows = getActiveWorkspaceTabList().length
-        // const layout = values(layouts).find(layout => layout.panes === nwindows)
-        // stage.setLayout(layout)
-        const layout = stage.layout === single ? split : single
-        await stage.setLayout(layout)
-        const tabList = getActiveWorkspaceTabList()
-        const panes = stage.getPanes()
-        panes.forEach((actor, i) => {
-            log(i, actor)
-            const metaWindow = tabList[i]
-            metaWindow.move_resize_frame(false, ...actor.getRect())
-        })
-    }
+    margins.top.onButtonPress = doLayout
     stage.connect('layout-changed', () => {})
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
