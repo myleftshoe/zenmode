@@ -11,6 +11,7 @@ const { exclude } = Extension.imports.functional
 const { getDominantColor } = Extension.imports.pixbuf
 const { createStage, layouts, single, split } = Extension.imports.stage
 const { merge, values } = Extension.imports.object
+const { focusedWindow } = Extension.imports.globals
 
 const { 
     activeWorkspace, 
@@ -64,11 +65,6 @@ function getTileMatch(metaWindow) {
     }
     return match
 }
-
-
-Object.defineProperty(this, 'focusedWindow', {
-    get() { return global.display.get_focus_window() }
-})
 
 async function setLayout() {
     let layout = stage.layout
