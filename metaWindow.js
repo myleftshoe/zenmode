@@ -51,13 +51,15 @@ function cloneActor(actor) {
 }
 
 function getImage(actor, { x, y, width, height } = {}) {
-    const rect = merge({x, y, width, height}, getRect(actor))
-    return actor.get_image(new cairo.RectangleInt({...rect}))
+    const rect = merge(getRect(actor), {x, y, width, height})
+    log('###', rect.x, rect.y, rect.width, rect.height, width, height)
+    return actor.get_image(new cairo.RectangleInt(rect))
 }
 
 function getPixels(actor,  { x, y, width, height } = {}) {
-    const rect = merge({x, y, width, height}, getRect(actor))
-    const image = getImage(actor, {...rect})
+    const rect = merge(getRect(actor), {x, y, width, height})
+    log('$$$', rect.x, rect.y, rect.width, rect.height, width, height)
+    const image = getImage(actor, rect)
     return Gdk.pixbuf_get_from_surface(image, 0, 0, rect.width, rect.height);
 }
 
@@ -124,13 +126,19 @@ function colocate(metaWindow, other) {
 
 function getFrameRect(metaWindow) {
     const {x, y, width, height} = metaWindow.get_frame_rect()
-    return [x, y, width, height]
+    return {x, y, width, height}
+}
+
+function getBufferRect(metaWindow) {
+    const {x, y, width, height} = metaWindow.get_buffer_rect()
+    return {x, y, width, height}
 }
 
 
 var rectToBox = ({ x, y, width, height }) => ({ left: x, top: y, right: x + width, bottom: y + height })
 
 var getFrameBox = (metaWindow) => rectToBox(metaWindow.get_frame_rect())
+var getBufferBox = (metaWindow) => rectToBox(metaWindow.get_buffer_rect())
 
 var getWorkAreaBox = (metaWindow) => rectToBox(metaWindow.get_work_area_current_monitor())
 

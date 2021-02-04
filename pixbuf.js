@@ -2,7 +2,6 @@ const { Gdk } = imports.gi
 
 function getColorFrequencies(pixbuf) {
     const pixels = pixbuf.get_pixels()
-
     const colors = new Map()
 
     const step = pixbuf.get_has_alpha() ? 4 : 3

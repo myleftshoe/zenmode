@@ -1,4 +1,4 @@
-const { Clutter, Cogl, Meta } = imports.gi
+const { Clutter, Cogl, Meta, St } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
@@ -28,6 +28,9 @@ const {
     getActor,
     getFrameRect,
     getFrameBox,
+    getBufferRect,
+    getBufferBox,
+    getPixels,
 } = Extension.imports.metaWindow
 
 const signals = new Signals()
@@ -73,15 +76,6 @@ function positionWindows () {
         pane.metaWindows = [metaWindow]
         metaWindow.move_resize_frame(false, ...pane.getRect())
     })
-    panes.forEach((pane, i) => { 
-        const metaWindow = pane.metaWindows[0]
-        const mwRect = getFrameRect(metaWindow)
-        const paneRect = pane.getRect()
-        log(i, pane)
-        log('mwRect', ...mwRect)
-        log('paneRe', ...paneRect)
-    })
-
 }
 
 async function doLayout () {
@@ -233,19 +227,23 @@ function connectResizeListener(leftWindow, rightWindow) {
 
 function handleFocusWindow(display) {
     ll('handleFocusWindow')
-    const pane = stage.getPanes()[0]
+    const pane = stage.getPanes().find(({metaWindows}) => metaWindows[0] === focusedWindow)
     const paneRect = pane.getRect()
     log('>>>>', paneRect)
     focusedWindow.move_resize_frame(false, ...paneRect)
 
-    const { top, right } = getFrameBox(focusedWindow)
+    const fr = getFrameRect(focusedWindow)
+    const br = getBufferRect(focusedWindow)
+    const topRight = {x: br.width - (br.width - fr.width) / 2, y: fr.y - br.y}
 
-    const pixbuf = getPixels(getActor(focusedWindow), { x: right - 100, y: top + 1, width: 5, height: 1 })
+    const sampleSize = {width: 5, height: 1}
+
+    // log('***********', top, right)
+    const pixbuf = getPixels(getActor(focusedWindow), { x: topRight.x - 50, y: topRight.y, ...sampleSize })
+
     
+    // DEBUG: Display sampled pixels
     const image = new Clutter.Image()
-    // Log.properties(image)
-
-    // START: Sampled pixels location for debugging
     image.set_data(pixbuf.get_pixels(),
         pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
             : Cogl.PixelFormat.RGB_888,
@@ -253,18 +251,25 @@ function handleFocusWindow(display) {
         pixbuf.get_height(),
         pixbuf.get_rowstride());
 
-    const actor = new Clutter.Actor({ x: right - 100, y: top + 1, height: 1, width: 5, backgroundColor: new Clutter.Color({ red: 255, alpha: 255 }) })
-    // actor.set_content(image)
+    const actor = new St.Bin({ 
+        x: br.x + topRight.x - pixbuf.get_width(),
+        y: fr.y, 
+        height: pixbuf.get_height(), 
+        width: pixbuf.get_width(), 
+        backgroundColor: new Clutter.Color({ red: 255, alpha: 255 }),
+        style: 'border: 1px solid yellow;'
+    })
+    actor.set_content(image)
     global.stage.add_child(actor)
-    // END: Sampled pixels location for debugging
+    // DEBUG END: Display sampled pixels
 
 
     const dominantColor = getDominantColor(pixbuf)
 
-    log('dominantColor', dominantColor)
+    log('dominantColor', dominantColor, focusedWindow.title)
 
-    // margins.top.style = `background-color: rgba(${dominantColor},1);`
-
+    stage.style = `border-color: rgba(${dominantColor},1);`
+    // stage.style = `border-color: red;`
 
 
 }
