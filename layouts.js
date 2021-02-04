@@ -2,23 +2,22 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { Pane } = Extension.imports.pane
 
 var layouts = {
-    single, split, layout1, complex
+    single, centered, split, layout1, complex
 }
 
-
-function _single() {
+function single() {
     const pane = new Pane()
     this.add_child(pane)
 }
 single.panes = 1
 
 
-function single() {
+function centered() {
     const pane = new Pane()
     this.add_style_class_name ('stage-centered')
     this.add_child(pane)
 }
-single.panes = 1
+centered.panes = 1
 
 
 function split() {

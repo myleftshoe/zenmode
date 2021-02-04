@@ -9,9 +9,9 @@ const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
 const { values } = Extension.imports.object
+const { loop } = Extension.imports.array
 const { createStage } = Extension.imports.stage
-const { layouts, single, split } = Extension.imports.layouts
-const { focusedWindow } = Extension.imports.globals
+const { layouts, single, centered, split } = Extension.imports.layouts
 
 const { 
     activateWorkspace, 
@@ -29,21 +29,35 @@ const {
 
 const signals = new Signals()
 
+
+Object.defineProperty(this, 'focusedWindow', {
+    get() { return global.display.get_focus_window() }
+})
+
+
+
 let margin = 40
 const spacerWidth = 40
 
 let chrome
 let hideChromeSid
 
+const nextLayout = loop([centered, single, split ])
+
 async function setLayout() {
-    let layout = stage.layout
-    if (layout === single) {
-        const nwindows = getActiveWorkspaceTabList().length
-        layout = values(layouts).find(layout => layout.panes === nwindows)
-    }
-    else {
-        layout = single
-    }
+    ll('setLayout')
+    const layout = nextLayout()
+    // let layout = stage.layout
+    // if (layout === single) {
+    //     layout = centered
+    // }
+    // else if (layout === centered) {
+    //     const nwindows = getActiveWorkspaceTabList().length
+    //     layout = values(layouts).find(layout => layout.panes === nwindows)
+    // }
+    // else {
+    //     layout = single
+    // }
     return stage.setLayout(layout)
 }
 
@@ -218,6 +232,11 @@ function connectResizeListener(leftWindow, rightWindow) {
 
 function handleFocusWindow(display) {
     ll('handleFocusWindow')
+    const pane = stage.getPanes()[0]
+    const paneRect = pane.getRect()
+    log('>>>>', paneRect)
+    focusedWindow.move_resize_frame(false, ...paneRect)
+
 }
 
 function maximizeAndHideWindows({ exclude: excluded = [] } = {}) {
