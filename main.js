@@ -9,7 +9,8 @@ const { getEventModifiers } = Extension.imports.events
 const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
 const { values } = Extension.imports.object
-const { createStage, layouts, single, split } = Extension.imports.stage
+const { createStage } = Extension.imports.stage
+const { layouts, single, split } = Extension.imports.layouts
 const { focusedWindow } = Extension.imports.globals
 
 const { 
