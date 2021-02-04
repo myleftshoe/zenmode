@@ -68,6 +68,7 @@ var Stage = GObject.registerClass(
         }
         async setLayout(layout) {
             this.remove_all_children()
+            this.remove_style_class_name('stage-centered')
             layout.call(this)
             this._layout = layout
             await this.layoutComplete()
@@ -78,6 +79,7 @@ var Stage = GObject.registerClass(
         }
         getPanes() {
             return get_childless_descendants(this)
+            
         }
     }
 )        
@@ -103,11 +105,20 @@ const layouts = {
 }
 
 
-function single() {
+function _single() {
     const panel = new Panel()
     this.add_child(panel)
 }
 single.panes = 1
+
+
+function single() {
+    const panel = new Panel()
+    this.add_style_class_name ('stage-centered')
+    this.add_child(panel)
+}
+single.panes = 1
+
 
 function split() {
     const left = new Panel()

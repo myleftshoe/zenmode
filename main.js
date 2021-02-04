@@ -23,6 +23,7 @@ const {
     hide,
     activate,
     maximize,
+    getFrameRect,
 } = Extension.imports.metaWindow
 
 const signals = new Signals()
@@ -48,11 +49,21 @@ async function setLayout() {
 function positionWindows () {
     const tabList = getActiveWorkspaceTabList()
     const panes = stage.getPanes()
-    panes.forEach((actor, i) => {
-        log(i, actor)
+    panes.forEach((pane, i) => {
+        log(i, pane)
         const metaWindow = tabList[i]
-        metaWindow.move_resize_frame(false, ...actor.getRect())
+        pane.metaWindows = [metaWindow]
+        metaWindow.move_resize_frame(false, ...pane.getRect())
     })
+    panes.forEach((pane, i) => { 
+        const metaWindow = pane.metaWindows[0]
+        const mwRect = getFrameRect(metaWindow)
+        const paneRect = pane.getRect()
+        log(i, pane)
+        log('mwRect', ...mwRect)
+        log('paneRe', ...paneRect)
+    })
+
 }
 
 async function doLayout () {

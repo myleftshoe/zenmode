@@ -122,6 +122,12 @@ function colocate(metaWindow, other) {
 
 // --------------------------------------------------------------------------------
 
+function getFrameRect(metaWindow) {
+    const {x, y, width, height} = metaWindow.get_frame_rect()
+    return [x, y, width, height]
+}
+
+
 var rectToBox = ({ x, y, width, height }) => ({ left: x, top: y, right: x + width, bottom: y + height })
 
 var getFrameBox = (metaWindow) => rectToBox(metaWindow.get_frame_rect())
@@ -243,7 +249,8 @@ var discrete = {
     alignTop,
     alignRight,
     alignBottom,
-    replaceWith
+    replaceWith,
+    getFrameRect,
 }
 
 const augment = (metaWindow) => augmentObject(metaWindow, discrete)

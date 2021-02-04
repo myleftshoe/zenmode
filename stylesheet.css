@@ -27,6 +27,11 @@
     /* padding: 20px; */
 }
 
+.stage-centered {
+    border-left: 200px solid rgba(45, 43, 85, 1); 
+    border-right: 200px solid rgba(45, 43, 85, 1);
+}
+
 .panel {
     border-color: rgba(255, 0, 0, .16);
     border-color: rgba(45, 43, 85, 1);
