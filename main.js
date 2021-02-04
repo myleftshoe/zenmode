@@ -1,4 +1,4 @@
-const { Clutter, Meta, } = imports.gi
+const { Clutter, Cogl, Meta } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome, addMargins, createChrome } = Extension.imports.chrome
@@ -12,6 +12,7 @@ const { values } = Extension.imports.object
 const { loop } = Extension.imports.array
 const { createStage } = Extension.imports.stage
 const { layouts, single, centered, split } = Extension.imports.layouts
+const { getDominantColor } = Extension.imports.pixbuf
 
 const { 
     activateWorkspace, 
@@ -24,7 +25,9 @@ const {
     hide,
     activate,
     maximize,
+    getActor,
     getFrameRect,
+    getFrameBox,
 } = Extension.imports.metaWindow
 
 const signals = new Signals()
@@ -234,6 +237,35 @@ function handleFocusWindow(display) {
     const paneRect = pane.getRect()
     log('>>>>', paneRect)
     focusedWindow.move_resize_frame(false, ...paneRect)
+
+    const { top, right } = getFrameBox(focusedWindow)
+
+    const pixbuf = getPixels(getActor(focusedWindow), { x: right - 100, y: top + 1, width: 5, height: 1 })
+    
+    const image = new Clutter.Image()
+    // Log.properties(image)
+
+    // START: Sampled pixels location for debugging
+    image.set_data(pixbuf.get_pixels(),
+        pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
+            : Cogl.PixelFormat.RGB_888,
+        pixbuf.get_width(),
+        pixbuf.get_height(),
+        pixbuf.get_rowstride());
+
+    const actor = new Clutter.Actor({ x: right - 100, y: top + 1, height: 1, width: 5, backgroundColor: new Clutter.Color({ red: 255, alpha: 255 }) })
+    // actor.set_content(image)
+    global.stage.add_child(actor)
+    // END: Sampled pixels location for debugging
+
+
+    const dominantColor = getDominantColor(pixbuf)
+
+    log('dominantColor', dominantColor)
+
+    // margins.top.style = `background-color: rgba(${dominantColor},1);`
+
+
 
 }
 
