@@ -90,8 +90,6 @@ async function doLayout () {
 let margins
 let stage
 
-const otherSignals = new Map()
-
 
 function start() {
     stage = createStage()
