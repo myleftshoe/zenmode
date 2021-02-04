@@ -229,7 +229,7 @@ function handleFocusWindow(display) {
     ll('handleFocusWindow')
     const pane = stage.getPanes().find(({metaWindows}) => metaWindows[0] === focusedWindow)
     const paneRect = pane.getRect()
-    log('>>>>', paneRect)
+
     focusedWindow.move_resize_frame(false, ...paneRect)
 
     const fr = getFrameRect(focusedWindow)
@@ -238,31 +238,28 @@ function handleFocusWindow(display) {
 
     const sampleSize = {width: 5, height: 1}
 
-    // log('***********', top, right)
     const pixbuf = getPixels(getActor(focusedWindow), { x: topRight.x - 50, y: topRight.y, ...sampleSize })
-
     
-    // DEBUG: Display sampled pixels
-    const image = new Clutter.Image()
-    image.set_data(pixbuf.get_pixels(),
-        pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
-            : Cogl.PixelFormat.RGB_888,
-        pixbuf.get_width(),
-        pixbuf.get_height(),
-        pixbuf.get_rowstride());
+    // // DEBUG: Display sampled pixels
+    // const image = new Clutter.Image()
+    // image.set_data(pixbuf.get_pixels(),
+    //     pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
+    //         : Cogl.PixelFormat.RGB_888,
+    //     pixbuf.get_width(),
+    //     pixbuf.get_height(),
+    //     pixbuf.get_rowstride());
 
-    const actor = new St.Bin({ 
-        x: br.x + topRight.x - pixbuf.get_width(),
-        y: fr.y, 
-        height: pixbuf.get_height(), 
-        width: pixbuf.get_width(), 
-        backgroundColor: new Clutter.Color({ red: 255, alpha: 255 }),
-        style: 'border: 1px solid yellow;'
-    })
-    actor.set_content(image)
-    global.stage.add_child(actor)
-    // DEBUG END: Display sampled pixels
-
+    // const actor = new St.Bin({ 
+    //     x: br.x + topRight.x - pixbuf.get_width(),
+    //     y: fr.y, 
+    //     height: pixbuf.get_height(), 
+    //     width: pixbuf.get_width(), 
+    //     backgroundColor: new Clutter.Color({ red: 255, alpha: 255 }),
+    //     style: 'border: 1px solid yellow;'
+    // })
+    // actor.set_content(image)
+    // global.stage.add_child(actor)
+    // // DEBUG END: Display sampled pixels
 
     const dominantColor = getDominantColor(pixbuf)
 

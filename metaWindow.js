@@ -52,13 +52,11 @@ function cloneActor(actor) {
 
 function getImage(actor, { x, y, width, height } = {}) {
     const rect = merge(getRect(actor), {x, y, width, height})
-    log('###', rect.x, rect.y, rect.width, rect.height, width, height)
     return actor.get_image(new cairo.RectangleInt(rect))
 }
 
 function getPixels(actor,  { x, y, width, height } = {}) {
     const rect = merge(getRect(actor), {x, y, width, height})
-    log('$$$', rect.x, rect.y, rect.width, rect.height, width, height)
     const image = getImage(actor, rect)
     return Gdk.pixbuf_get_from_surface(image, 0, 0, rect.width, rect.height);
 }
