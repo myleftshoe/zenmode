@@ -133,16 +133,13 @@ function getBufferRect(metaWindow) {
     return {x, y, width, height}
 }
 
-
 var rectToBox = ({ x, y, width, height }) => ({ left: x, top: y, right: x + width, bottom: y + height })
 
 var getFrameBox = (metaWindow) => rectToBox(metaWindow.get_frame_rect())
 var getBufferBox = (metaWindow) => rectToBox(metaWindow.get_buffer_rect())
-
 var getWorkAreaBox = (metaWindow) => rectToBox(metaWindow.get_work_area_current_monitor())
 
 var isLeftAligned = (metaWindow) => getFrameBox(metaWindow).left === getWorkAreaBox(metaWindow).left
-
 var isRightAligned = (metaWindow) => getFrameBox(metaWindow).right === getWorkAreaBox(metaWindow).right
 
 function isFullHeight(metaWindow) {
