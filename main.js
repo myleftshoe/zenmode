@@ -31,7 +31,7 @@ let hideChromeSid
 
 const nextLayout = loop([single, split, centered])
 
-function setLayout() {
+function loopLayouts() {
     ll('setLayout')
     stage.setLayout(nextLayout())
 }
@@ -52,7 +52,7 @@ let stage
 
 function start() {
     stage = createStage()
-    stage.frame.top.onButtonPress = setLayout
+    stage.frame.top.onButtonPress = loopLayouts
     stage.connect('layout-changed', positionWindows)
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
