@@ -234,7 +234,8 @@ function handleFocusWindow(display) {
 
     const fr = getFrameRect(focusedWindow)
     const br = getBufferRect(focusedWindow)
-    const topRight = {x: br.width - (br.width - fr.width) / 2, y: fr.y - br.y}
+    
+    const topRight = {x: br.width - (fr.x - br.x), y: fr.y - br.y}
 
     const sampleSize = {width: 5, height: 1}
 
