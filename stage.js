@@ -9,7 +9,7 @@ const { layouts } = Extension.imports.layouts
 
 var createStage = (props) => new Stage(props)
 
-const defaultProps = (props = {}) => merge({layout: layouts.single, width: global.stage.width, height: global.stage.height}, props)
+const defaultProps = (props = {}) => merge({layout: layouts.centered, width: global.stage.width, height: global.stage.height}, props)
 
 var Stage = GObject.registerClass(
     {

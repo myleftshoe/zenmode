@@ -48,9 +48,9 @@ const spacerWidth = 40
 let chrome
 let hideChromeSid
 
-const nextLayout = loop([centered, single, split, complex ])
+const nextLayout = loop([single, split, centered])
 
-async function setLayout() {
+function setLayout() {
     ll('setLayout')
     const layout = nextLayout()
     // let layout = stage.layout
@@ -64,7 +64,7 @@ async function setLayout() {
     // else {
     //     layout = single
     // }
-    return stage.setLayout(layout)
+    stage.setLayout(layout)
 }
 
 function positionWindows () {
@@ -78,11 +78,6 @@ function positionWindows () {
     })
 }
 
-async function doLayout () {
-    await setLayout()
-    positionWindows()
-}
-
 
 let margins
 let stage
@@ -91,8 +86,8 @@ let stage
 function start() {
     stage = createStage()
     margins = addMargins(margin)
-    margins.top.onButtonPress = doLayout
-    stage.connect('layout-changed', () => { ll('layout-changed') })
+    margins.top.onButtonPress = setLayout
+    stage.connect('layout-changed', positionWindows)
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
@@ -225,16 +220,8 @@ function connectResizeListener(leftWindow, rightWindow) {
     });
 }
 
-let prevFocusedWindow
-function handleFocusWindow(display) {
-    ll('handleFocusWindow')
-    const pane = stage.getPanes().find(({metaWindows}) => metaWindows[0] === prevFocusedWindow) || stage.getPanes()[0]
-    const paneRect = pane.getRect()
 
-    focusedWindow.move_resize_frame(false, ...paneRect)
-    pane.metaWindows = [focusedWindow]
-    prevFocusedWindow = focusedWindow
-
+function updateStage() {
     const fr = getFrameRect(focusedWindow)
     const br = getBufferRect(focusedWindow)
     
@@ -275,6 +262,21 @@ function handleFocusWindow(display) {
     // stage.style = `border-color: red;`
 
 
+}
+
+
+let prevFocusedWindow
+function handleFocusWindow(display) {
+    ll('handleFocusWindow')
+    const pane = stage.getPanes().find(({metaWindows}) => metaWindows[0] === prevFocusedWindow) || stage.getPanes()[0]
+    const paneRect = pane.getRect()
+
+    focusedWindow.move_resize_frame(false, ...paneRect)
+    pane.metaWindows = [focusedWindow]
+    prevFocusedWindow = focusedWindow
+
+    if (stage.layout.panes === 1) 
+        updateStage()
 }
 
 function maximizeAndHideWindows({ exclude: excluded = [] } = {}) {
