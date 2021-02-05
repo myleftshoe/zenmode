@@ -33,19 +33,7 @@ const nextLayout = loop([single, split, centered])
 
 function setLayout() {
     ll('setLayout')
-    const layout = nextLayout()
-    // let layout = stage.layout
-    // if (layout === single) {
-    //     layout = centered
-    // }
-    // else if (layout === centered) {
-    //     const nwindows = getActiveWorkspaceTabList().length
-    //     layout = values(layouts).find(layout => layout.panes === nwindows)
-    // }
-    // else {
-    //     layout = single
-    // }
-    stage.setLayout(layout)
+    stage.setLayout(nextLayout())
 }
 
 function positionWindows () {
@@ -61,7 +49,6 @@ function positionWindows () {
 
 
 let stage
-
 
 function start() {
     stage = createStage()
