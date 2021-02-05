@@ -105,6 +105,18 @@ class StageFrame {
         this.setVert(vert)
         this.setHorz(horz)
     }
+    show() {
+        this.top.show()
+        this.bottom.show()
+        this.left.show()
+        this.right.show()
+    }
+    hide() {
+        this.top.hide()
+        this.bottom.hide()
+        this.left.hide()
+        this.right.hide()
+    }
     setVert(size) {
         this.top.width = monitor.width
         this.top.height = size

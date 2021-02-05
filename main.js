@@ -79,14 +79,12 @@ function positionWindows () {
 }
 
 
-let margins
 let stage
 
 
 function start() {
     stage = createStage()
-    margins = stage.frame
-    margins.top.onButtonPress = setLayout
+    stage.frame.top.onButtonPress = setLayout
     stage.connect('layout-changed', positionWindows)
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
@@ -149,20 +147,14 @@ function handleChromeBottomClick(actor, event) {
 
 function hideChrome() {
     ll('overview hidden')
-    margins.top.show()
-    margins.bottom.show()
-    margins.left.show()
-    margins.right.show()
+    stage.frame.show()
     chrome.left.show()
     chrome.right.show()
 }
 
 function showChrome() {
     ll('overview shown')
-    margins.top.hide()
-    margins.bottom.hide()
-    margins.left.hide()
-    margins.right.hide()
+    stage.frame.hide()
     chrome.left.hide()
     chrome.right.hide()
 }
