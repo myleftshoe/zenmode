@@ -1,7 +1,7 @@
 const { Clutter, Cogl, Meta, St } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
-const { addChrome, addMargins, createChrome } = Extension.imports.chrome
+const { addChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
 const Log = Extension.imports.logger
 const { ll, logArguments } = Extension.imports.logger
@@ -85,7 +85,7 @@ let stage
 
 function start() {
     stage = createStage()
-    margins = addMargins(margin)
+    margins = stage.frame
     margins.top.onButtonPress = setLayout
     stage.connect('layout-changed', positionWindows)
 

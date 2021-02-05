@@ -13,7 +13,7 @@ let monitor = global.display.get_monitor_geometry(primaryMonitor)
 
 const _Chrome = GObject.registerClass({},
     class _Chrome extends St.Widget {
-        _init({ affectsStruts = true, ...props }) {
+        _init({ affectsStruts = true, ...props } = {}) {
             super._init({
                 style_class,
                 reactive: true,

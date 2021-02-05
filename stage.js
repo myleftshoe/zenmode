@@ -5,6 +5,10 @@ const { ll } = Log
 const { merge } = Extension.imports.object
 const { Pane } = Extension.imports.pane
 const { layouts } = Extension.imports.layouts
+const { Chrome } = Extension.imports.chrome
+
+const primaryMonitor = global.display.get_current_monitor()
+const monitor = global.display.get_monitor_geometry(primaryMonitor)
 
 
 var createStage = (props) => new Stage(props)
@@ -28,6 +32,7 @@ var Stage = GObject.registerClass(
                 reactive: false,
                 // vertical: true,
             })
+            this.frame = new StageFrame(40)
             global.stage.add_child(this)
             this.setLayout(layout)
         }
@@ -88,4 +93,30 @@ function get_all_descendants(actor) {
     }
     getChildren(actor)
     return children
+}
+
+
+class StageFrame {
+    constructor(vert = 40, horz = vert) {
+        this.top = new Chrome({reactive: true})
+        this.bottom = new Chrome()
+        this.left = new Chrome({})
+        this.right = new Chrome()
+        this.setVert(vert)
+        this.setHorz(horz)
+    }
+    setVert(size) {
+        this.top.width = monitor.width
+        this.top.height = size
+        this.bottom.y = monitor.height - size
+        this.bottom.width = monitor.width
+        this.bottom.height = size
+    }
+    setHorz(size) {
+        this.left.width = size;
+        this.left.height = monitor.height
+        this.right.x = monitor.width - size
+        this.right.width = size
+        this.right.height = monitor.height
+    }
 }
