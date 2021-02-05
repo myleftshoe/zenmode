@@ -271,9 +271,7 @@ function handleFocusWindow(display) {
 
     // stage.style = `border-color: rgba(${dominantColor},1);`
 
-    get_all_descendants(stage).forEach(c => {
-        c.style = `border-color: rgba(${dominantColor},1);`
-    })
+    stage.setColor(dominantColor)
     // stage.style = `border-color: red;`
 
 

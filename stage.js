@@ -52,6 +52,11 @@ var Stage = GObject.registerClass(
             return get_childless_descendants(this)
             
         }
+        setColor(rgb) {
+            get_all_descendants(this).forEach(c => {
+                c.style = `border-color: rgba(${rgb},1);`
+            })
+        }
     }
 )        
 
