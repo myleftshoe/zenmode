@@ -36,6 +36,14 @@ var Stage = GObject.registerClass(
             global.stage.add_child(this)
             this.setLayout(layout)
         }
+        show() {
+            this.frame.show()
+            super.show()
+        }
+        hide() {
+            this.frame.hide()
+            super.hide()
+        }
         get layout() { 
             return this._layout 
         }

@@ -93,7 +93,7 @@ function start() {
     chrome.top.onButtonPress = handleChromeTopClick
     chrome.bottom.onButtonPress = handleChromeBottomClick
 
-    hideChromeSid = Main.overview.connect('shown', hideChrome);
+    hideChromeSid = Main.overview.connect('showing', hideChrome);
     showChromeSid = Main.overview.connect('hidden', showChrome);
 
     signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
@@ -147,16 +147,16 @@ function handleChromeBottomClick(actor, event) {
 
 function hideChrome() {
     ll('overview hidden')
-    stage.frame.show()
-    chrome.left.show()
-    chrome.right.show()
+    stage.hide()
+    chrome.left.hide()
+    chrome.right.hide()
 }
 
 function showChrome() {
     ll('overview shown')
-    stage.frame.hide()
-    chrome.left.hide()
-    chrome.right.hide()
+    stage.show()
+    chrome.left.show()
+    chrome.right.show()
 }
 
 // --------------------------------------------------------------------------------
