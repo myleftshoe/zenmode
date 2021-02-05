@@ -9,13 +9,13 @@ const { merge } = Extension.imports.object
 
 function show(metaWindow) {
     log('show', metaWindow.title)
-    getActor(metaWindow).set_scale(1, 1)
+    getActor(metaWindow).show()
     return metaWindow
 }
 
 function hide(metaWindow) {
     log('hide', metaWindow.title)
-    getActor(metaWindow).set_scale(1, 1);
+    getActor(metaWindow).hide()
     return metaWindow
 }
 

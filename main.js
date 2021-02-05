@@ -21,15 +21,9 @@ const {
     getActiveWorkspaceTabList 
 } = Extension.imports.workspaces
 const {
-    show,
-    hide,
-    activate,
-    maximize,
     getActor,
     getFrameRect,
-    getFrameBox,
     getBufferRect,
-    getBufferBox,
     getPixels,
 } = Extension.imports.metaWindow
 
@@ -97,17 +91,6 @@ function start() {
     showChromeSid = Main.overview.connect('hidden', showChrome);
 
     signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
-    signals.connect(global.display, 'window-created', addWindow)
-    signals.connect(global.display, 'restacked', () => { ll('restacked') })
-
-    // signals.connect(global.display, 'grab-op-begin', handleGrabOpBegin)
-    // signals.connect(global.display, 'grab-op-end', handleGrabOpEnd)
-    signals.connect(workspaces.activeWorkspace, 'window-removed', () => { ll('window-removed') })
-
-    signals.connect(global.display, 'in-fullscreen-changed', () => { ll('in-fullscreen-changed') })
-
-    maximizeAndHideWindows()
-    show(focusedWindow)
 }
 
 function stop() {
@@ -159,58 +142,6 @@ function showChrome() {
     chrome.right.show()
 }
 
-// --------------------------------------------------------------------------------
-
-let grabbed = false;
-let spinegrab = false
-function handleGrabOpBegin(display, screen, metaWindow, op) {
-    ll('handleGrabOpBegin'. op)
-    if (!metaWindow) return
-    if (!spinegrab) {
-        global.display.end_grab_op(global.get_current_time())
-        global.sync_pointer()
-        return
-    }
-    if (grabbed) return
-    const [leftWindow, rightWindow] = getTiles()
-    if (!rightWindow) return
-    global.display.end_grab_op(global.get_current_time())
-    grabbed = true
-    const [x, y] = global.get_pointer()
-    global.display.begin_grab_op(
-        rightWindow,
-        Meta.GrabOp.RESIZING_W,
-        false, /* pointer grab */
-        false, /* frame action */
-        null,
-        null,
-        global.get_current_time(),
-        x, y
-    )
-    connectResizeListener(leftWindow, rightWindow)
-}
-
-let savedPointerPosition
-function handleGrabOpEnd(_display, _screen, metaWindow, op) {
-    ll('handleGrabOpEnd', op)
-    if (op !== Meta.GrabOp.RESIZING_W) return
-    if (spinegrab)
-        savedPointerPosition = global.get_pointer()
-    if (grabbed) {
-        grabbed = false
-        spinegrab = false
-    }
-    signals.disconnectObject(metaWindow)
-}
-
-function connectResizeListener(leftWindow, rightWindow) {
-    signals.connect(rightWindow, 'size-changed', (metaWindow) => {
-        let { x, y, width, height } = leftWindow.get_work_area_current_monitor()
-        const rwidth = metaWindow.get_frame_rect().width
-        width = width - rwidth - spacerWidth
-        leftWindow.move_resize_frame(false, x, y, width, height)
-    });
-}
 
 
 function updateStage() {
@@ -252,8 +183,6 @@ function updateStage() {
 
     stage.setColor(dominantColor)
     // stage.style = `border-color: red;`
-
-
 }
 
 
@@ -271,26 +200,6 @@ function handleFocusWindow(display) {
         updateStage()
 }
 
-function maximizeAndHideWindows({ exclude: excluded = [] } = {}) {
-    getActiveWorkspaceTabList().filter(exclude(excluded)).map(maximize).map(hide)
-}
-
-function addWindow(display, metaWindow) {
-    maximize(metaWindow)
-}
-
-let reordering = false
-function setTabListOrder(metaWindows = []) {
-    reordering = true
-    Promise.all(
-        metaWindows.map(metaWindow => new Promise(resolve =>
-            onIdle(() => {
-                activate(metaWindow)
-                resolve('activated')
-            })
-        ))
-    ).then(() => { reordering = false })
-}
 
 
 
