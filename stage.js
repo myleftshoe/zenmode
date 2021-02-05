@@ -35,7 +35,7 @@ var Stage = GObject.registerClass(
             return this._layout 
         }
         async setLayout(layout) {
-            this.remove_all_children()
+            this.destroy_all_children()
             this.remove_style_class_name('stage-centered')
             layout.call(this)
             this._layout = layout
@@ -46,6 +46,9 @@ var Stage = GObject.registerClass(
             return Promise.all(this.getPanes().map(allocated))
         }
         getPanes() {
+            get_all_descendants(this).map((c, i) => { 
+                log('#', i, c)
+            })
             return get_childless_descendants(this)
             
         }
@@ -67,4 +70,17 @@ function get_childless_descendants(actor) {
         ? actor.get_children().flatMap(leafs) 
         : [ actor ]
     return leafs(actor)
+}
+
+
+function get_all_descendants(actor) {
+    const children = []
+    const getChildren = (actor) => { 
+        children.push(actor)
+        if (actor.get_n_children())
+            actor.get_children().forEach(getChildren)
+        
+    }
+    getChildren(actor)
+    return children
 }

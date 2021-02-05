@@ -10,8 +10,8 @@ const { onIdle } = Extension.imports.async
 const { exclude } = Extension.imports.functional
 const { values } = Extension.imports.object
 const { loop } = Extension.imports.array
-const { createStage } = Extension.imports.stage
-const { layouts, single, centered, split } = Extension.imports.layouts
+const { createStage, get_all_descendants } = Extension.imports.stage
+const { layouts, single, centered, split, complex } = Extension.imports.layouts
 const { getDominantColor } = Extension.imports.pixbuf
 
 const { 
@@ -48,7 +48,7 @@ const spacerWidth = 40
 let chrome
 let hideChromeSid
 
-const nextLayout = loop([centered, single, split ])
+const nextLayout = loop([centered, single, split, complex ])
 
 async function setLayout() {
     ll('setLayout')
@@ -225,12 +225,15 @@ function connectResizeListener(leftWindow, rightWindow) {
     });
 }
 
+let prevFocusedWindow
 function handleFocusWindow(display) {
     ll('handleFocusWindow')
-    const pane = stage.getPanes().find(({metaWindows}) => metaWindows[0] === focusedWindow)
+    const pane = stage.getPanes().find(({metaWindows}) => metaWindows[0] === prevFocusedWindow) || stage.getPanes()[0]
     const paneRect = pane.getRect()
 
     focusedWindow.move_resize_frame(false, ...paneRect)
+    pane.metaWindows = [focusedWindow]
+    prevFocusedWindow = focusedWindow
 
     const fr = getFrameRect(focusedWindow)
     const br = getBufferRect(focusedWindow)
@@ -266,7 +269,11 @@ function handleFocusWindow(display) {
 
     log('dominantColor', dominantColor, focusedWindow.title)
 
-    stage.style = `border-color: rgba(${dominantColor},1);`
+    // stage.style = `border-color: rgba(${dominantColor},1);`
+
+    get_all_descendants(stage).forEach(c => {
+        c.style = `border-color: rgba(${dominantColor},1);`
+    })
     // stage.style = `border-color: red;`
 
 
