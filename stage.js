@@ -6,6 +6,7 @@ const { merge } = Extension.imports.object
 const { Pane } = Extension.imports.pane
 const { layouts } = Extension.imports.layouts
 const { Chrome } = Extension.imports.chrome
+const { sampleColors } = Extension.imports.metaWindow
 
 const primaryMonitor = global.display.get_current_monitor()
 const monitor = global.display.get_monitor_geometry(primaryMonitor)
@@ -69,6 +70,12 @@ var Stage = GObject.registerClass(
             get_all_descendants(this).forEach(c => {
                 c.style = `border-color: rgba(${rgb},1);`
             })
+        }
+        blendWithMetaWindow(metaWindow) {
+            if (this.layout.panes !== 1)
+                return 
+            const dominantColor = sampleColors(metaWindow)
+            this.setColor(dominantColor)
         }
     }
 )        

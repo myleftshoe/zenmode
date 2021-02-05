@@ -1,18 +1,14 @@
-const { Clutter, Cogl, Meta, St } = imports.gi
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
 const { Signals } = Extension.imports.signals
 const Log = Extension.imports.logger
-const { ll, logArguments } = Extension.imports.logger
+const { ll, logArguments } = Log
 const { getEventModifiers } = Extension.imports.events
-const { onIdle } = Extension.imports.async
-const { exclude } = Extension.imports.functional
 const { values } = Extension.imports.object
 const { loop } = Extension.imports.array
-const { createStage, get_all_descendants } = Extension.imports.stage
+const { createStage } = Extension.imports.stage
 const { layouts, single, centered, split, complex } = Extension.imports.layouts
-const { getDominantColor } = Extension.imports.pixbuf
 
 const { 
     activateWorkspace, 
@@ -20,12 +16,6 @@ const {
     workspaces, 
     getActiveWorkspaceTabList 
 } = Extension.imports.workspaces
-const {
-    getActor,
-    getFrameRect,
-    getBufferRect,
-    getPixels,
-} = Extension.imports.metaWindow
 
 const signals = new Signals()
 
@@ -35,11 +25,8 @@ Object.defineProperty(this, 'focusedWindow', {
 })
 
 
-
-let margin = 40
-const spacerWidth = 40
-
 let chrome
+let showChromeSid
 let hideChromeSid
 
 const nextLayout = loop([single, split, centered])
@@ -142,50 +129,6 @@ function showChrome() {
     chrome.right.show()
 }
 
-
-
-function updateStage() {
-    const fr = getFrameRect(focusedWindow)
-    const br = getBufferRect(focusedWindow)
-    
-    const topRight = {x: br.width - (fr.x - br.x), y: fr.y - br.y}
-
-    const sampleSize = {width: 5, height: 1}
-
-    const pixbuf = getPixels(getActor(focusedWindow), { x: topRight.x - 50, y: topRight.y, ...sampleSize })
-    
-    // // DEBUG: Display sampled pixels
-    // const image = new Clutter.Image()
-    // image.set_data(pixbuf.get_pixels(),
-    //     pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
-    //         : Cogl.PixelFormat.RGB_888,
-    //     pixbuf.get_width(),
-    //     pixbuf.get_height(),
-    //     pixbuf.get_rowstride());
-
-    // const actor = new St.Bin({ 
-    //     x: br.x + topRight.x - pixbuf.get_width(),
-    //     y: fr.y, 
-    //     height: pixbuf.get_height(), 
-    //     width: pixbuf.get_width(), 
-    //     backgroundColor: new Clutter.Color({ red: 255, alpha: 255 }),
-    //     style: 'border: 1px solid yellow;'
-    // })
-    // actor.set_content(image)
-    // global.stage.add_child(actor)
-    // // DEBUG END: Display sampled pixels
-
-    const dominantColor = getDominantColor(pixbuf)
-
-    log('dominantColor', dominantColor, focusedWindow.title)
-
-    // stage.style = `border-color: rgba(${dominantColor},1);`
-
-    stage.setColor(dominantColor)
-    // stage.style = `border-color: red;`
-}
-
-
 let prevFocusedWindow
 function handleFocusWindow(display) {
     ll('handleFocusWindow')
@@ -196,10 +139,6 @@ function handleFocusWindow(display) {
     pane.metaWindows = [focusedWindow]
     prevFocusedWindow = focusedWindow
 
-    if (stage.layout.panes === 1) 
-        updateStage()
+    stage.blendWithMetaWindow(focusedWindow)
 }
-
-
-
 

@@ -1,4 +1,4 @@
-const { Clutter, Gdk, Meta, cairo } = imports.gi
+const { Clutter, Cogl, Gdk, Meta, cairo } = imports.gi
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { Point } = Extension.imports.point
 const { logArguments } = Extension.imports.logger
@@ -6,6 +6,7 @@ const Log = Extension.imports.logger
 const { and } = Extension.imports.functional
 const { augmentObject } = Extension.imports.functional
 const { merge } = Extension.imports.object
+const { getDominantColor } = Extension.imports.pixbuf
 
 function show(metaWindow) {
     log('show', metaWindow.title)
@@ -231,6 +232,44 @@ function alignToActor(metaWindow) {
         metaWindow.move_resize_frame(false, x + actor.margin, y + actor.margin, width - 2 * actor.margin, height - 2 * actor.margin)
     }
 }
+
+
+function sampleColors(metaWindow) {
+
+    const fr = getFrameRect(metaWindow)
+    const br = getBufferRect(metaWindow)
+    
+    const topRight = {x: br.width - (fr.x - br.x), y: fr.y - br.y}
+
+    const sampleSize = {width: 5, height: 1}
+
+    const pixbuf = getPixels(getActor(metaWindow), { x: topRight.x - 50, y: topRight.y, ...sampleSize })
+    
+    // // DEBUG: Display sampled pixels
+    // const image = new Clutter.Image()
+    // image.set_data(pixbuf.get_pixels(),
+    //     pixbuf.get_has_alpha() ? Cogl.PixelFormat.RGBA_8888
+    //         : Cogl.PixelFormat.RGB_888,
+    //     pixbuf.get_width(),
+    //     pixbuf.get_height(),
+    //     pixbuf.get_rowstride());
+
+    // const actor = new St.Bin({ 
+    //     x: br.x + topRight.x - pixbuf.get_width(),
+    //     y: fr.y, 
+    //     height: pixbuf.get_height(), 
+    //     width: pixbuf.get_width(), 
+    //     backgroundColor: new Clutter.Color({ red: 255, alpha: 255 }),
+    //     style: 'border: 1px solid yellow;'
+    // })
+    // actor.set_content(image)
+    // global.stage.add_child(actor)
+    // // DEBUG END: Display sampled pixels
+
+    return getDominantColor(pixbuf)
+}
+
+
 
 
 var discrete = {
