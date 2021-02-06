@@ -11,9 +11,32 @@ const { sampleColors } = Extension.imports.metaWindow
 const primaryMonitor = global.display.get_current_monitor()
 const monitor = global.display.get_monitor_geometry(primaryMonitor)
 
+const spacing = 40
 
-const margin = 40
-const spacing = 0
+const separators = { 
+    props: {
+        name: 'separator',
+        style_class: 'separator'
+    },
+    get horizontal() { 
+        return new St.Bin({
+            ...this.props, 
+            width: spacing,
+            x_expand: false,
+            y_expand: true,
+        })
+    },
+    get vertical() { 
+        return new St.Bin({
+            ...this.props, 
+            height: spacing,
+            x_expand: true,
+            y_expand: false,
+        })
+    }
+}
+
+
 
 var createStage = (props) => new Stage(props)
 
@@ -26,23 +49,17 @@ var Stage = GObject.registerClass(
             'layout-changed': {}
         }
     },
-    class Stage extends Clutter.Actor {
+    class Stage extends St.BoxLayout {
         _init(props) {
             const { width, height, layout} = defaultProps(props)
             super._init({
-                width: width - 2 * margin,
-                height: height - 2 * margin,
-                margin_left: margin,
-                margin_top: margin,
-                margin_right: margin,
-                margin_bottom: margin,
-                // style_class: 'stage',
+                width,
+                height,
+                style_class: 'stage',
                 reactive: false,
-                // vertical: true,
+                vertical: true,
             })
-            this.layout_manager = new Clutter.BoxLayout({spacing})
-            this.set_layout_manager(this.layout_manager)
-            this.frame = new StageFrame(40)
+            this.frame = new StageFrame(spacing)
             this.add_child(new St.Bin({
                 x_expand: true,
                 y_expand: true,
@@ -65,16 +82,28 @@ var Stage = GObject.registerClass(
         add_child(actor) {
             if (actor.name === 'separator') return
             super.add_child(actor)
-            if (this.get_n_children() > 0) {
-                const separator = new St.Bin({
-                    name: 'separator',
-                    width: margin,
-                    x_expand: false,
-                    y_expand: true,
-                    style: 'background-color: rgba(0, 255, 0, .5);'
-                })
+            if (this.get_n_children() > 1) {
+                const separator = this.vertical ? separators.vertical : separators.horizontal
                 this.insert_child_below(separator, actor)
             }
+        }
+        horizontalSeparator() {
+            return new St.Bin({
+                name: 'separator',
+                width: spacing,
+                x_expand: false,
+                y_expand: true,
+                style_class: 'separator'
+            })
+        }
+        verticalSeparator() {
+            return new St.Bin({
+                name: 'separator',
+                height: spacing,
+                x_expand: true,
+                y_expand: false,
+                style_class: 'separator'
+            })
         }
         show() {
             this.frame.show()
@@ -147,7 +176,7 @@ function get_all_descendants(actor) {
 
 
 class StageFrame {
-    constructor(vert = 40, horz = vert) {
+    constructor(vert = spacing, horz = vert) {
         this.top = new Chrome({reactive: true})
         this.bottom = new Chrome()
         this.left = new Chrome({})
