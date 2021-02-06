@@ -15,8 +15,8 @@ const spacing = 40
 
 
 const separator = (vertical = false) => new St.Bin({
-    name: 'separator',
-    style_class: 'separator',
+    name: separator.name,
+    style_class: separator.name,
     ...vertical ? separator.vertical : separator.horizontal
 })
 
@@ -63,29 +63,11 @@ var Stage = GObject.registerClass(
             this.setLayout(layout)
         }
         add_child(actor) {
-            if (actor.name === 'separator') return
+            if (actor.name === separator.name) return
             super.add_child(actor)
             if (this.get_n_children() > 1) {
                 this.insert_child_below(separator(this.vertical), actor)
             }
-        }
-        horizontalSeparator() {
-            return new St.Bin({
-                name: 'separator',
-                width: spacing,
-                x_expand: false,
-                y_expand: true,
-                style_class: 'separator'
-            })
-        }
-        verticalSeparator() {
-            return new St.Bin({
-                name: 'separator',
-                height: spacing,
-                x_expand: true,
-                y_expand: false,
-                style_class: 'separator'
-            })
         }
         show() {
             this.frame.show()
@@ -109,7 +91,7 @@ var Stage = GObject.registerClass(
             return Promise.all(this.getPanes().map(allocated))
         }
         getPanes() {
-            return get_childless_descendants(this).filter(child => child.name !== 'separator')
+            return get_childless_descendants(this).filter(child => child.name !== separator.name)
             
         }
         setColor(rgb) {
