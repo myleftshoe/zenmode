@@ -75,9 +75,6 @@ var Stage = GObject.registerClass(
             get_childless_descendants(this).filter(child => !child.isPane).forEach(child => {
                 child.style = `background-color: rgba(${rgb},1);`
             })
-            // get_all_descendants(this).forEach(c => {
-            //     c.style = `border-color: rgba(${rgb},1);`
-            // })
         }
         blendWithMetaWindow(metaWindow) {
             if (this.layout.panes !== 1)
