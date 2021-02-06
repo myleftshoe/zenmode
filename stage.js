@@ -79,7 +79,7 @@ var Stage = GObject.registerClass(
 )        
 
 
-function allocated(pane) {
+const allocated = function(pane) {
     return new Promise(resolve => {
         const sid = pane.connect('notify::allocation', () => {
             pane.disconnect(sid)
@@ -88,7 +88,7 @@ function allocated(pane) {
     })
 }
 
-function get_childless_descendants(actor) {
+const get_childless_descendants = function(actor) {
     const leafs = (actor) => actor.get_n_children() 
         ? actor.get_children().flatMap(leafs) 
         : [ actor ]
@@ -96,7 +96,7 @@ function get_childless_descendants(actor) {
 }
 
 
-function get_all_descendants(actor) {
+const get_all_descendants = function(actor) {
     const children = []
     const getChildren = (actor) => { 
         children.push(actor)
