@@ -13,29 +13,25 @@ const monitor = global.display.get_monitor_geometry(primaryMonitor)
 
 const spacing = 40
 
-const separators = { 
-    props: {
-        name: 'separator',
-        style_class: 'separator'
-    },
-    get horizontal() { 
-        return new St.Bin({
-            ...this.props, 
-            width: spacing,
-            x_expand: false,
-            y_expand: true,
-        })
-    },
-    get vertical() { 
-        return new St.Bin({
-            ...this.props, 
-            height: spacing,
-            x_expand: true,
-            y_expand: false,
-        })
-    }
-}
 
+
+const separator = (vertical = false) => new St.Bin({
+    name: 'separator',
+    style_class: 'separator',
+    ...vertical ? separator.vertical : separator.horizontal
+})
+
+separator.horizontal = { 
+    width: spacing,
+    x_expand: false,
+    y_expand: true,
+}
+separator.vertical = { 
+    height: spacing,
+    x_expand: true,
+    y_expand: false,
+}
+    
 
 
 var createStage = (props) => new Stage(props)
@@ -57,34 +53,17 @@ var Stage = GObject.registerClass(
                 height,
                 style_class: 'stage',
                 reactive: false,
-                vertical: true,
+                vertical: false,
             })
             this.frame = new StageFrame(spacing)
-            this.add_child(new St.Bin({
-                x_expand: true,
-                y_expand: true,
-                style: 'border: 1px soild red;'
-            }))
-            this.add_child(new St.Bin({
-                x_expand: true,
-                y_expand: true,
-                style: 'border: 1px soild red;'
-            }))
             global.stage.add_child(this)
-            this.add_child(new St.Bin({
-                x_expand: true,
-                y_expand: true,
-                style: 'border: 1px soild red;'
-            }))
-            global.stage.add_child(this)
-            // this.setLayout(layout)
+            this.setLayout(layout)
         }
         add_child(actor) {
             if (actor.name === 'separator') return
             super.add_child(actor)
             if (this.get_n_children() > 1) {
-                const separator = this.vertical ? separators.vertical : separators.horizontal
-                this.insert_child_below(separator, actor)
+                this.insert_child_below(separator(this.vertical), actor)
             }
         }
         horizontalSeparator() {
