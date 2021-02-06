@@ -13,26 +13,6 @@ const monitor = global.display.get_monitor_geometry(primaryMonitor)
 
 const spacing = 40
 
-const separator = (vertical = false) => new St.Bin({
-    name: separator.name,
-    style_class: separator.name,
-    ...vertical ? separator.vertical : separator.horizontal
-})
-
-separator.size = spacing
-
-separator.horizontal = { 
-    width: separator.size,
-    x_expand: false,
-    y_expand: true,
-}
-
-separator.vertical = { 
-    height: separator.size,
-    x_expand: true,
-    y_expand: false,
-}
-
 
 var createStage = (props) => new Stage(props)
 
@@ -49,10 +29,11 @@ var Stage = GObject.registerClass(
             'layout-changed': {}
         }
     },
-    class Stage extends St.BoxLayout {
+    class Stage extends Pane {
         _init(props) {
             const { width, height, layout } = defaultProps(props)
             super._init({
+                name: 'stage',
                 width,
                 height,
                 style_class: 'stage',
@@ -62,13 +43,6 @@ var Stage = GObject.registerClass(
             this.frame = new StageFrame(spacing)
             global.stage.add_child(this)
             this.setLayout(layout)
-        }
-        add_child(actor) {
-            if (actor.name === separator.name) return
-            super.add_child(actor)
-            if (this.get_n_children() > 1) {
-                this.insert_child_below(separator(this.vertical), actor)
-            }
         }
         show() {
             this.frame.show()
@@ -93,7 +67,7 @@ var Stage = GObject.registerClass(
             return Promise.all(this.getPanes().map(allocated))
         }
         getPanes() {
-            return get_childless_descendants(this).filter(child => child.name === 'pane')
+            return get_childless_descendants(this).filter(child => child.isPane)
             
         }
         setColor(rgb) {

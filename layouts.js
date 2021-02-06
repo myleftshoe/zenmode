@@ -3,7 +3,7 @@ const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { Pane } = Extension.imports.pane
 const Log = Extension.imports.logger
 var layouts = {
-    single, centered, split, layout1, complex
+    single, centered, split, layout1, complex, grid
 }
 
 function single() {
@@ -39,34 +39,46 @@ function split() {
 split.panes = 2
 
 function layout1() {
-    const left = new Pane({name: 'left', vertical:true})
-    const right = new Pane({name: 'right'})
+    const left = new Pane({vertical:true})
+    const right = new Pane()
+    left.add_child(new Pane())
+    left.add_child(new Pane())
     this.add_child(left)
     this.add_child(right)
-    const leftTop = new Pane({name: 'leftTop'})
-    const leftBottom = new Pane({name: 'leftBottom'})
-    left.add_child(leftTop)
-    left.add_child(leftBottom)
+
 }
 layout1.panes = 3
 
-function complex() {
-    const left = new Pane({name: 'left', vertical:true})
-    const right = new Pane({name: 'right'})
+function grid() {
+    const left = new Pane({vertical: true})
+    const right = new Pane({vertical: true})
+    left.add_child(new Pane())
+    left.add_child(new Pane())
+    right.add_child(new Pane())
+    right.add_child(new Pane())
     this.add_child(left)
     this.add_child(right)
-    const leftTop = new Pane({name: 'leftTop'})
-    const leftBottom = new Pane({name: 'leftBottom'})
+}
+layout1.panes = 4
+
+
+function complex() {
+    const left = new Pane({vertical:true})
+    const right = new Pane()
+    this.add_child(left)
+    this.add_child(right)
+    const leftTop = new Pane()
+    const leftBottom = new Pane()
     left.add_child(leftTop)
     left.add_child(leftBottom)
     // left.remove_child(leftTop)
     // left.remove_child(leftBottom)
-    const leftBottomLeft = new Pane({name: 'leftBottomLeft'})
+    const leftBottomLeft = new Pane()
     leftBottom.add_child(leftBottomLeft)
-    const leftBottomRight = new Pane({name: 'leftBottomRight'})
+    const leftBottomRight = new Pane()
     leftBottom.add_child(leftBottomRight)
-    const rightLeft = new Pane({name: 'rightLeft'})
-    const rightRight = new Pane({name: 'rightRight'})
+    const rightLeft = new Pane()
+    const rightRight = new Pane()
     right.add_child(rightLeft)
     right.add_child(rightRight)
 }

@@ -8,7 +8,7 @@ const { getEventModifiers } = Extension.imports.events
 const { values } = Extension.imports.object
 const { loop } = Extension.imports.array
 const { createStage } = Extension.imports.stage
-const { layouts, single, centered, split, complex } = Extension.imports.layouts
+const { layouts, single, centered, split, layout1, complex, grid } = Extension.imports.layouts
 
 const { 
     activateWorkspace, 
@@ -29,7 +29,7 @@ let chrome
 let showChromeSid
 let hideChromeSid
 
-const nextLayout = loop([single, split, centered, complex])
+const nextLayout = loop([centered, single, split, layout1, grid, complex])
 
 function loopLayouts() {
     ll('loopLayouts')
@@ -44,7 +44,7 @@ function positionWindows () {
         log(i, pane)
         const metaWindow = tabList[i]
         pane.metaWindows = [metaWindow]
-        metaWindow.move_resize_frame(true, ...pane.getRect())
+        metaWindow.move_resize_frame(false, ...pane.getRect())
     })
 }
 
