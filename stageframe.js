@@ -10,7 +10,7 @@ var StageFrame = class StageFrame {
     constructor(vert = spacing, horz = vert) {
         this.top = new Chrome({reactive: true})
         this.bottom = new Chrome()
-        this.left = new Chrome({})
+        this.left = new Chrome()
         this.right = new Chrome()
         this.setVert(vert)
         this.setHorz(horz)
