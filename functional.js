@@ -1,11 +1,11 @@
-const pipe = (...fns) => x => fns.reduce((v, f) => f(v), x);
-const compose = (...fns) => x => fns.reduceRight((v, f) => f(v), x);
-const and = (...fns) => x => fns.every(f => f(x))
-const or = (...fns) => x => fns.some(f => f(x))
-const not = x => y => x !== y
-const include = a => v => a.includes(v)
-const excludeUnary = a => v => !a.includes(v)
-const exclude = (...any) => excludeUnary(Array.isArray(any[0]) ? any[0] : any)
+var pipe = (...fns) => x => fns.reduce((v, f) => f(v), x);
+var compose = (...fns) => x => fns.reduceRight((v, f) => f(v), x);
+var and = (...fns) => x => fns.every(f => f(x))
+var or = (...fns) => x => fns.some(f => f(x))
+var not = x => y => x !== y
+var include = a => v => a.includes(v)
+var excludeUnary = a => v => !a.includes(v)
+var exclude = (...any) => excludeUnary(Array.isArray(any[0]) ? any[0] : any)
 
 
 class AugmentedObject {
