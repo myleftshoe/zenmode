@@ -12,7 +12,7 @@ var Pane = GObject.registerClass(
                 style_class: 'pane',
                 ...props
             })
-            this.layout_manager.set_spacing(40)
+            // this.layout_manager.set_spacing(40)
         }
         getRect() {
             const [x, y] = this.get_transformed_position()

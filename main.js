@@ -32,7 +32,7 @@ let hideChromeSid
 const nextLayout = loop([single, split, centered])
 
 function loopLayouts() {
-    ll('setLayout')
+    ll('loopLayouts')
     stage.setLayout(nextLayout())
 }
 
