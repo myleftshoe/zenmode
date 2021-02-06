@@ -45,6 +45,7 @@ var Pane = GObject.registerClass(
             if (this.get_n_children() > 1) {
                 this.insert_child_below(separator(this.vertical), actor)
             }
+            this.remove_style_class_name('pane')
         }
         getRect() {
             const [x, y] = this.get_transformed_position()
