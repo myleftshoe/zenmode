@@ -66,9 +66,10 @@ var Stage = GObject.registerClass(
             
         }
         setColor(rgb) {
-            this.style = `border-color: rgba(${rgb},1);`
+            const color = `rgba(${rgb},1)`
+            this.style = `border-color: ${color};`
             get_childless_descendants(this).filter(child => !child.isPane).forEach(child => {
-                child.style = `background-color: rgba(${rgb},1);`
+                child.style = `background-color: ${color};`
             })
         }
         blendWithMetaWindow(metaWindow) {
