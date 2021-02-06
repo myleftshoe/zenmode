@@ -12,21 +12,13 @@ var Pane = GObject.registerClass(
                 style_class: 'pane',
                 ...props
             })
-            this.connect('actor-added', () => {
-                log('actor-added', this.name)
-                this.remove_style_class_name('pane')
-            })
-            this.connect('actor-removed', () => {
-                log('actor-removed', this.name)
-                if (!this.get_n_children()) {
-                    this.add_style_class_name('pane')
-                }
-            })
+            this.layout_manager.set_spacing(40)
         }
         getRect() {
             const [x, y] = this.get_transformed_position()
             const [w, h] = this.get_transformed_size()
             const m = 20
+            return [x, y, w, h]
             return [x + m, y + m, w - 2 * m, h - 2 * m]
         }
     }

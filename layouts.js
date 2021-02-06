@@ -32,6 +32,7 @@ function layout1() {
     const left = new Pane({name: 'left', vertical:true})
     const right = new Pane({name: 'right'})
     this.add_child(left)
+ 
     this.add_child(right)
     const leftTop = new Pane({name: 'leftTop'})
     const leftBottom = new Pane({name: 'leftBottom'})

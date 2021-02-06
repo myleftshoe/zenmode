@@ -37,13 +37,14 @@ function loopLayouts() {
 }
 
 function positionWindows () {
+    log('layout-changed')
     const tabList = getActiveWorkspaceTabList()
     const panes = stage.getPanes()
     panes.forEach((pane, i) => {
         log(i, pane)
         const metaWindow = tabList[i]
         pane.metaWindows = [metaWindow]
-        metaWindow.move_resize_frame(false, ...pane.getRect())
+        metaWindow.move_resize_frame(true, ...pane.getRect())
     })
 }
 
@@ -119,6 +120,7 @@ function showChrome() {
 let prevFocusedWindow
 function handleFocusWindow(display) {
     ll('handleFocusWindow')
+    return
     const pane = stage.getPanes().find(({metaWindows}) => metaWindows[0] === prevFocusedWindow) || stage.getPanes()[0]
     const paneRect = pane.getRect()
 

@@ -1,4 +1,4 @@
-const { GObject } = imports.gi
+const { GObject, Clutter, St } = imports.gi
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const Log = Extension.imports.logger
 const { ll } = Log
@@ -12,6 +12,9 @@ const primaryMonitor = global.display.get_current_monitor()
 const monitor = global.display.get_monitor_geometry(primaryMonitor)
 
 
+const margin = 40
+const spacing = 0
+
 var createStage = (props) => new Stage(props)
 
 const defaultProps = (props = {}) => merge({layout: layouts.centered, width: global.stage.width, height: global.stage.height}, props)
@@ -23,19 +26,55 @@ var Stage = GObject.registerClass(
             'layout-changed': {}
         }
     },
-    class Stage extends Pane {
+    class Stage extends Clutter.Actor {
         _init(props) {
             const { width, height, layout} = defaultProps(props)
             super._init({
-                width,
-                height,
-                style_class: 'stage',
+                width: width - 2 * margin,
+                height: height - 2 * margin,
+                margin_left: margin,
+                margin_top: margin,
+                margin_right: margin,
+                margin_bottom: margin,
+                // style_class: 'stage',
                 reactive: false,
                 // vertical: true,
             })
+            this.layout_manager = new Clutter.BoxLayout({spacing})
+            this.set_layout_manager(this.layout_manager)
             this.frame = new StageFrame(40)
+            this.add_child(new St.Bin({
+                x_expand: true,
+                y_expand: true,
+                style: 'border: 1px soild red;'
+            }))
+            this.add_child(new St.Bin({
+                x_expand: true,
+                y_expand: true,
+                style: 'border: 1px soild red;'
+            }))
             global.stage.add_child(this)
-            this.setLayout(layout)
+            this.add_child(new St.Bin({
+                x_expand: true,
+                y_expand: true,
+                style: 'border: 1px soild red;'
+            }))
+            global.stage.add_child(this)
+            // this.setLayout(layout)
+        }
+        add_child(actor) {
+            if (actor.name === 'separator') return
+            super.add_child(actor)
+            if (this.get_n_children() > 0) {
+                const separator = new St.Bin({
+                    name: 'separator',
+                    width: margin,
+                    x_expand: false,
+                    y_expand: true,
+                    style: 'background-color: rgba(0, 255, 0, .5);'
+                })
+                this.insert_child_below(separator, actor)
+            }
         }
         show() {
             this.frame.show()
@@ -50,7 +89,6 @@ var Stage = GObject.registerClass(
         }
         async setLayout(layout) {
             this.destroy_all_children()
-            this.remove_style_class_name('stage-centered')
             layout.call(this)
             this._layout = layout
             await this.layoutComplete()
@@ -60,10 +98,7 @@ var Stage = GObject.registerClass(
             return Promise.all(this.getPanes().map(allocated))
         }
         getPanes() {
-            get_all_descendants(this).map((c, i) => { 
-                log('#', i, c)
-            })
-            return get_childless_descendants(this)
+            return get_childless_descendants(this).filter(child => child.name !== 'separator')
             
         }
         setColor(rgb) {
