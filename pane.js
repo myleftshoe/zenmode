@@ -1,5 +1,6 @@
 const { GObject, St } = imports.gi
-
+const Extension = imports.misc.extensionUtils.getCurrentExtension()
+const { merge } = Extension.imports.object
 
 const spacing = 40
 
@@ -23,20 +24,22 @@ separator.vertical = {
     y_expand: false,
 }
 
+const defaultProps = (props = {}) => merge({
+    name: 'pane',
+    x_expand: true,
+    y_expand: true,
+    style_class: 'pane',
+}, props)
+
 
 var Pane = GObject.registerClass(
     {
         GTypeName: 'zmPane',
     }, 
     class Pane extends St.BoxLayout {
-        _init({...props} = {}) {
-            super._init({
-                name: 'pane',
-                x_expand: true,
-                y_expand: true,
-                style_class: 'pane',
-                ...props
-            })
+        _init(props) {
+            const initProps = defaultProps(props)
+            super._init(initProps)
         }
         get isPane() { return true }
         add_child(actor) {

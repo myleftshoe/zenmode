@@ -12,9 +12,13 @@ const { ll } = Log
 var createStage = (props) => new Stage(props)
 
 const defaultProps = (props = {}) => merge({
-    layout: layouts.centered, 
+    name: 'stage',
+    style_class: 'stage',
     width: global.stage.width, 
-    height: global.stage.height
+    height: global.stage.height,
+    layout: layouts.centered, 
+    reactive: false,
+    vertical: false,
 }, props)
 
 var Stage = GObject.registerClass(
@@ -26,15 +30,8 @@ var Stage = GObject.registerClass(
     },
     class Stage extends Pane {
         _init(props) {
-            const { width, height, layout } = defaultProps(props)
-            super._init({
-                name: 'stage',
-                width,
-                height,
-                style_class: 'stage',
-                reactive: false,
-                vertical: false,
-            })
+            const { layout, ...initProps } = defaultProps(props)
+            super._init(initProps)
             this.frame = new StageFrame()
             global.stage.add_child(this)
             this.setLayout(layout)
