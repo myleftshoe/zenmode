@@ -1,6 +1,7 @@
+const { St } = imports.gi
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { Pane } = Extension.imports.pane
-
+const Log = Extension.imports.logger
 var layouts = {
     single, centered, split, layout1, complex
 }
@@ -11,11 +12,20 @@ function single() {
 }
 single.panes = 1
 
+function Spacer ({ name = 'spacer', width = 250} = {}) {
+    return new St.Bin({
+        name, 
+        width,
+        x_expand: false,
+        y_expand: true,
+        style_class: name,
+    })
+}
 
 function centered() {
-    const pane = new Pane()
-    this.add_style_class_name ('stage-centered')
-    this.add_child(pane)
+    this.add_child(new Spacer())
+    this.add_child(new Pane())
+    this.add_child(new Spacer())
 }
 centered.panes = 1
 
@@ -32,7 +42,6 @@ function layout1() {
     const left = new Pane({name: 'left', vertical:true})
     const right = new Pane({name: 'right'})
     this.add_child(left)
- 
     this.add_child(right)
     const leftTop = new Pane({name: 'leftTop'})
     const leftBottom = new Pane({name: 'leftBottom'})

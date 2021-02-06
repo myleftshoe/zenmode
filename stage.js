@@ -81,18 +81,19 @@ var Stage = GObject.registerClass(
         get layout() { 
             return this._layout 
         }
-        async setLayout(layout) {
+        setLayout(layout) {
             this.destroy_all_children()
             layout.call(this)
             this._layout = layout
-            await this.layoutComplete()
-            this.emit('layout-changed')
+            this.layoutComplete().then(() => {
+                this.emit('layout-changed')
+            })
         }
         layoutComplete() {
             return Promise.all(this.getPanes().map(allocated))
         }
         getPanes() {
-            return get_childless_descendants(this).filter(child => child.name !== separator.name)
+            return get_childless_descendants(this).filter(child => child.name === 'pane')
             
         }
         setColor(rgb) {

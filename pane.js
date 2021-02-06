@@ -7,6 +7,7 @@ var Pane = GObject.registerClass(
     class Pane extends St.BoxLayout {
         _init({...props} = {}) {
             super._init({
+                name: 'pane',
                 x_expand: true,
                 y_expand: true,
                 style_class: 'pane',
