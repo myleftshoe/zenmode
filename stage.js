@@ -13,21 +13,22 @@ const monitor = global.display.get_monitor_geometry(primaryMonitor)
 
 const spacing = 40
 
-
 const separator = (vertical = false) => new St.Bin({
     name: separator.name,
     style_class: separator.name,
     ...vertical ? separator.vertical : separator.horizontal
 })
 
+separator.size = spacing
+
 separator.horizontal = { 
-    width: spacing,
+    width: separator.size,
     x_expand: false,
     y_expand: true,
 }
 
 separator.vertical = { 
-    height: spacing,
+    height: separator.size,
     x_expand: true,
     y_expand: false,
 }
