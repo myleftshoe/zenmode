@@ -33,10 +33,8 @@ centered.panes = 1
 
 
 function split() {
-    const left = new Pane()
-    const right = new Pane()
-    this.add_child(left)
-    this.add_child(right)
+    this.add_child(new Pane())
+    this.add_child(new Pane())
 }
 split.panes = 2
 
@@ -71,15 +69,5 @@ function complex() {
     const rightRight = new Pane({name: 'rightRight'})
     right.add_child(rightLeft)
     right.add_child(rightRight)
-
-    // log('leftBottomLeft', leftBottomLeft.get_allocation_box().get_origin(), leftBottomLeft.get_allocation_box().get_size())
-    // this.leftBottomLeft = leftBottomLeft
-    // this.leftBottomRight = leftBottomRight
-    // this.leftBottomLeftInner = new Pane()
-    // this.leftBottomLeftInner.style = 'margin: 20px';
-    // this.leftBottomRightInner = new Pane()
-    // this.leftBottomRightInner.style = 'margin: 20px';
-    // leftBottomLeft.add_child(this.leftBottomLeftInner)
-    // leftBottomRight.add_child(this.leftBottomRightInner)
 }
 complex.panes = 5

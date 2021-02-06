@@ -29,7 +29,7 @@ let chrome
 let showChromeSid
 let hideChromeSid
 
-const nextLayout = loop([single, split, centered])
+const nextLayout = loop([single, split, centered, complex])
 
 function loopLayouts() {
     ll('loopLayouts')
