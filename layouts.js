@@ -12,7 +12,9 @@ function single() {
 }
 single.panes = 1
 
-function Spacer ({ name = 'spacer', width = 250} = {}) {
+const spacerWidth = 200
+
+function Spacer ({ name = 'spacer', width = spacerWidth} = {}) {
     return new St.Bin({
         name, 
         width,
