@@ -14,7 +14,6 @@ const monitor = global.display.get_monitor_geometry(primaryMonitor)
 const spacing = 40
 
 
-
 const separator = (vertical = false) => new St.Bin({
     name: 'separator',
     style_class: 'separator',
@@ -26,17 +25,21 @@ separator.horizontal = {
     x_expand: false,
     y_expand: true,
 }
+
 separator.vertical = { 
     height: spacing,
     x_expand: true,
     y_expand: false,
 }
-    
 
 
 var createStage = (props) => new Stage(props)
 
-const defaultProps = (props = {}) => merge({layout: layouts.centered, width: global.stage.width, height: global.stage.height}, props)
+const defaultProps = (props = {}) => merge({
+    layout: layouts.centered, 
+    width: global.stage.width, 
+    height: global.stage.height
+}, props)
 
 var Stage = GObject.registerClass(
     {
@@ -47,7 +50,7 @@ var Stage = GObject.registerClass(
     },
     class Stage extends St.BoxLayout {
         _init(props) {
-            const { width, height, layout} = defaultProps(props)
+            const { width, height, layout } = defaultProps(props)
             super._init({
                 width,
                 height,
