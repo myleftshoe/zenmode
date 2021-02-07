@@ -117,7 +117,9 @@ function showChrome() {
 let prevFocusedWindow
 function handleFocusWindow(display) {
     ll('handleFocusWindow')
-    const pane = stage.getPanes().find(({metaWindows}) => metaWindows[0] === prevFocusedWindow) || stage.getPanes()[0]
+    const panes = stage.getPanes() 
+    if (panes.length > 1) return
+    const pane = panes.find(({metaWindows}) => metaWindows[0] === prevFocusedWindow) || stage.getPanes()[0]
     const paneRect = pane.getRect()
 
     focusedWindow.move_resize_frame(false, ...values(paneRect))
