@@ -5,7 +5,7 @@ const { Signals } = Extension.imports.signals
 const Log = Extension.imports.logger
 const { ll } = Log
 const { getEventModifiers } = Extension.imports.events
-const { values } = Extension.imports.object
+const { defineGetter, values } = Extension.imports.object
 const { loop } = Extension.imports.array
 const { createStage } = Extension.imports.stage
 const { layouts, single, centered, split, layout1, complex, grid } = Extension.imports.layouts
@@ -19,11 +19,8 @@ const {
 
 const signals = new Signals()
 
-
-Object.defineProperty(this, 'focusedWindow', {
-    get() { return global.display.get_focus_window() }
-})
-
+const module = this
+defineGetter(module, 'focusedWindow', () => global.display.get_focus_window())
 
 let chrome
 let showChromeSid
