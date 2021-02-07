@@ -44,7 +44,7 @@ function positionWindows () {
         log(i, pane)
         const metaWindow = tabList[i]
         pane.metaWindows = [metaWindow]
-        metaWindow.move_resize_frame(false, ...pane.getRect())
+        metaWindow.move_resize_frame(false, ...values(pane.getRect()))
     })
 }
 
@@ -123,7 +123,7 @@ function handleFocusWindow(display) {
     const pane = stage.getPanes().find(({metaWindows}) => metaWindows[0] === prevFocusedWindow) || stage.getPanes()[0]
     const paneRect = pane.getRect()
 
-    focusedWindow.move_resize_frame(false, ...paneRect)
+    focusedWindow.move_resize_frame(false, ...values(paneRect))
     pane.metaWindows = [focusedWindow]
     prevFocusedWindow = focusedWindow
 

@@ -52,8 +52,8 @@ var Pane = GObject.registerClass(
         }
         getRect() {
             const [x, y] = this.get_transformed_position()
-            const [w, h] = this.get_transformed_size()
-            return [x, y, w, h]
+            const [width, height] = this.get_transformed_size()
+            return {x, y, width, height}
         }
     }
 )
