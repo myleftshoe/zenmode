@@ -10,6 +10,7 @@ const { loop } = Extension.imports.array
 const { createStage } = Extension.imports.stage
 const { layouts, single, centered, split, layout1, complex, grid } = Extension.imports.layouts
 
+const { moveResizeFrame } = Extension.imports.metaWindow
 const { 
     activateWorkspace, 
     moveWindowToWorkspace, 
@@ -39,14 +40,13 @@ function positionWindows () {
     const panes = stage.getPanes()
     panes.forEach((pane, i) => {
         log(i, pane)
-        const metaWindow = tabList[i]
-        pane.metaWindows = [metaWindow]
-        metaWindow.move_resize_frame(false, ...values(pane.getRect()))
+        pane.addVirtualChild(tabList[i], moveResizeFrame)
     })
 }
 
 
 let stage
+let newWindow
 
 function start() {
     stage = createStage()
@@ -62,6 +62,9 @@ function start() {
     hideChromeSid = Main.overview.connect('showing', hideChrome);
     showChromeSid = Main.overview.connect('hidden', showChrome);
 
+    signals.connect(global.display, 'window-left-monitor', (display, monitorNumber, metaWindow) => {
+        stage.removeMetaWindow(metaWindow)
+    })
     signals.connect(global.display, 'notify::focus-window', handleFocusWindow)
 }
 
@@ -117,14 +120,24 @@ function showChrome() {
 let prevFocusedWindow
 function handleFocusWindow(display) {
     ll('handleFocusWindow')
-    const panes = stage.getPanes() 
-    if (panes.length > 1) return
-    const pane = panes.find(({metaWindows}) => metaWindows[0] === prevFocusedWindow) || stage.getPanes()[0]
-    const paneRect = pane.getRect()
 
-    focusedWindow.move_resize_frame(false, ...values(paneRect))
-    pane.metaWindows = [focusedWindow]
+    const panes = stage.getPanes() 
+    let pane = panes.find(pane => pane.virtualChildren.has(prevFocusedWindow))
+    log('%%%%%%1', pane)
+    if (!pane) {
+        pane = panes.find((pane => !pane.size)) || panes[0]
+    }
+    log('%%%%%%2', pane)
+
+    pane.addVirtualChild(focusedWindow, moveResizeFrame)
+
+
+    pane.flash()
     prevFocusedWindow = focusedWindow
+    // if (panes.length > 1) return
+
+
+    pane.add_style_class_name('pane-focused')
 
     stage.blendWithMetaWindow(focusedWindow)
 }

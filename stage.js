@@ -60,7 +60,13 @@ var Stage = GObject.registerClass(
         }
         getPanes() {
             return get_childless_descendants(this).filter(child => child.isPane)
-            
+        }
+        findMetaWindow(metaWindow) {
+            return this.getPanes().find(pane => pane.virtualChildren.has(metaWindow))
+        }
+        removeMetaWindow(metaWindow) {
+            const pane = this.findMetaWindow(metaWindow)
+            pane.virtualChildren.delete(metaWindow)
         }
         setColor(rgb) {
             const color = `rgba(${rgb},1)`

@@ -39,10 +39,10 @@ function split() {
 split.panes = 2
 
 function layout1() {
-    const left = new Pane({vertical:true})
-    const right = new Pane()
-    left.add_child(new Pane())
-    left.add_child(new Pane())
+    const left = new Pane({vertical:true, name: 'left'})
+    const right = new Pane({name: 'right'})
+    left.add_child(new Pane({name: 'left-top'}))
+    left.add_child(new Pane({name: 'left-bottom'}))
     this.add_child(left)
     this.add_child(right)
 

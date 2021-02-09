@@ -1,4 +1,4 @@
-const { GObject, St } = imports.gi
+const { Clutter, GObject, St } = imports.gi
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { merge } = Extension.imports.object
 
@@ -40,6 +40,7 @@ var Pane = GObject.registerClass(
         _init(props) {
             const initProps = defaultProps(props)
             super._init(initProps)
+            this.virtualChildren = new Set()
         }
         get isPane() { return true }
         add_child(actor) {
@@ -54,6 +55,18 @@ var Pane = GObject.registerClass(
             const [x, y] = this.get_transformed_position()
             const [width, height] = this.get_transformed_size()
             return {x, y, width, height}
+        }
+        addVirtualChild(child, resizeFunc) {
+            this.virtualChildren.add(child)
+            resizeFunc(child, this.getRect())
+        }
+        flash() {
+            this.set_background_color(new Clutter.Color({red: 0, green: 255, blue: 255, alpha: 100}))
+            this.save_easing_state()
+            this.set_easing_duration(300)
+            this.set_easing_mode(Clutter.AnimationMode.EASE_IN_CUBIC)
+            this.set_background_color(new Clutter.Color({red: 0, green: 255, blue: 255, alpha: 0}))
+            this.restore_easing_state()
         }
     }
 )
