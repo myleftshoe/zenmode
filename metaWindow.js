@@ -203,7 +203,7 @@ function alignBottom(metaWindow) {
 }
 
 function moveResizeFrame(metaWindow, {x, y, width, height }) {
-    metaWindow.move_resize_frame(true, x, y, width, height)
+    metaWindow.move_resize_frame(false, x, y, width, height)
 }
 
 function allocationBoxToRect(actor) {

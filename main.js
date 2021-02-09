@@ -38,10 +38,15 @@ function positionWindows () {
     log('layout-changed')
     const tabList = getActiveWorkspaceTabList()
     const panes = stage.getPanes()
-    panes.forEach((pane, i) => {
-        log(i, pane)
-        pane.addVirtualChild(tabList[i], moveResizeFrame)
-    })
+    let i = 0
+    for (; i < panes.length; i++) {
+        panes[i].addVirtualChild(tabList[i], moveResizeFrame)
+    }
+    const rect = panes[0].getRect()
+    for (; i < tabList.length; i++) {
+        moveResizeFrame(tabList[i], rect )
+    }
+
 }
 
 
