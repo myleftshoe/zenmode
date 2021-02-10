@@ -44,7 +44,17 @@ function positionWindows () {
     }
     const rect = panes[0].getRect()
     for (; i < tabList.length; i++) {
-        moveResizeFrame(tabList[i], rect )
+        log(i, tabList[i].wm_class)
+        panes.forEach(pane => {
+            const metaWindow = [...pane.virtualChildren.values()][0]
+            if (tabList[i].wm_class === metaWindow.wm_class) {
+                moveResizeFrame(tabList[i], pane.getRect() )
+            }
+            else {
+                moveResizeFrame(tabList[i], rect )
+            }
+        })
+        
     }
 
 }
@@ -133,13 +143,13 @@ function handleFocusWindow(display) {
         pane = panes.find((pane => !pane.size)) || panes[0]
     }
     log('%%%%%%2', pane)
+    if (panes.length > 1) return
 
     pane.addVirtualChild(focusedWindow, moveResizeFrame)
 
 
     pane.flash()
     prevFocusedWindow = focusedWindow
-    // if (panes.length > 1) return
 
 
     pane.add_style_class_name('pane-focused')
