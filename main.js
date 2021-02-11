@@ -9,19 +9,17 @@ const { defineGetter, values } = Extension.imports.object
 const { loop } = Extension.imports.array
 const { createStage } = Extension.imports.stage
 const { layouts, single, centered, split, layout1, complex, grid } = Extension.imports.layouts
-
 const { moveResizeFrame } = Extension.imports.metaWindow
-const { 
-    activateWorkspace, 
-    moveWindowToWorkspace, 
-    workspaces, 
-    getActiveWorkspaceTabList 
+const {
+    activateWorkspace,
+    moveWindowToWorkspace,
+    workspaces,
+    getActiveWorkspaceTabList
 } = Extension.imports.workspaces
 
 const module = this
 defineGetter(module, 'focusedWindow', () => global.display.get_focus_window())
 
-let chrome
 
 const nextLayout = loop([centered, single, split, layout1, grid, complex])
 
@@ -30,7 +28,7 @@ function loopLayouts() {
     stage.setLayout(nextLayout())
 }
 
-function positionWindows () {
+function positionWindows() {
     log('layout-changed')
     const tabList = getActiveWorkspaceTabList()
     const panes = stage.getPanes()
@@ -44,20 +42,20 @@ function positionWindows () {
         panes.forEach(pane => {
             const metaWindow = [...pane.virtualChildren.values()][0]
             if (tabList[i].wm_class === metaWindow.wm_class) {
-                moveResizeFrame(tabList[i], pane.getRect() )
+                moveResizeFrame(tabList[i], pane.getRect())
             }
             else {
-                moveResizeFrame(tabList[i], rect )
+                moveResizeFrame(tabList[i], rect)
             }
         })
-        
+
     }
 
 }
 
 
 let stage
-let newWindow
+let chrome
 
 function start() {
     stage = createStage()
@@ -130,7 +128,7 @@ let prevFocusedWindow
 function handleFocusWindow(display) {
     ll('handleFocusWindow')
 
-    const panes = stage.getPanes() 
+    const panes = stage.getPanes()
     let pane = panes.find(pane => pane.virtualChildren.has(prevFocusedWindow))
     log('%%%%%%1', pane)
     if (!pane) {
@@ -141,10 +139,8 @@ function handleFocusWindow(display) {
 
     pane.addVirtualChild(focusedWindow, moveResizeFrame)
 
-
     pane.flash()
     prevFocusedWindow = focusedWindow
-
 
     pane.add_style_class_name('pane-focused')
 

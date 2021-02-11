@@ -52,12 +52,12 @@ function cloneActor(actor) {
 }
 
 function getImage(actor, { x, y, width, height } = {}) {
-    const rect = merge(getRect(actor), {x, y, width, height})
+    const rect = merge(getRect(actor), { x, y, width, height })
     return actor.get_image(new cairo.RectangleInt(rect))
 }
 
-function getPixels(actor,  { x, y, width, height } = {}) {
-    const rect = merge(getRect(actor), {x, y, width, height})
+function getPixels(actor, { x, y, width, height } = {}) {
+    const rect = merge(getRect(actor), { x, y, width, height })
     const image = getImage(actor, rect)
     return Gdk.pixbuf_get_from_surface(image, 0, 0, rect.width, rect.height);
 }
@@ -106,7 +106,7 @@ function ease(actor, props = defaultEasing) {
 function getRect(actor) {
     const [x, y] = actor.get_position()
     const [width, height] = actor.get_size()
-    return {x, y, width, height}
+    return { x, y, width, height }
 }
 
 function replaceWith(metaWindow, other) {
@@ -124,13 +124,13 @@ function colocate(metaWindow, other) {
 // --------------------------------------------------------------------------------
 
 function getFrameRect(metaWindow) {
-    const {x, y, width, height} = metaWindow.get_frame_rect()
-    return {x, y, width, height}
+    const { x, y, width, height } = metaWindow.get_frame_rect()
+    return { x, y, width, height }
 }
 
 function getBufferRect(metaWindow) {
-    const {x, y, width, height} = metaWindow.get_buffer_rect()
-    return {x, y, width, height}
+    const { x, y, width, height } = metaWindow.get_buffer_rect()
+    return { x, y, width, height }
 }
 
 var rectToBox = ({ x, y, width, height }) => ({ left: x, top: y, right: x + width, bottom: y + height })
@@ -146,7 +146,7 @@ function isFullHeight(metaWindow) {
     const workAreaBox = getWorkAreaBox(metaWindow)
     const frameBox = getFrameBox(metaWindow)
     return (
-        frameBox.top === workAreaBox.top && 
+        frameBox.top === workAreaBox.top &&
         frameBox.bottom === workAreaBox.bottom
     )
 }
@@ -156,9 +156,9 @@ function isFullSize(metaWindow) {
     const frameBox = getFrameBox(metaWindow)
     logArguments(workAreaBox, frameBox)
     return (
-        frameBox.top === workAreaBox.top && 
-        frameBox.bottom === workAreaBox.bottom && 
-        frameBox.right === workAreaBox.right && 
+        frameBox.top === workAreaBox.top &&
+        frameBox.bottom === workAreaBox.bottom &&
+        frameBox.right === workAreaBox.right &&
         frameBox.left === workAreaBox.left
     )
 }
@@ -177,32 +177,32 @@ var isTiledLeft = and(isLeftAligned, isFullHeight)
 
 
 function alignLeft(metaWindow) {
-    const {x} = metaWindow.get_work_area_current_monitor()
-    const {y} = metaWindow.get_frame_rect()
+    const { x } = metaWindow.get_work_area_current_monitor()
+    const { y } = metaWindow.get_frame_rect()
     metaWindow.move_frame(true, x, y)
     return metaWindow
 }
 
 function alignTop(metaWindow) {
-    const {x} = metaWindow.get_frame_rect()
-    const {y} = metaWindow.get_work_area_current_monitor()
+    const { x } = metaWindow.get_frame_rect()
+    const { y } = metaWindow.get_work_area_current_monitor()
     metaWindow.move_frame(true, x, y)
 }
 
 function alignRight(metaWindow) {
-    const {right} = getFrameBox(metaWindow)
-    const {y, width} = metaWindow.get_frame_rect()
+    const { right } = getFrameBox(metaWindow)
+    const { y, width } = metaWindow.get_frame_rect()
     metaWindow.move_frame(true, right - width, y)
     return metaWindow
 }
 
 function alignBottom(metaWindow) {
-    const {x, height} = metaWindow.get_frame_rect()
-    const {bottom} = getWorkAreaBox(metaWindow)
+    const { x, height } = metaWindow.get_frame_rect()
+    const { bottom } = getWorkAreaBox(metaWindow)
     metaWindow.move_frame(true, x, bottom - height)
 }
 
-function moveResizeFrame(metaWindow, {x, y, width, height }) {
+function moveResizeFrame(metaWindow, { x, y, width, height }) {
     metaWindow.move_resize_frame(false, x, y, width, height)
 }
 
@@ -210,15 +210,15 @@ function allocationBoxToRect(actor) {
     const box = actor.get_allocation_box()
     return {
         x: box.get_x(),
-        y: box.get_y(), 
-        width: box.get_width(), 
+        y: box.get_y(),
+        width: box.get_width(),
         height: box.get_height(),
     }
 }
 
 
 function alignToActor(metaWindow) {
-    return function(actor) {
+    return function (actor) {
         const { x, y, width, height } = allocationBoxToRect(actor)
         log(metaWindow.title, x + 20, y + 20, width - 40, height - 40)
         // const a = getActor(metaWindow)
@@ -235,13 +235,13 @@ function sampleColors(metaWindow) {
 
     const fr = getFrameRect(metaWindow)
     const br = getBufferRect(metaWindow)
-    
-    const topRight = {x: br.width - (fr.x - br.x), y: fr.y - br.y}
 
-    const sampleSize = {width: 5, height: 1}
+    const topRight = { x: br.width - (fr.x - br.x), y: fr.y - br.y }
+
+    const sampleSize = { width: 5, height: 1 }
 
     const pixbuf = getPixels(getActor(metaWindow), { x: topRight.x - 50, y: topRight.y, ...sampleSize })
-    
+
     // // DEBUG: Display sampled pixels
     // const image = new Clutter.Image()
     // image.set_data(pixbuf.get_pixels(),

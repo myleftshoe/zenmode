@@ -11,7 +11,7 @@ function getColorFrequencies(pixbuf) {
         colors.set(rgba, ++count)
     }
 
-    const sorted = [...colors].sort((a, b) => a[1] < b[1] )
+    const sorted = [...colors].sort((a, b) => a[1] < b[1])
     return sorted
 }
 

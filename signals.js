@@ -45,13 +45,13 @@ var Signals = class Signals {
 var signals = new Signals()
 
 function defineListener(object, eventName, signalName) {
-    object.prototype[eventName] = function(callback) {
+    object.prototype[eventName] = function (callback) {
         signals.connect(this, signalName, callback)
     }
 }
 
 function defineActionListener(object, actionName, eventName, signalName) {
-    object.prototype[eventName] = function(callback) {
+    object.prototype[eventName] = function (callback) {
         this.set_reactive(true)
         const action = new Clutter[actionName]()
         this.add_action(action)

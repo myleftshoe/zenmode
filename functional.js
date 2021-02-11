@@ -13,7 +13,7 @@ class AugmentedObject {
         this.root = object
     }
     addMethod([name, func]) {
-        this[name] = function(params) {
+        this[name] = function (params) {
             const result = func(this.root, params)
             return result === this.root ? this : result
         }

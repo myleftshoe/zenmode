@@ -3,17 +3,16 @@ const uuid = Extension.metadata.uuid
 
 
 function entry(func) {
-    return function([k, v]) {
-        func(k,v)
+    return function ([k, v]) {
+        func(k, v)
     }
 }
 
 function pair(k, v) {
     log(`${k}: ${v}`)
-} 
+}
 
-log('>>>>>>>>')
-entries({key1: 'val1', key2: 'val2'})
+
 function entries(object) {
     Object.entries(object).forEach(entry(pair))
 }

@@ -14,9 +14,9 @@ single.panes = 1
 
 const spacerWidth = 200
 
-function Spacer ({ name = 'spacer', width = spacerWidth} = {}) {
+function Spacer({ name = 'spacer', width = spacerWidth } = {}) {
     return new St.Bin({
-        name, 
+        name,
         width,
         x_expand: false,
         y_expand: true,
@@ -39,10 +39,10 @@ function split() {
 split.panes = 2
 
 function layout1() {
-    const left = new Pane({vertical:true, name: 'left'})
-    const right = new Pane({name: 'right'})
-    left.add_child(new Pane({name: 'left-top'}))
-    left.add_child(new Pane({name: 'left-bottom'}))
+    const left = new Pane({ vertical: true, name: 'left' })
+    const right = new Pane({ name: 'right' })
+    left.add_child(new Pane({ name: 'left-top' }))
+    left.add_child(new Pane({ name: 'left-bottom' }))
     this.add_child(left)
     this.add_child(right)
 
@@ -50,8 +50,8 @@ function layout1() {
 layout1.panes = 3
 
 function grid() {
-    const left = new Pane({vertical: true})
-    const right = new Pane({vertical: true})
+    const left = new Pane({ vertical: true })
+    const right = new Pane({ vertical: true })
     left.add_child(new Pane())
     left.add_child(new Pane())
     right.add_child(new Pane())
@@ -63,7 +63,7 @@ layout1.panes = 4
 
 
 function complex() {
-    const left = new Pane({vertical:true})
+    const left = new Pane({ vertical: true })
     const right = new Pane()
     this.add_child(left)
     this.add_child(right)
