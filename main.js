@@ -59,7 +59,7 @@ let chrome
 
 function start() {
     stage = createStage()
-    stage.frame.top.onButtonPress = loopLayouts
+    stage.frame.top.onButtonPress(loopLayouts)
     signals.connect(stage, 'layout-changed', positionWindows)
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
