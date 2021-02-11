@@ -5,6 +5,7 @@ const { Pane } = Extension.imports.pane
 const { StageFrame } = Extension.imports.stageframe
 const { layouts } = Extension.imports.layouts
 const { sampleColors } = Extension.imports.metaWindow
+const { signals } = Extension.imports.signals
 const Log = Extension.imports.logger
 const { ll } = Log
 
@@ -87,8 +88,7 @@ var Stage = GObject.registerClass(
 
 const allocated = function(pane) {
     return new Promise(resolve => {
-        const sid = pane.connect('notify::allocation', () => {
-            pane.disconnect(sid)
+        signals.connectOnce(pane, 'notify::allocation', () => {
             resolve('allocated')
         })
     })

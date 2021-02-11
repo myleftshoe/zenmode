@@ -1,8 +1,7 @@
 const Main = imports.ui.main
 const { GObject, Clutter, Meta, St } = imports.gi
-
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
-const { Signals, withSignals, defineListener, defineActionListener } = Extension.imports.signals
+const { signals, defineListener, defineActionListener } = Extension.imports.signals
 
 const style_class = 'chrome'
 const affectsStruts = true
@@ -11,7 +10,7 @@ let primaryMonitor = global.display.get_current_monitor()
 let monitor = global.display.get_monitor_geometry(primaryMonitor)
 
 
-const _Chrome = GObject.registerClass({},
+const Chrome = GObject.registerClass({},
     class _Chrome extends St.Widget {
         _init({ affectsStruts = true, ...props } = {}) {
             super._init({
@@ -24,18 +23,12 @@ const _Chrome = GObject.registerClass({},
     }
 )
 
-function composeChrome() {
-    const ComposedChrome = withSignals(_Chrome)
-    defineListener(ComposedChrome, 'onButtonPress', 'button-press-event')
-    // defineActionListener(ComposedChrome, 'ClickAction', 'onButtonPress', 'clicked')
-    return ComposedChrome
-}
+defineListener(Chrome, 'onButtonPress', 'button-press-event')
 
-var Chrome = composeChrome()
 
 function createChrome(props) {
     const edge = new Chrome({ ...props, affectsStruts: false })
-    edge.connect('enter-event', () => {
+    signals.connect(edge, 'enter-event', () => {
         global.display.set_cursor(Meta.Cursor.POINTING_HAND)
     })
     return edge

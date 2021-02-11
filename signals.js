@@ -1,16 +1,18 @@
 const { GObject, Clutter } = imports.gi
+const Extension = imports.misc.extensionUtils.getCurrentExtension()
+const Log = Extension.imports.logger
 
 var Signals = class Signals {
     constructor() {
         this.signals = new Map()
     }
     connect(object, signal, callback) {
-        const sid = GObject.signal_connect(object, signal, callback)
+        const sid = object.connect(signal, callback)
         this.signals.set(sid, { object, signal })
         return sid
     }
     connectOnce(object, signal, callback, data) {
-        const sid = GObject.signal_connect(object, signal, (...args) => {
+        const sid = object.connect(signal, (...args) => {
             this.disconnect(sid)
             callback(...args, data)
         })
@@ -20,7 +22,7 @@ var Signals = class Signals {
     disconnect(sid) {
         const { object } = this.signals.get(sid) || {}
         if (!object) return
-        GObject.signal_handler_disconnect(object, sid)
+        object.disconnect(sid)
         this.signals.delete(sid)
     }
     disconnectObject(object) {
@@ -31,7 +33,7 @@ var Signals = class Signals {
     }
     destroy() {
         this.signals.forEach(({ object }, sid) => {
-            GObject.signal_handler_disconnect(object, sid)
+            object.disconnect(sid)
         })
         this.signals.clear()
     }
@@ -40,30 +42,12 @@ var Signals = class Signals {
     }
 }
 
-function withSignals(SuperClass) {
-    return GObject.registerClass({}, class WithSignals extends SuperClass {
-        _init(...props) {
-            this.signals = new Signals()
-            super._init(...props)
-        }
-        connect(signal, callback) {
-            this.signals.connect(this, signal, callback)
-        }
-        disconnect(sid) {
-            this.signals.disconnect(sid)
-        }
-        destroy() {
-            this.signals.destroy()
-            this.signals.list()
-            return super.destroy()
-        }
-    })
-}
+var signals = new Signals()
 
 function defineListener(object, eventName, signalName) {
     return Object.defineProperty(object.prototype, eventName, {
         set(callback) {
-            this.connect(signalName, callback)
+            signals.connect(this, signalName, callback)
         }
     })
 }

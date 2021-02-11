@@ -1,7 +1,7 @@
 const Main = imports.ui.main
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 const { addChrome } = Extension.imports.chrome
-const { Signals } = Extension.imports.signals
+const { signals } = Extension.imports.signals
 const Log = Extension.imports.logger
 const { ll } = Log
 const { getEventModifiers } = Extension.imports.events
@@ -18,14 +18,10 @@ const {
     getActiveWorkspaceTabList 
 } = Extension.imports.workspaces
 
-const signals = new Signals()
-
 const module = this
 defineGetter(module, 'focusedWindow', () => global.display.get_focus_window())
 
 let chrome
-let showChromeSid
-let hideChromeSid
 
 const nextLayout = loop([centered, single, split, layout1, grid, complex])
 
@@ -66,7 +62,7 @@ let newWindow
 function start() {
     stage = createStage()
     stage.frame.top.onButtonPress = loopLayouts
-    stage.connect('layout-changed', positionWindows)
+    signals.connect(stage, 'layout-changed', positionWindows)
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
     chrome.left.onButtonPress = handleChromeLeftClick
@@ -74,8 +70,8 @@ function start() {
     chrome.top.onButtonPress = handleChromeTopClick
     chrome.bottom.onButtonPress = handleChromeBottomClick
 
-    hideChromeSid = Main.overview.connect('showing', hideChrome);
-    showChromeSid = Main.overview.connect('hidden', showChrome);
+    signals.connect(Main.overview, 'showing', hideChrome);
+    signals.connect(Main.overview, 'hidden', showChrome);
 
     signals.connect(global.display, 'window-left-monitor', (display, monitorNumber, metaWindow) => {
         stage.removeMetaWindow(metaWindow)
@@ -85,8 +81,6 @@ function start() {
 
 function stop() {
     signals.destroy()
-    Main.overview.disconnect(hideChromeSid);
-    Main.overview.disconnect(showChromeSid);
     chrome.destroy()
 }
 
