@@ -65,10 +65,10 @@ function start() {
     signals.connect(stage, 'layout-changed', positionWindows)
 
     chrome = addChrome({ top: 1, right: 1, bottom: 1, left: 1 })
-    chrome.left.onButtonPress = handleChromeLeftClick
-    chrome.right.onButtonPress = handleChromeRightClick
-    chrome.top.onButtonPress = handleChromeTopClick
-    chrome.bottom.onButtonPress = handleChromeBottomClick
+    chrome.left.onButtonPress(handleChromeLeftClick)
+    chrome.right.onButtonPress(handleChromeRightClick)
+    chrome.top.onButtonPress(handleChromeTopClick)
+    chrome.bottom.onButtonPress(handleChromeBottomClick)
 
     signals.connect(Main.overview, 'showing', hideChrome);
     signals.connect(Main.overview, 'hidden', showChrome);

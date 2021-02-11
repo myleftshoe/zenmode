@@ -24,7 +24,7 @@ const Chrome = GObject.registerClass({},
 )
 
 defineListener(Chrome, 'onButtonPress', 'button-press-event')
-
+// defineActionListener(Chrome, 'ClickAction', 'onClick', 'clicked')
 
 function createChrome(props) {
     const edge = new Chrome({ ...props, affectsStruts: false })
