@@ -10,7 +10,7 @@ let primaryMonitor = global.display.get_current_monitor()
 let monitor = global.display.get_monitor_geometry(primaryMonitor)
 
 
-const Chrome = GObject.registerClass({},
+var Chrome = GObject.registerClass({},
     class _Chrome extends St.Widget {
         _init({ affectsStruts = true, ...props } = {}) {
             super._init({
